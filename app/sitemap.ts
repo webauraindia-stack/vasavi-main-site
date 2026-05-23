@@ -1,7 +1,8 @@
 import type { MetadataRoute } from "next";
 import { getAllHotelSlugs } from "@/lib/data/hotels";
 
-const BASE = "https://hotelhub.com";
+const BASE =
+  process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ?? "https://vasavihotels.org";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const hotelPages = getAllHotelSlugs().map((slug) => ({

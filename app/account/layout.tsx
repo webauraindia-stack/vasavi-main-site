@@ -34,7 +34,9 @@ export default function AccountLayout({
                   href={link.href}
                   className={cn(
                     "px-4 py-2 rounded-lg text-sm transition-colors",
-                    pathname === link.href
+                    pathname === link.href ||
+                    (link.href === "/account/bookings" &&
+                      pathname.startsWith("/account/bookings/"))
                       ? "bg-champagne/20 text-champagne"
                       : "text-muted hover:text-charcoal hover:bg-surface"
                   )}

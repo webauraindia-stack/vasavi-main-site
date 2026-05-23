@@ -29,9 +29,10 @@ export async function generateStaticParams() {
 export async function generateMetadata({
   params,
 }: {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
-  const hotel = getHotelBySlug(params.slug);
+  const { slug } = await params;
+  const hotel = getHotelBySlug(slug);
   if (!hotel) return { title: "Hotel Not Found" };
   return {
     title: hotel.name,
@@ -40,12 +41,13 @@ export async function generateMetadata({
   };
 }
 
-export default function HotelDetailPage({
+export default async function HotelDetailPage({
   params,
 }: {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }) {
-  const hotel = getHotelBySlug(params.slug);
+  const { slug } = await params;
+  const hotel = getHotelBySlug(slug);
   if (!hotel) notFound();
 
   const rooms = getRoomsForHotel(hotel.id);

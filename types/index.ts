@@ -134,7 +134,12 @@ export type AmenityTag =
 
 export type RoomCategory = "Standard" | "Deluxe" | "Suite" | "Penthouse";
 
-export type BookingStatus = "confirmed" | "cancelled" | "completed" | "pending";
+export type BookingStatus =
+  | "confirmed"
+  | "cancelled"
+  | "completed"
+  | "pending"
+  | "checked_in";
 
 export interface Hotel {
   id: string;
@@ -240,13 +245,20 @@ export interface DonationRecord {
 
 export interface DonorBooking {
   id: string;
+  reference?: string;
+  hotelId?: string;
   hotelName: string;
   roomType: string;
+  roomNumber?: string;
   checkIn: string;
   checkOut: string;
+  nights?: number;
+  subtotal?: number;
   totalPaid: number;
   discountApplied: number;
   status: BookingStatus;
+  guestEmail?: string;
+  guestPhone?: string;
 }
 
 export interface Booking {
