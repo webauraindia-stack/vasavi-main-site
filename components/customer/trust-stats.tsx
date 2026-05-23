@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { motion, useInView } from "framer-motion";
-import { TRUST_STATS } from "@/lib/data/hotels";
+import { TRUST_STATS } from "@/lib/constants/site";
 import { useTranslation } from "react-i18next";
 
 function CountUp({

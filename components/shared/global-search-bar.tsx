@@ -13,7 +13,7 @@ import {
   SelectTrigger,
 } from "@/components/ui/select";
 import { DateRangePickerField } from "@/components/shared/date-range-picker-field";
-import { HOTELS } from "@/lib/data/hotels";
+import { useHotels } from "@/lib/hooks/use-hotels";
 import { normalizeStayDates } from "@/lib/date-range-selection";
 import { parseGuestParams, parseSearchDate } from "@/lib/parse-search-params";
 import { useSearchStore } from "@/stores/search-store";
@@ -27,11 +27,11 @@ interface GlobalSearchBarProps {
 
 const FIELD_H = "h-[3.25rem] min-h-[3.25rem]";
 
-function getHotelLabels(id: string | null) {
+function getHotelLabels(id: string | null, hotels: { id: string; name: string; city: string }[]) {
   if (!id) {
     return { full: "All guest houses", short: "All guest houses" };
   }
-  const hotel = HOTELS.find((h) => h.id === id);
+  const hotel = hotels.find((h) => h.id === id);
   if (!hotel) {
     return { full: "All guest houses", short: "All guest houses" };
   }
@@ -48,6 +48,7 @@ function getHotelLabels(id: string | null) {
 export function GlobalSearchBar({ className, variant = "hero" }: GlobalSearchBarProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { data: hotels = [] } = useHotels();
   const { hotelId, checkIn, checkOut, guests, setHotel, setDates, setGuests } =
     useSearchStore();
   const [calendarOpen, setCalendarOpen] = useState(false);
@@ -98,7 +99,10 @@ export function GlobalSearchBar({ className, variant = "hero" }: GlobalSearchBar
     if (Object.keys(guestUpdates).length > 0) setGuests(guestUpdates);
   }, [searchParams, calendarOpen, setHotel, setDates, setGuests]);
 
-  const hotelLabels = useMemo(() => getHotelLabels(hotelId), [hotelId]);
+  const hotelLabels = useMemo(
+    () => getHotelLabels(hotelId, hotels),
+    [hotelId, hotels]
+  );
 
   const handleRangeChange = useCallback(
     (next: DateRange | undefined, complete: boolean) => {
@@ -171,7 +175,7 @@ export function GlobalSearchBar({ className, variant = "hero" }: GlobalSearchBar
       </SelectTrigger>
       <SelectContent className="z-[250] max-h-[min(20rem,70dvh)]">
         <SelectItem value="all">All guest houses</SelectItem>
-        {HOTELS.map((h) => (
+        {hotels.map((h) => (
           <SelectItem key={h.id} value={h.id}>
             {h.name} — {h.city}
           </SelectItem>

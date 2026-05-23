@@ -7,14 +7,15 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Instagram, Facebook, Twitter, Linkedin, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { HOTELS } from "@/lib/data/hotels";
+import { useHotels } from "@/lib/hooks/use-hotels";
+import { ROLE_PORTAL_URL } from "@/lib/constants/site";
 import { cn } from "@/lib/utils";
 
 const companyLinks = [
   { href: "/donors", label: "Donor Program" },
   { href: "/schemes", label: "Community Schemes" },
   { href: "/founder", label: "Our Founder" },
-  { href: "/admin", label: "ERP Admin Panel" },
+  { href: ROLE_PORTAL_URL, label: "Staff Portal" },
   { href: "/about", label: "About Us" },
   { href: "/contact", label: "Contact" },
   { href: "https://vasaviclubs.org/", label: "Vasavi Clubs International" },
@@ -28,6 +29,7 @@ const social = [
 ];
 
 export function Footer() {
+  const { data: hotels = [] } = useHotels();
   const [email, setEmail] = useState("");
   const [openSection, setOpenSection] = useState<string | null>(null);
 
@@ -46,7 +48,7 @@ export function Footer() {
             onToggle={() => toggle("hotels")}
           >
             <ul className="space-y-2 pb-4">
-              {HOTELS.map((h) => (
+              {hotels.map((h) => (
                 <li key={h.id}>
                   <Link
                     href={`/hotels/${h.slug}`}
@@ -122,7 +124,7 @@ export function Footer() {
           <div>
             <h3 className="font-display text-lg text-charcoal mb-4">Our Hotels</h3>
             <ul className="space-y-2 max-h-48 overflow-y-auto scrollbar-hide">
-              {HOTELS.map((h) => (
+              {hotels.map((h) => (
                 <li key={h.id}>
                   <Link
                     href={`/hotels/${h.slug}`}

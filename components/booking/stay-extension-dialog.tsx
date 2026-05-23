@@ -18,7 +18,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { minExtensionDate } from "@/lib/data/customer-bookings";
+import { minExtensionDate } from "@/lib/bookings/customer";
 import type { DonorBooking } from "@/types";
 import {
   checkExtensionAvailability,
@@ -307,7 +307,7 @@ export function StayExtensionDialog({
               <strong>{formatDate(extension?.requestedCheckOut ?? requestedCheckOut)}</strong>
             </p>
             <p className="text-xs text-muted">
-              Confirmation sent via email, SMS, and WhatsApp (demo).
+              Confirmation will be sent via email, SMS, and WhatsApp when enabled.
             </p>
             <Button className="w-full" onClick={() => onOpenChange(false)}>
               Done

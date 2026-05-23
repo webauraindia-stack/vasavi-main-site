@@ -1,33 +1,42 @@
-import { NextResponse } from "next/server";
-import { getCustomerProfilePreview } from "@/lib/auth/customer-profile";
-import { verifyOtp } from "@/lib/auth/otp-store";
-import { normalizePhone } from "@/lib/auth/phone";
-import { issueVerificationToken } from "@/lib/auth/verification-token";
+import { NextRequest, NextResponse } from "next/server";
+import { proxyToBackend } from "@/lib/api/proxy-handler";
 
-export async function POST(request: Request) {
-  try {
-    const body = (await request.json()) as { phone?: string; otp?: string };
-    const phone = normalizePhone(body.phone ?? "");
-    const otp = String(body.otp ?? "").trim();
-
-    if (!phone || otp.length !== 6) {
-      return NextResponse.json({ error: "Enter a valid OTP." }, { status: 400 });
-    }
-
-    const verification = verifyOtp(phone, otp);
-    if (!verification.ok) {
-      return NextResponse.json({ error: verification.error }, { status: 401 });
-    }
-
-    const verificationToken = issueVerificationToken(phone);
-    const profile = getCustomerProfilePreview(phone);
-
-    return NextResponse.json({
-      ok: true,
-      verificationToken,
-      profile,
-    });
-  } catch {
-    return NextResponse.json({ error: "Unable to verify OTP." }, { status: 500 });
+/** Proxy OTP verify to Django (sets vasavi_refresh cookie via proxy path rewrite). */
+export async function POST(request: NextRequest) {
+  const headers = new Headers(request.headers);
+  if (!headers.has("x-idempotency-key")) {
+    headers.set("x-idempotency-key", crypto.randomUUID());
   }
+  const body = await request.text();
+  const subpath = ["accounts", "otp", "verify"];
+  const BACKEND_URL = process.env.BACKEND_URL ?? "http://localhost:8000";
+  const target = `${BACKEND_URL}/api/v1/${subpath.join("/")}/`;
+
+  const backendRes = await fetch(target, {
+    method: "POST",
+    headers,
+    body,
+    cache: "no-store",
+  });
+
+  const text = await backendRes.text();
+  const response = new NextResponse(text, {
+    status: backendRes.status,
+    headers: {
+      "content-type": backendRes.headers.get("content-type") ?? "application/json",
+    },
+  });
+
+  backendRes.headers.forEach((value, key) => {
+    if (key.toLowerCase() !== "set-cookie") return;
+    for (const part of value.split(/,(?=\s*[^;]+=)/)) {
+      const rewritten = part
+        .trim()
+        .replace(/path=\/api\/v1\/[^;]*/gi, "path=/")
+        .replace(/path=\/api\/backend\/[^;]*/gi, "path=/");
+      response.headers.append("set-cookie", rewritten);
+    }
+  });
+
+  return response;
 }

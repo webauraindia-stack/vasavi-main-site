@@ -8,7 +8,7 @@ import {
   VCI_CONTACT,
   QUICK_LINKS,
 } from "@/lib/data/vasavi-community";
-import { HOTELS } from "@/lib/data/hotels";
+import { fetchHotels } from "@/lib/hotels/api";
 
 export const metadata: Metadata = {
   title: "About Us",
@@ -16,7 +16,9 @@ export const metadata: Metadata = {
     "HotelHub — eleven Vasavi-affiliated boutique hotels united under the spirit of Vasavi Clubs International since 1961.",
 };
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const hotels = await fetchHotels().catch(() => []);
+
   return (
     <div className="pt-20 pb-16 bg-white">
       <div className="mx-auto max-w-3xl px-4 lg:px-8">
@@ -58,10 +60,10 @@ export default function AboutPage() {
         <section className="mt-12">
           <h2 className="font-display text-2xl text-charcoal mb-4">Our Collection</h2>
           <p className="text-muted text-sm mb-4">
-            {HOTELS.length} properties across {new Set(HOTELS.map((h) => h.city)).size} cities
+            {hotels.length} properties across {new Set(hotels.map((h) => h.city)).size} cities
           </p>
           <ul className="grid sm:grid-cols-2 gap-2 text-sm text-muted">
-            {HOTELS.map((h) => (
+            {hotels.map((h) => (
               <li key={h.id}>
                 <Link href={`/hotels/${h.slug}`} className="hover:text-champagne">
                   {h.name} — {h.city}

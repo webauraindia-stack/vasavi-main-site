@@ -17,7 +17,7 @@ import {
   CircleUser,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { HOTELS } from "@/lib/data/hotels";
+import { useHotels } from "@/lib/hooks/use-hotels";
 import { useBodyScrollLock } from "@/lib/use-body-scroll-lock";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
@@ -33,6 +33,7 @@ const LANGUAGES = [
 export function Navbar() {
   const { t, i18n } = useTranslation();
   const { data: session } = useSession();
+  const { data: hotels = [] } = useHotels();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [megaOpen, setMegaOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -120,7 +121,7 @@ export function Navbar() {
                     className="absolute left-1/2 top-full -translate-x-1/2 pt-4 w-screen max-w-5xl"
                   >
                     <div className="bg-white rounded-xl p-6 grid grid-cols-3 gap-4 border border-charcoal/10 shadow-warm-md">
-                      {HOTELS.map((hotel) => (
+                      {hotels.map((hotel) => (
                         <Link
                           key={hotel.id}
                           href={`/hotels/${hotel.slug}`}
@@ -289,7 +290,7 @@ export function Navbar() {
 
                 <p className="text-label mt-6 mb-3">Hotels</p>
                 <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2">
-                  {HOTELS.map((h) => (
+                  {hotels.map((h) => (
                     <Link
                       key={h.id}
                       href={`/hotels/${h.slug}`}

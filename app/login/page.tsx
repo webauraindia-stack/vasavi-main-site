@@ -3,26 +3,17 @@
 import { Suspense, useEffect, useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { MessageCircle, ArrowLeft, ShieldCheck, UserCheck, UserPlus } from "lucide-react";
+import { MessageCircle, ArrowLeft, ShieldCheck, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { formatPhoneDisplay } from "@/lib/auth/phone";
-import type { CustomerProfileForm } from "@/lib/auth/customer-profile";
+import { formatPhoneDisplay, toBackendPhone } from "@/lib/auth/phone";
+import { ApiClientError } from "@/lib/api/client";
+import { parseApiErrorMessage } from "@/lib/api/parse-error";
+import type { ApiResponse } from "@/lib/api/types";
+import type { LoginResult } from "@/lib/api/accounts";
 
-type Step = "phone" | "otp" | "profile";
-
-const EMPTY_PROFILE: CustomerProfileForm = {
-  name: "",
-  email: "",
-  phone: "",
-  city: "",
-  memberId: "",
-  categoryLabel: "",
-  isKnownMember: false,
-  isDonor: false,
-};
+type Step = "phone" | "otp" | "register";
 
 function LoginPageContent() {
   const router = useRouter();
@@ -32,11 +23,10 @@ function LoginPageContent() {
   const [step, setStep] = useState<Step>("phone");
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
-  const [verificationToken, setVerificationToken] = useState("");
-  const [profile, setProfile] = useState<CustomerProfileForm>(EMPTY_PROFILE);
+  const [name, setName] = useState("");
+  const [registrationToken, setRegistrationToken] = useState("");
   const [error, setError] = useState("");
   const [info, setInfo] = useState("");
-  const [demoCode, setDemoCode] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [cooldown, setCooldown] = useState(0);
 
@@ -48,50 +38,72 @@ function LoginPageContent() {
     return () => window.clearInterval(timer);
   }, [cooldown]);
 
+  useEffect(() => {
+    if (searchParams.get("session") === "expired") {
+      setInfo("Your session expired. Please sign in again to continue.");
+      setError("");
+    }
+  }, [searchParams]);
+
   const sendOtp = async () => {
     setError("");
     setInfo("");
-    setDemoCode(null);
     setLoading(true);
 
     try {
       const response = await fetch("/api/auth/otp/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone }),
+        body: JSON.stringify({ phone: toBackendPhone(phone) }),
       });
 
-      const data = (await response.json()) as {
-        error?: string;
-        message?: string;
-        demoCode?: string;
-        cooldownSeconds?: number;
-      };
+      const data = (await response.json()) as ApiResponse<{
+        ok?: boolean;
+        cooldown_seconds?: number;
+      }>;
 
-      if (!response.ok) {
-        setError(data.error ?? "Could not send OTP.");
-        if (response.status === 429 && data.error) {
-          const match = data.error.match(/(\d+)s/);
-          if (match) setCooldown(Number(match[1]));
-        }
+      if (!response.ok || data.success === false) {
+        setError(parseApiErrorMessage(data, "Could not send OTP."));
+        if (response.status === 429) setCooldown(60);
         return;
       }
 
       setStep("otp");
       setOtp("");
-      setInfo(data.message ?? "OTP sent on WhatsApp.");
-      setDemoCode(data.demoCode ?? null);
-      setCooldown(data.cooldownSeconds ?? 60);
+      setInfo(
+        "OTP sent. Check the Django server terminal for the code (DEBUG mode)."
+      );
+      setCooldown(data.data?.cooldown_seconds ?? 60);
     } catch {
-      setError("Network error. Please try again.");
+      setError("Network error. Is the backend running on port 8000?");
     } finally {
       setLoading(false);
     }
   };
 
-  const handlePhoneSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    await sendOtp();
+  const completeSignIn = async (payload: LoginResult) => {
+    if (!payload.access || !payload.user) {
+      setError("Login response missing token.");
+      return;
+    }
+
+    const result = await signIn("whatsapp-otp", {
+      phone: payload.user.phone,
+      accessToken: payload.access,
+      userJson: JSON.stringify(payload.user),
+      donorProfileJson: payload.donor_profile
+        ? JSON.stringify(payload.donor_profile)
+        : "",
+      redirect: false,
+    });
+
+    if (result?.error) {
+      setError("Could not start session. Please try again.");
+      return;
+    }
+
+    router.push(callbackUrl);
+    router.refresh();
   };
 
   const handleOtpSubmit = async (e: React.FormEvent) => {
@@ -102,29 +114,36 @@ function LoginPageContent() {
     try {
       const response = await fetch("/api/auth/otp/verify", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone, otp }),
+        headers: {
+          "Content-Type": "application/json",
+          "X-Idempotency-Key": crypto.randomUUID(),
+        },
+        body: JSON.stringify({ phone: toBackendPhone(phone), otp }),
+        credentials: "include",
       });
 
-      const data = (await response.json()) as {
-        error?: string;
-        verificationToken?: string;
-        profile?: CustomerProfileForm;
-      };
+      const data = (await response.json()) as ApiResponse<LoginResult>;
 
-      if (!response.ok) {
-        setError(data.error ?? "Invalid or expired OTP.");
+      if (!response.ok || data.success === false) {
+        setError(parseApiErrorMessage(data, "Invalid OTP."));
         return;
       }
 
-      setVerificationToken(data.verificationToken ?? "");
-      setProfile(data.profile ?? EMPTY_PROFILE);
-      setStep("profile");
-      setInfo(
-        data.profile?.isKnownMember
-          ? "We found your community profile. Details are filled automatically."
-          : "Please complete your customer details to continue."
-      );
+      const payload = data.data;
+
+      if (payload.access && payload.user) {
+        await completeSignIn(payload);
+        return;
+      }
+
+      if (payload.state === "registration" && payload.registration_token) {
+        setRegistrationToken(payload.registration_token);
+        setStep("register");
+        setInfo("New number — enter your name to finish registration.");
+        return;
+      }
+
+      setError("Unexpected login response.");
     } catch {
       setError("Network error. Please try again.");
     } finally {
@@ -132,33 +151,44 @@ function LoginPageContent() {
     }
   };
 
-  const handleProfileSubmit = async (e: React.FormEvent) => {
+  const handleRegisterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
 
-    const result = await signIn("whatsapp-otp", {
-      phone,
-      verificationToken,
-      name: profile.name,
-      email: profile.email,
-      city: profile.city,
-      redirect: false,
-    });
+    try {
+      const response = await fetch("/api/backend/accounts/register/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Idempotency-Key": crypto.randomUUID(),
+        },
+        body: JSON.stringify({
+          registration_token: registrationToken,
+          name: name.trim(),
+        }),
+        credentials: "include",
+      });
 
-    setLoading(false);
+      const data = (await response.json()) as ApiResponse<LoginResult>;
 
-    if (result?.error) {
-      setError("Could not complete sign in. Please try again from the OTP step.");
-      return;
+      if (!response.ok || data.success === false) {
+        setError(
+          data.success === false ? data.error.message : "Registration failed."
+        );
+        return;
+      }
+
+      await completeSignIn(data.data);
+    } catch (err) {
+      if (err instanceof ApiClientError) {
+        setError(err.message);
+      } else {
+        setError("Registration failed. Please try again.");
+      }
+    } finally {
+      setLoading(false);
     }
-
-    router.push(callbackUrl);
-    router.refresh();
-  };
-
-  const updateProfile = (field: keyof CustomerProfileForm, value: string) => {
-    setProfile((current) => ({ ...current, [field]: value }));
   };
 
   return (
@@ -172,15 +202,19 @@ function LoginPageContent() {
 
         <h1 className="font-display text-3xl text-charcoal text-center mb-2">Welcome Back</h1>
         <p className="text-sm text-muted text-center mb-8">
-          {step === "profile"
-            ? profile.isKnownMember
-              ? "Confirm your details and continue."
-              : "Tell us a little about yourself to finish signing in."
-            : "Sign in with your mobile number. We'll send a one-time code on WhatsApp."}
+          {step === "register"
+            ? "Complete your profile to book stays."
+            : "Sign in with your mobile number. OTP is printed in the backend console for now."}
         </p>
 
         {step === "phone" && (
-          <form onSubmit={handlePhoneSubmit} className="space-y-4">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              void sendOtp();
+            }}
+            className="space-y-4"
+          >
             <div>
               <Label htmlFor="phone">Mobile number</Label>
               <div className="mt-1 flex rounded-lg border border-charcoal/15 overflow-hidden focus-within:ring-2 focus-within:ring-champagne/30">
@@ -205,7 +239,7 @@ function LoginPageContent() {
 
             <Button type="submit" className="w-full gap-2" disabled={loading || phone.length < 10}>
               <MessageCircle className="h-4 w-4" />
-              {loading ? "Sending..." : "Send OTP on WhatsApp"}
+              {loading ? "Sending..." : "Send OTP"}
             </Button>
           </form>
         )}
@@ -218,7 +252,7 @@ function LoginPageContent() {
             </div>
 
             <div>
-              <Label htmlFor="otp">WhatsApp OTP</Label>
+              <Label htmlFor="otp">OTP (6 digits)</Label>
               <Input
                 id="otp"
                 type="text"
@@ -234,11 +268,6 @@ function LoginPageContent() {
             </div>
 
             {info && <p className="text-sm text-emerald-700">{info}</p>}
-            {demoCode && (
-              <p className="text-xs text-center rounded-lg bg-amber-50 border border-amber-200 text-amber-900 px-3 py-2">
-                Demo OTP: <span className="font-bold tracking-widest">{demoCode}</span>
-              </p>
-            )}
             {error && <p className="text-sm text-red-600">{error}</p>}
 
             <Button type="submit" className="w-full" disabled={loading || otp.length !== 6}>
@@ -252,7 +281,6 @@ function LoginPageContent() {
                   setStep("phone");
                   setError("");
                   setInfo("");
-                  setDemoCode(null);
                   setOtp("");
                 }}
                 className="inline-flex items-center gap-1 text-sm text-muted hover:text-charcoal"
@@ -262,7 +290,7 @@ function LoginPageContent() {
               </button>
               <button
                 type="button"
-                onClick={sendOtp}
+                onClick={() => void sendOtp()}
                 disabled={loading || cooldown > 0}
                 className="text-sm text-champagne-dark hover:underline disabled:opacity-50"
               >
@@ -272,117 +300,35 @@ function LoginPageContent() {
           </form>
         )}
 
-        {step === "profile" && (
-          <form onSubmit={handleProfileSubmit} className="space-y-4">
-            <div className="rounded-xl border border-charcoal/10 bg-surface/70 px-4 py-3">
-              <div className="flex items-start gap-3">
-                {profile.isKnownMember ? (
-                  <UserCheck className="h-5 w-5 text-emerald-600 mt-0.5 shrink-0" />
-                ) : (
-                  <UserPlus className="h-5 w-5 text-champagne-dark mt-0.5 shrink-0" />
-                )}
-                <div>
-                  <p className="text-sm font-semibold text-charcoal">
-                    {profile.isKnownMember ? "Profile found" : "New customer details"}
-                  </p>
-                  <p className="text-xs text-muted mt-1">{info}</p>
-                  {profile.isKnownMember && profile.categoryLabel && (
-                    <Badge variant="donor" className="mt-2">
-                      {profile.categoryLabel}
-                    </Badge>
-                  )}
-                </div>
-              </div>
+        {step === "register" && (
+          <form onSubmit={handleRegisterSubmit} className="space-y-4">
+            <div className="rounded-xl border border-charcoal/10 bg-surface/70 px-4 py-3 flex gap-3">
+              <UserPlus className="h-5 w-5 text-champagne-dark shrink-0 mt-0.5" />
+              <p className="text-sm text-muted">{info}</p>
             </div>
 
             <div>
-              <Label htmlFor="profile-phone">Mobile number</Label>
-              <Input
-                id="profile-phone"
-                value={profile.phone || formatPhoneDisplay(phone)}
-                disabled
-                className="mt-1 opacity-70"
-              />
+              <Label htmlFor="reg-phone">Mobile</Label>
+              <Input id="reg-phone" value={formatPhoneDisplay(phone)} disabled className="mt-1 opacity-70" />
             </div>
 
             <div>
-              <Label htmlFor="profile-name">Full name</Label>
+              <Label htmlFor="reg-name">Full name</Label>
               <Input
-                id="profile-name"
-                value={profile.name}
-                onChange={(e) => updateProfile("name", e.target.value)}
+                id="reg-name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 required
-                readOnly={profile.isKnownMember}
-                className={`mt-1 ${profile.isKnownMember ? "opacity-70" : ""}`}
-                placeholder="Enter your full name"
+                className="mt-1"
+                placeholder="Your name"
               />
             </div>
-
-            <div>
-              <Label htmlFor="profile-email">Email</Label>
-              <Input
-                id="profile-email"
-                type="email"
-                value={profile.email}
-                onChange={(e) => updateProfile("email", e.target.value)}
-                required
-                readOnly={profile.isKnownMember}
-                className={`mt-1 ${profile.isKnownMember ? "opacity-70" : ""}`}
-                placeholder="you@example.com"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="profile-city">City</Label>
-              <Input
-                id="profile-city"
-                value={profile.city}
-                onChange={(e) => updateProfile("city", e.target.value)}
-                readOnly={profile.isKnownMember}
-                className={`mt-1 ${profile.isKnownMember ? "opacity-70" : ""}`}
-                placeholder="Hyderabad"
-              />
-            </div>
-
-            {profile.isKnownMember && profile.memberId && (
-              <div>
-                <Label htmlFor="profile-member-id">Member / Donor ID</Label>
-                <Input
-                  id="profile-member-id"
-                  value={profile.memberId}
-                  disabled
-                  className="mt-1 opacity-70"
-                />
-              </div>
-            )}
 
             {error && <p className="text-sm text-red-600">{error}</p>}
 
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={
-                loading ||
-                !profile.name.trim() ||
-                !profile.email.trim() ||
-                (!profile.isKnownMember && !profile.email.includes("@"))
-              }
-            >
-              {loading ? "Signing in..." : profile.isKnownMember ? "Continue" : "Save & Sign In"}
+            <Button type="submit" className="w-full" disabled={loading || name.trim().length < 2}>
+              {loading ? "Creating account..." : "Create account & sign in"}
             </Button>
-
-            <button
-              type="button"
-              onClick={() => {
-                setStep("otp");
-                setError("");
-                setInfo("");
-              }}
-              className="inline-flex items-center gap-1 text-sm text-muted hover:text-charcoal"
-            >
-              <ArrowLeft className="h-3.5 w-3.5" />
-              Back to OTP
-            </button>
           </form>
         )}
 
@@ -390,8 +336,9 @@ function LoginPageContent() {
           <div className="flex items-start gap-2">
             <ShieldCheck className="h-4 w-4 text-champagne-dark mt-0.5 shrink-0" />
             <p className="text-xs text-muted leading-relaxed">
-              Demo: <strong>9848012345</strong> auto-fills a Gold donor profile. Any other number
-              shows an empty customer form after OTP verification.
+              Staff and donors: use your registered 10-digit mobile. OTP appears in the Django
+              terminal when <code className="text-[11px]">DEBUG=True</code>. Test admin:{" "}
+              <strong>9876543210</strong>, donor: <strong>9876543211</strong>.
             </p>
           </div>
         </div>

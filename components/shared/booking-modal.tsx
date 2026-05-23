@@ -3,16 +3,15 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { QRCodeSVG } from "qrcode.react";
 import { useSession } from "next-auth/react";
+import { useAuthenticatedSession } from "@/lib/hooks/use-authenticated-session";
+import { isSessionExpiredError } from "@/lib/auth/session-expired";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronLeft,
   ChevronRight,
-  CreditCard,
+  Banknote,
   User,
   Calendar,
   Check,
@@ -21,7 +20,6 @@ import {
   MessageCircle,
   Loader2,
   HeartHandshake,
-  IndianRupee,
   Wand2,
 } from "lucide-react";
 import { DayPicker, type DateRange } from "react-day-picker";
@@ -40,30 +38,21 @@ import {
   canStackCoupon,
 } from "@/lib/booking-benefits";
 import { validateCoupon, suggestBestCoupons } from "@/lib/donor-engine";
-import { MOCK_MEMBER_PROFILES } from "@/lib/data/community-members";
+import { formatPhoneDisplay } from "@/lib/auth/phone";
+import { formatLocalDateString } from "@/lib/date-format";
+import { getRoomImageUrl } from "@/lib/images/room-image";
+import { isUuid } from "@/lib/hotels/catalog";
 import { BookingStepper } from "@/components/booking/booking-stepper";
 import { BenefitWalletSummaryPanel } from "@/components/booking/benefit-wallet-summary";
 import { BenefitCouponCard } from "@/components/booking/benefit-coupon-card";
 import { PaymentBreakdownPanel } from "@/components/booking/payment-breakdown-panel";
-import { MemberProfileCard } from "@/components/booking/member-profile-card";
 import "react-day-picker/style.css";
-
-const guestSchema = z.object({
-  firstName: z.string().min(2, "First name required"),
-  lastName: z.string().min(2, "Last name required"),
-  email: z.string().email("Valid email required"),
-  phone: z.string().min(10, "Valid phone required"),
-  countryCode: z.string().default("+91"),
-  arrivalTime: z.string().min(1, "Select arrival time"),
-  specialRequests: z.string().optional(),
-});
-
-type GuestForm = z.infer<typeof guestSchema>;
 
 const SEVA_AMOUNTS = [0, 101, 501, 1001, 2501];
 
 export function BookingModal() {
   const { data: session } = useSession();
+  const { isAuthenticated: hasValidSession, withAccessToken } = useAuthenticatedSession();
   const {
     isOpen,
     step,
@@ -72,9 +61,6 @@ export function BookingModal() {
     checkOut,
     guestCount,
     roomCount,
-    guestDetails,
-    memberProfile,
-    memberVerified,
     selectedCouponIds,
     useCompensationWallet,
     walletAmountToUse,
@@ -87,8 +73,6 @@ export function BookingModal() {
     nextStep,
     prevStep,
     setDates,
-    setGuestDetails,
-    setMemberProfile,
     setDonorSession,
     setSelectedCouponIds,
     setUseCompensationWallet,
@@ -100,19 +84,21 @@ export function BookingModal() {
     reset,
   } = useBookingStore();
 
-  const { donor, isAuthenticated, verifyMemberId, redeemCoupons } = useDonorStore();
+  const { donor, isAuthenticated } = useDonorStore();
 
   const [pickerRange, setPickerRange] = useState<DateRange | undefined>();
-  const [memberIdInput, setMemberIdInput] = useState("");
-  const [verifyError, setVerifyError] = useState("");
-  const [verifying, setVerifying] = useState(false);
   const [suggestionMessage, setSuggestionMessage] = useState("");
   const [autoSuggested, setAutoSuggested] = useState(false);
+  const [payError, setPayError] = useState("");
+  const [payLoading, setPayLoading] = useState(false);
 
   useBodyScrollLock(isOpen);
 
-  const activeDonor = memberProfile?.donor ?? donor;
-  const isMemberFlow = memberVerified && !!activeDonor;
+  const isDonorUser = Boolean((session?.user as { isDonor?: boolean })?.isDonor);
+  const activeDonor = isDonorUser ? donor : null;
+  const isDonorFlow = isDonorUser && !!activeDonor;
+  const guestDisplayName = session?.user?.name ?? "Guest";
+  const guestDisplayPhone = (session?.user as { phone?: string })?.phone;
 
   const nights =
     checkIn && checkOut && selectedRoom ? calculateNights(checkIn, checkOut) : 1;
@@ -171,17 +157,16 @@ export function BookingModal() {
   useEffect(() => {
     if (!isOpen) {
       setPickerRange(undefined);
-      setMemberIdInput("");
-      setVerifyError("");
       setSuggestionMessage("");
       setAutoSuggested(false);
+      setPayError("");
+      setPayLoading(false);
     }
   }, [isOpen]);
 
   useEffect(() => {
     const tier = (session?.user as { tier?: string })?.tier;
-    const isDonor = (session?.user as { isDonor?: boolean })?.isDonor;
-    if (isDonor && tier && !memberVerified) {
+    if (isDonorUser && tier) {
       const discountMap: Record<string, number> = {
         bronze: 10,
         silver: 20,
@@ -191,19 +176,10 @@ export function BookingModal() {
       };
       setDonorSession(tier as never, discountMap[tier] ?? 0);
     }
-  }, [session, setDonorSession, memberVerified]);
+  }, [session, isDonorUser, setDonorSession]);
 
   useEffect(() => {
-    if (isAuthenticated && donor && !memberProfile) {
-      const match = MOCK_MEMBER_PROFILES.find(
-        (p) => p.memberId === donor.donorId || p.email === donor.email
-      );
-      if (match) setMemberProfile(match);
-    }
-  }, [isAuthenticated, donor, memberProfile, setMemberProfile]);
-
-  useEffect(() => {
-    if (step === 4 && isMemberFlow && activeDonor && !autoSuggested) {
+    if (step === 2 && isDonorFlow && activeDonor && !autoSuggested) {
       const suggestion = suggestBestCoupons(
         activeDonor.coupons.filter((c) => c.status === "available"),
         afterTierSubtotal
@@ -212,54 +188,9 @@ export function BookingModal() {
       setSuggestionMessage(suggestion.message);
       setAutoSuggested(true);
     }
-  }, [step, isMemberFlow, activeDonor, afterTierSubtotal, autoSuggested, setSelectedCouponIds]);
-
-  const form = useForm<GuestForm>({
-    resolver: zodResolver(guestSchema),
-    defaultValues: {
-      firstName: guestDetails.firstName ?? "",
-      lastName: guestDetails.lastName ?? "",
-      email: guestDetails.email ?? session?.user?.email ?? "",
-      phone: guestDetails.phone ?? "",
-      countryCode: guestDetails.countryCode ?? "+91",
-      arrivalTime: guestDetails.arrivalTime ?? "15:00",
-      specialRequests: guestDetails.specialRequests ?? "",
-    },
-  });
+  }, [step, isDonorFlow, activeDonor, afterTierSubtotal, autoSuggested, setSelectedCouponIds]);
 
   if (!selectedRoom || !pricing) return null;
-
-  const handleGuestSubmit = form.handleSubmit((data) => {
-    setGuestDetails(data);
-    nextStep();
-  });
-
-  const handleVerifyMember = async () => {
-    setVerifying(true);
-    setVerifyError("");
-    await new Promise((r) => setTimeout(r, 600));
-    const profile = verifyMemberId(memberIdInput.trim());
-    if (profile) {
-      setMemberProfile(profile);
-      setAutoSuggested(false);
-      setSelectedCouponIds([]);
-    } else {
-      setVerifyError("Member ID not found. Try DH-2024-8842, VCI-HYD-2841, or VCI-SEC-1092");
-    }
-    setVerifying(false);
-  };
-
-  const selectDemoProfile = (profileId: string) => {
-    const profile = MOCK_MEMBER_PROFILES.find((p) => p.id === profileId);
-    if (profile) {
-      verifyMemberId(profile.memberId);
-      setMemberProfile(profile);
-      setMemberIdInput(profile.memberId);
-      setAutoSuggested(false);
-      setSelectedCouponIds([]);
-      setVerifyError("");
-    }
-  };
 
   const toggleCoupon = (id: string) => {
     if (!activeDonor) return;
@@ -283,17 +214,54 @@ export function BookingModal() {
     setSuggestionMessage("");
   };
 
-  const handlePayment = () => {
-    const ref = `VH-${Date.now().toString(36).toUpperCase()}`;
-    if (pricing.couponsConsumed.length > 0) {
-      redeemCoupons(pricing.couponsConsumed);
+  const handlePayment = async () => {
+    setPayError("");
+    if (!hasValidSession) {
+      setPayError("Please sign in to complete your booking.");
+      return;
     }
-    completeBooking(ref);
+    if (!selectedRoom || !checkIn || !checkOut) {
+      setPayError("Select dates and a room first.");
+      return;
+    }
+    if (!isUuid(selectedRoom.id)) {
+      setPayError("Invalid room. Please search again and select an available room.");
+      return;
+    }
+
+    const couponIds = selectedCouponIds.filter(isUuid);
+
+    setPayLoading(true);
+    try {
+      await withAccessToken(async (accessToken) => {
+        const { createBooking, confirmCashPayment } = await import("@/lib/api/bookings");
+        const booking = await createBooking(accessToken, {
+          room_id: selectedRoom.id,
+          check_in_date: formatLocalDateString(checkIn),
+          check_out_date: formatLocalDateString(checkOut),
+          guest_count: guestCount.adults + guestCount.children,
+          coupon_ids: couponIds.length ? couponIds : undefined,
+        });
+
+        const confirmed = await confirmCashPayment(accessToken, booking.id);
+        completeBooking(confirmed.booking_reference);
+      });
+    } catch (err) {
+      if (isSessionExpiredError(err)) {
+        setPayError(err.message);
+        return;
+      }
+      const message =
+        err instanceof Error ? err.message : "Could not create booking. Try again.";
+      setPayError(message);
+    } finally {
+      setPayLoading(false);
+    }
   };
 
   const handleClose = () => {
     closeBooking();
-    if (step === 7) setTimeout(reset, 300);
+    if (step === 5) setTimeout(reset, 300);
   };
 
   const availableCoupons =
@@ -336,7 +304,7 @@ export function BookingModal() {
                     id="booking-title"
                     className="font-display text-lg md:text-xl font-bold text-charcoal tracking-tight truncate"
                   >
-                    {step === 7 ? "Blessed journey confirmed" : `Reserve ${selectedRoom.name}`}
+                    {step === 5 ? "Blessed journey confirmed" : `Reserve ${selectedRoom.name}`}
                   </h2>
                   <p className="text-xs text-muted font-semibold truncate">
                     {selectedRoom.hotelName}
@@ -350,7 +318,7 @@ export function BookingModal() {
                   <X className="h-5 w-5 text-muted" />
                 </button>
               </div>
-              {step < 7 && <BookingStepper step={step} />}
+              {step < 5 && <BookingStepper step={step} />}
             </div>
 
             <div className="flex-1 overflow-y-auto px-5 py-4 scrollbar-thin">
@@ -359,7 +327,7 @@ export function BookingModal() {
                 <div className="space-y-4">
                   <div className="relative h-28 rounded-xl overflow-hidden">
                     <Image
-                      src={selectedRoom.images[0] ?? selectedRoom.hotelName}
+                      src={getRoomImageUrl(selectedRoom)}
                       alt={selectedRoom.name}
                       fill
                       className="object-cover"
@@ -423,123 +391,47 @@ export function BookingModal() {
                     </div>
                   </div>
 
+                  {session?.user ? (
+                    <div className="rounded-xl border border-champagne/20 bg-champagne/5 px-4 py-3 text-sm">
+                      <p className="text-xs font-bold uppercase tracking-wider text-muted mb-1">
+                        Booking as
+                      </p>
+                      <p className="font-semibold text-charcoal">{guestDisplayName}</p>
+                      {guestDisplayPhone && (
+                        <p className="text-muted text-xs mt-0.5">
+                          {formatPhoneDisplay(guestDisplayPhone)} · WhatsApp confirmation
+                        </p>
+                      )}
+                      <p className="text-[11px] text-muted mt-2">
+                        Guest details are taken from your signed-in account — no extra form needed.
+                      </p>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
+                      <Link href="/login" className="font-bold underline">
+                        Sign in
+                      </Link>{" "}
+                      before payment so we can attach this stay to your account.
+                    </p>
+                  )}
+
                   <NavButtons onBack={handleClose} backLabel="Cancel" onNext={nextStep} nextDisabled={!checkIn || !checkOut} />
                 </div>
               )}
 
-              {/* STEP 2 — Guest */}
+              {/* STEP 2 — Blessings & coupons (donor wallet from API) */}
               {step === 2 && (
-                <form onSubmit={handleGuestSubmit} className="space-y-4">
-                  <p className="text-sm text-muted">
-                    Guest details for temple-town check-in & WhatsApp confirmation.
-                  </p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <Field label="First name" error={form.formState.errors.firstName?.message}>
-                      <Input {...form.register("firstName")} className="h-11 bg-surface/50" />
-                    </Field>
-                    <Field label="Last name" error={form.formState.errors.lastName?.message}>
-                      <Input {...form.register("lastName")} className="h-11 bg-surface/50" />
-                    </Field>
-                  </div>
-                  <Field label="Email" error={form.formState.errors.email?.message}>
-                    <Input type="email" {...form.register("email")} className="h-11 bg-surface/50" />
-                  </Field>
-                  <div className="grid grid-cols-3 gap-2">
-                    <Field label="Code">
-                      <Input {...form.register("countryCode")} className="h-11 bg-surface/50" />
-                    </Field>
-                    <div className="col-span-2">
-                      <Field label="Phone (WhatsApp)" error={form.formState.errors.phone?.message}>
-                        <Input {...form.register("phone")} className="h-11 bg-surface/50" />
-                      </Field>
-                    </div>
-                  </div>
-                  <Field label="Arrival time">
-                    <Input type="time" {...form.register("arrivalTime")} className="h-11 bg-surface/50" />
-                  </Field>
-                  <NavButtons onBack={prevStep} submit />
-                </form>
-              )}
-
-              {/* STEP 3 — Member verification */}
-              {step === 3 && (
                 <div className="space-y-4">
-                  <p className="text-sm text-muted leading-relaxed">
-                    Verify your Vasavi Clubs International membership to unlock free stays,
-                    compensation wallet, festival coupons, and donor rewards.
-                  </p>
-
-                  {memberProfile ? (
-                    <MemberProfileCard profile={memberProfile} />
-                  ) : (
-                    <>
-                      <div className="flex gap-2">
-                        <Input
-                          placeholder="Member ID e.g. DH-2024-8842"
-                          value={memberIdInput}
-                          onChange={(e) => setMemberIdInput(e.target.value.toUpperCase())}
-                          className="h-11 font-mono bg-surface/50"
-                        />
-                        <Button
-                          type="button"
-                          onClick={handleVerifyMember}
-                          disabled={verifying || !memberIdInput.trim()}
-                          className="h-11 shrink-0 bg-champagne hover:bg-champagne/90 text-white font-bold"
-                        >
-                          {verifying ? <Loader2 className="h-4 w-4 animate-spin" /> : "Verify"}
-                        </Button>
-                      </div>
-                      {verifyError && (
-                        <p className="text-xs text-rose-700 font-semibold">{verifyError}</p>
-                      )}
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-muted">
-                        Demo profiles — tap to verify
-                      </p>
-                      <div className="grid gap-2">
-                        {MOCK_MEMBER_PROFILES.map((p) => (
-                          <button
-                            key={p.id}
-                            type="button"
-                            onClick={() => selectDemoProfile(p.id)}
-                            className="flex items-center gap-3 p-3 rounded-xl border border-beige/50 hover:border-champagne/40 hover:bg-surface/50 text-left transition-all"
-                          >
-                            <div className="relative w-10 h-10 rounded-lg overflow-hidden shrink-0">
-                              <Image src={p.avatarUrl} alt="" fill className="object-cover" sizes="40px" />
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <p className="font-bold text-sm text-charcoal truncate">{p.name}</p>
-                              <p className="text-[10px] text-muted font-mono">{p.displayId}</p>
-                            </div>
-                            <span className="text-[10px] font-bold text-champagne shrink-0">
-                              {p.freeStaysRemaining > 0
-                                ? `${p.freeStaysRemaining} free`
-                                : p.compensationWallet > 0
-                                ? formatCurrency(p.compensationWallet)
-                                : "Donor"}
-                            </span>
-                          </button>
-                        ))}
-                      </div>
-                    </>
-                  )}
-
-                  <NavButtons
-                    onBack={prevStep}
-                    onNext={nextStep}
-                    nextLabel={memberVerified ? "View blessings" : "Continue as guest"}
-                  />
-                </div>
-              )}
-
-              {/* STEP 4 — Blessings & coupons */}
-              {step === 4 && (
-                <div className="space-y-4">
-                  {isMemberFlow && memberProfile && activeDonor ? (
+                  {isDonorFlow && activeDonor ? (
                     <>
                       <BenefitWalletSummaryPanel
                         summary={walletSummary}
-                        memberName={memberProfile.name}
-                        tierLabel={memberProfile.categoryLabel}
+                        memberName={activeDonor.name}
+                        tierLabel={
+                          (session?.user as { categoryLabel?: string })?.categoryLabel ??
+                          activeDonor.tier ??
+                          "Donor"
+                        }
                       />
 
                       {suggestionMessage && (
@@ -648,8 +540,8 @@ export function BookingModal() {
                           Community rewards await
                         </p>
                         <p className="text-sm text-muted max-w-sm mx-auto mt-2">
-                          Verify your member ID on the previous step, or sign in at the donor portal
-                          to apply free stays and compensation credits.
+                          Sign in with a donor account to apply free stays and wallet coupons from
+                          your profile.
                         </p>
                       </div>
                       <PaymentBreakdownPanel pricing={pricing} />
@@ -659,8 +551,8 @@ export function BookingModal() {
                 </div>
               )}
 
-              {/* STEP 5 — Seva donation */}
-              {step === 5 && (
+              {/* STEP 3 — Seva donation */}
+              {step === 3 && (
                 <div className="space-y-4">
                   <div className="rounded-2xl border border-beige/50 bg-gradient-to-br from-amber-50/50 to-surface p-4">
                     <HeartHandshake className="h-8 w-8 text-champagne mb-2" />
@@ -696,34 +588,40 @@ export function BookingModal() {
                 </div>
               )}
 
-              {/* STEP 6 — Payment */}
-              {step === 6 && (
+              {/* STEP 4 — Payment */}
+              {step === 4 && (
                 <div className="space-y-4">
+                  {!hasValidSession && (
+                    <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
+                      <Link href="/login" className="font-bold underline">
+                        Sign in
+                      </Link>{" "}
+                      to complete payment. Guest name and phone are taken from your account
+                      automatically.
+                    </p>
+                  )}
                   <div className="grid md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <p className="text-xs font-bold uppercase tracking-wider text-muted">
-                        Payment method
+                        Payment
                       </p>
-                      {(["upi", "card", "netbanking"] as const).map((method) => (
-                        <button
-                          key={method}
-                          type="button"
-                          onClick={() => setPaymentMethod(method)}
-                          className={cn(
-                            "w-full flex items-center gap-3 p-3.5 rounded-xl border font-bold text-sm capitalize",
-                            paymentMethod === method
-                              ? "border-champagne-dark bg-champagne/5 text-charcoal"
-                              : "border-beige hover:border-champagne/30"
-                          )}
-                        >
-                          <CreditCard className="h-4 w-4 text-champagne" />
-                          {method === "upi"
-                            ? "UPI / GPay / PhonePe"
-                            : method === "card"
-                            ? "Credit / Debit Card"
-                            : "Net Banking"}
-                        </button>
-                      ))}
+                      <button
+                        type="button"
+                        onClick={() => setPaymentMethod("cash")}
+                        className={cn(
+                          "w-full flex items-center gap-3 p-3.5 rounded-xl border font-bold text-sm",
+                          paymentMethod === "cash"
+                            ? "border-champagne-dark bg-champagne/5 text-charcoal"
+                            : "border-beige hover:border-champagne/30"
+                        )}
+                      >
+                        <Banknote className="h-4 w-4 text-champagne" />
+                        Pay at property (Cash)
+                      </button>
+                      <p className="text-[11px] text-muted leading-relaxed px-1">
+                        Your reservation is confirmed immediately. Settle the amount in cash at
+                        temple-town reception on arrival.
+                      </p>
 
                       <div className="flex items-center gap-2 pt-2">
                         <Checkbox
@@ -744,21 +642,27 @@ export function BookingModal() {
                     <PaymentBreakdownPanel pricing={pricing} />
                   </div>
 
+                  {payError && (
+                    <p className="text-sm text-red-600 mb-3">{payError}</p>
+                  )}
                   <NavButtons
                     onBack={prevStep}
-                    onNext={handlePayment}
+                    onNext={() => void handlePayment()}
+                    nextDisabled={payLoading || !hasValidSession}
                     nextLabel={
-                      pricing.total > 0
-                        ? `Pay ${formatCurrency(pricing.total)}`
-                        : "Confirm booking"
+                      payLoading
+                        ? "Confirming…"
+                        : pricing.total > 0
+                          ? `Confirm · ${formatCurrency(pricing.total)} cash`
+                          : "Confirm booking"
                     }
-                    nextIcon={<IndianRupee className="h-4 w-4" />}
+                    nextIcon={<Banknote className="h-4 w-4" />}
                   />
                 </div>
               )}
 
-              {/* STEP 7 — Confirmation & gratitude */}
-              {step === 7 && bookingReference && (
+              {/* STEP 5 — Confirmation & gratitude */}
+              {step === 5 && bookingReference && (
                 <div className="text-center space-y-5 py-2">
                   <motion.div
                     initial={{ scale: 0.8, opacity: 0 }}
@@ -778,8 +682,14 @@ export function BookingModal() {
                     </p>
                   </div>
 
-                  {memberProfile && (
-                    <MemberProfileCard profile={memberProfile} compact />
+                  {isDonorFlow && activeDonor && (
+                    <div className="card-surface p-4 max-w-sm mx-auto text-left text-sm">
+                      <p className="font-display font-bold text-charcoal">{activeDonor.name}</p>
+                      <p className="text-muted text-xs mt-1">
+                        Donor {activeDonor.donorId} · {activeDonor.tier} tier
+                        {activeDonor.clubName ? ` · ${activeDonor.clubName}` : ""}
+                      </p>
+                    </div>
                   )}
 
                   <div className="card-surface p-4 max-w-sm mx-auto text-left space-y-2 text-sm">
@@ -824,7 +734,10 @@ export function BookingModal() {
                       className="flex items-center justify-center gap-2 text-sm text-emerald-800 font-semibold bg-emerald-50 border border-emerald-200/60 rounded-xl py-2.5 px-4 max-w-sm mx-auto"
                     >
                       <MessageCircle className="h-4 w-4" />
-                      WhatsApp confirmation sent to {form.getValues("phone") || "your number"}
+                      WhatsApp confirmation sent to{" "}
+                      {guestDisplayPhone
+                        ? formatPhoneDisplay(guestDisplayPhone)
+                        : "your number"}
                     </motion.div>
                   )}
 

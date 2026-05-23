@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { LayoutGrid, Map } from "lucide-react";
-import { HOTELS } from "@/lib/data/hotels";
+import { useHotels } from "@/lib/hooks/use-hotels";
 import { HotelCard } from "@/components/customer/hotel-card";
 import { HotelMap } from "@/components/customer/hotel-map";
 import { Button } from "@/components/ui/button";
@@ -19,15 +19,21 @@ import {
 import type { AmenityTag } from "@/types";
 import { cn } from "@/lib/utils";
 
-const CITIES = Array.from(new Set(HOTELS.map((h) => h.city))).sort();
-const ALL_AMENITIES = Array.from(
-  new Set(HOTELS.flatMap((h) => h.amenities))
-) as AmenityTag[];
-
 const PRICE_MIN = 800;
 const PRICE_MAX = 5000;
 
 export function HotelGrid() {
+  const { data: hotels = [], isLoading, error } = useHotels();
+  const cities = useMemo(
+    () => Array.from(new Set(hotels.map((h) => h.city))).sort(),
+    [hotels]
+  );
+  const allAmenities = useMemo(
+    () =>
+      Array.from(new Set(hotels.flatMap((h) => h.amenities))) as AmenityTag[],
+    [hotels]
+  );
+
   const [city, setCity] = useState<string>("all");
   const [amenities, setAmenities] = useState<AmenityTag[]>([]);
   const [priceRange, setPriceRange] = useState([PRICE_MIN, PRICE_MAX]);
@@ -36,7 +42,7 @@ export function HotelGrid() {
   const [highlightId, setHighlightId] = useState<string | undefined>();
 
   const filtered = useMemo(() => {
-    return HOTELS.filter((h) => {
+    return hotels.filter((h) => {
       if (city !== "all" && h.city !== city) return false;
       if (donorOnly && !h.hasDonorRooms) return false;
       if (h.startingPrice < priceRange[0] || h.startingPrice > priceRange[1])
@@ -45,13 +51,25 @@ export function HotelGrid() {
         return false;
       return true;
     });
-  }, [city, amenities, priceRange, donorOnly]);
+  }, [hotels, city, amenities, priceRange, donorOnly]);
 
   const toggleAmenity = (a: AmenityTag) => {
     setAmenities((prev) =>
       prev.includes(a) ? prev.filter((x) => x !== a) : [...prev, a]
     );
   };
+
+  if (error) {
+    return (
+      <section id="hotels" className="py-12 md:py-20 bg-white">
+        <div className="mx-auto max-w-7xl px-4 text-center text-red-600">
+          Could not load guest houses. Run{" "}
+          <code className="text-sm">python manage.py seed_demo_hotels</code> and ensure the
+          backend is running.
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section id="hotels" className="py-12 md:py-20 bg-white">
@@ -77,7 +95,7 @@ export function HotelGrid() {
             >
               All
             </FilterPill>
-            {CITIES.map((c) => (
+            {cities.map((c) => (
               <FilterPill key={c} active={city === c} onClick={() => setCity(c)}>
                 {c}
               </FilterPill>
@@ -97,7 +115,7 @@ export function HotelGrid() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Cities</SelectItem>
-                  {CITIES.map((c) => (
+                  {cities.map((c) => (
                     <SelectItem key={c} value={c}>
                       {c}
                     </SelectItem>
@@ -122,7 +140,7 @@ export function HotelGrid() {
 
             <FilterBlock title="Amenities">
               <div className="flex flex-wrap gap-2">
-                {ALL_AMENITIES.map((a) => (
+                {allAmenities.map((a) => (
                   <button
                     key={a}
                     type="button"
@@ -155,7 +173,9 @@ export function HotelGrid() {
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between mb-4 md:mb-6">
               <p className="text-sm text-muted">
-                {filtered.length} hotel{filtered.length !== 1 ? "s" : ""}
+                {isLoading
+                  ? "Loading guest houses…"
+                  : `${filtered.length} hotel${filtered.length !== 1 ? "s" : ""}`}
               </p>
               <div className="hidden lg:flex gap-1 rounded-lg border border-charcoal/10 p-1 bg-surface">
                 <Button

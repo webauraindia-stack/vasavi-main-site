@@ -1,16 +1,22 @@
 import type { MetadataRoute } from "next";
-import { getAllHotelSlugs } from "@/lib/data/hotels";
+import { getAllHotelSlugs } from "@/lib/hotels/api";
 
 const BASE =
   process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ?? "https://vasavihotels.org";
 
-export default function sitemap(): MetadataRoute.Sitemap {
-  const hotelPages = getAllHotelSlugs().map((slug) => ({
-    url: `${BASE}/hotels/${slug}`,
-    lastModified: new Date(),
-    changeFrequency: "weekly" as const,
-    priority: 0.8,
-  }));
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  let hotelPages: MetadataRoute.Sitemap = [];
+  try {
+    const slugs = await getAllHotelSlugs();
+    hotelPages = slugs.map((slug) => ({
+      url: `${BASE}/hotels/${slug}`,
+      lastModified: new Date(),
+      changeFrequency: "weekly" as const,
+      priority: 0.8,
+    }));
+  } catch {
+    hotelPages = [];
+  }
 
   return [
     { url: BASE, lastModified: new Date(), changeFrequency: "daily", priority: 1 },

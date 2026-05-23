@@ -13,6 +13,7 @@ import { canAccessDonorRoom } from "@/lib/donor-engine";
 import { useSession } from "next-auth/react";
 import type { Hotel, Room, Review, DateAvailability } from "@/types";
 import type { DonorTier } from "@/types";
+import { getRoomImageUrl } from "@/lib/images/room-image";
 import { cn } from "@/lib/utils";
 import "react-day-picker/style.css";
 
@@ -149,7 +150,7 @@ function RoomSection({
             >
               <div className="relative h-40 md:h-32 md:w-48 shrink-0 rounded-lg overflow-hidden">
                 <Image
-                  src={room.images[0]}
+                  src={getRoomImageUrl(room)}
                   alt={room.name}
                   fill
                   className="object-cover"

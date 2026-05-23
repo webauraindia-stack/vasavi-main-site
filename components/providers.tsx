@@ -5,6 +5,8 @@ import { SessionProvider } from "next-auth/react";
 import { useState } from "react";
 import { I18nextProvider } from "react-i18next";
 import i18n from "@/lib/i18n";
+import { ApiSessionSync } from "@/components/api-session-sync";
+import { SessionTokenRefresher } from "@/components/session-token-refresher";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -20,6 +22,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <SessionProvider>
       <QueryClientProvider client={queryClient}>
         <I18nextProvider i18n={i18n}>
+          <ApiSessionSync />
+          <SessionTokenRefresher />
           {children}
         </I18nextProvider>
       </QueryClientProvider>

@@ -10,7 +10,7 @@ import { formatCurrency } from "@/lib/utils";
 import type { Hotel } from "@/types";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
-import { unsplash, U } from "@/lib/data/hotel-images";
+import { unsplash, U } from "@/lib/images/hotel-images";
 
 const FALLBACK_THUMB = unsplash(U.hotelExterior);
 

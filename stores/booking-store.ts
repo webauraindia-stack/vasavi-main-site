@@ -1,8 +1,9 @@
 import { create } from "zustand";
-import type { CommunityMemberProfile, GuestCount, GuestDetails, Room } from "@/types";
+import type { GuestCount, GuestDetails, Room } from "@/types";
 import type { DonorTier } from "@/types";
 
-export type BookingStep = 1 | 2 | 3 | 4 | 5 | 6 | 7;
+/** Stay → Blessings (optional) → Seva → Pay → Done */
+export type BookingStep = 1 | 2 | 3 | 4 | 5;
 
 interface BookingState {
   isOpen: boolean;
@@ -13,8 +14,6 @@ interface BookingState {
   guestCount: GuestCount;
   roomCount: number;
   guestDetails: Partial<GuestDetails>;
-  memberProfile: CommunityMemberProfile | null;
-  memberVerified: boolean;
   isDonorFlow: boolean;
   donorTier: DonorTier;
   donorDiscount: number;
@@ -49,8 +48,6 @@ interface BookingState {
   setGuestCount: (count: Partial<GuestCount>) => void;
   setRoomCount: (count: number) => void;
   setGuestDetails: (details: Partial<GuestDetails>) => void;
-  setMemberProfile: (profile: CommunityMemberProfile | null) => void;
-  setMemberVerified: (verified: boolean) => void;
   setDonorSession: (tier: DonorTier, discount: number) => void;
   setSelectedCouponIds: (ids: string[]) => void;
   toggleCouponId: (id: string) => void;
@@ -76,8 +73,6 @@ export const useBookingStore = create<BookingState>((set, get) => ({
   guestCount: defaultGuestCount,
   roomCount: 1,
   guestDetails: {},
-  memberProfile: null,
-  memberVerified: false,
   isDonorFlow: false,
   donorTier: null,
   donorDiscount: 0,
@@ -88,7 +83,7 @@ export const useBookingStore = create<BookingState>((set, get) => ({
   promoDiscount: 0,
   sevaDonation: 0,
   whatsappConfirm: true,
-  paymentMethod: "upi",
+  paymentMethod: "cash",
   bookingReference: null,
   showToast: false,
   toastData: null,
@@ -107,8 +102,6 @@ export const useBookingStore = create<BookingState>((set, get) => ({
       roomCount: guests?.rooms ?? get().roomCount,
       bookingReference: null,
       selectedCouponIds: [],
-      memberProfile: null,
-      memberVerified: false,
       sevaDonation: 0,
     });
   },
@@ -116,7 +109,7 @@ export const useBookingStore = create<BookingState>((set, get) => ({
   closeBooking: () => set({ isOpen: false }),
 
   setStep: (step) => set({ step }),
-  nextStep: () => set({ step: Math.min(7, get().step + 1) as BookingStep }),
+  nextStep: () => set({ step: Math.min(5, get().step + 1) as BookingStep }),
   prevStep: () => set({ step: Math.max(1, get().step - 1) as BookingStep }),
 
   setDates: (checkIn, checkOut) => set({ checkIn, checkOut }),
@@ -126,16 +119,6 @@ export const useBookingStore = create<BookingState>((set, get) => ({
 
   setGuestDetails: (details) =>
     set({ guestDetails: { ...get().guestDetails, ...details } }),
-
-  setMemberProfile: (profile) =>
-    set({
-      memberProfile: profile,
-      memberVerified: !!profile,
-      isDonorFlow: !!profile,
-      donorTier: profile?.tier ?? null,
-    }),
-
-  setMemberVerified: (verified) => set({ memberVerified: verified }),
 
   setDonorSession: (tier, discount) =>
     set({ isDonorFlow: true, donorTier: tier, donorDiscount: discount }),
@@ -163,7 +146,7 @@ export const useBookingStore = create<BookingState>((set, get) => ({
     const { selectedRoom, checkIn, whatsappConfirm } = get();
     set({
       bookingReference: reference,
-      step: 7,
+      step: 5,
       showToast: true,
       toastData: selectedRoom
         ? {
@@ -188,8 +171,6 @@ export const useBookingStore = create<BookingState>((set, get) => ({
       guestCount: defaultGuestCount,
       roomCount: 1,
       guestDetails: {},
-      memberProfile: null,
-      memberVerified: false,
       isDonorFlow: false,
       donorTier: null,
       donorDiscount: 0,

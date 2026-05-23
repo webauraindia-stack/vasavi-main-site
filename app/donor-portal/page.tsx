@@ -26,7 +26,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useDonorStore } from "@/stores/donor-store";
-import { lookupMemberByPhone } from "@/lib/auth/users-by-phone";
 import { getNextTierProgress, getTierInfo, TIER_THRESHOLDS } from "@/lib/donor-engine";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import type { Coupon } from "@/types";
@@ -72,7 +71,7 @@ const ConfettiParticle = ({ index }: { index: number }) => {
 export default function DonorPortalPage() {
   const router = useRouter();
   const { data: session, status } = useSession();
-  const { donor, isAuthenticated, logout, celebration, clearCelebration, loadMemberProfile } =
+  const { donor, isAuthenticated, logout, celebration, clearCelebration, hydrateFromApi } =
     useDonorStore();
   const [activeTab, setActiveTab] = useState<"wallet" | "benefits" | "history">("wallet");
   const [profileChecked, setProfileChecked] = useState(false);
@@ -85,16 +84,13 @@ export default function DonorPortalPage() {
       return;
     }
 
-    const phone = (session.user as { phone?: string }).phone;
-    if (phone && !isAuthenticated) {
-      const profile = lookupMemberByPhone(phone);
-      if (profile) {
-        loadMemberProfile(profile);
-      }
+    const accessToken = session.accessToken;
+    if (accessToken && session.user?.isDonor && !isAuthenticated) {
+      void hydrateFromApi(accessToken);
     }
 
     setProfileChecked(true);
-  }, [session, status, isAuthenticated, loadMemberProfile, router]);
+  }, [session, status, isAuthenticated, hydrateFromApi, router]);
 
   if (status === "loading" || !profileChecked) {
     return (

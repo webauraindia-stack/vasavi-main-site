@@ -18,11 +18,22 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { Room, RoomCategory } from "@/types";
 import { Crown } from "lucide-react";
+import { getRoomImageUrl } from "@/lib/images/room-image";
+import { defaultSearchDates } from "@/lib/rooms/search";
 
-async function fetchRooms(params: URLSearchParams): Promise<Room[]> {
+type SearchResponse = {
+  rooms: Room[];
+  meta?: { source?: string; check_in?: string; check_out?: string };
+};
+
+async function fetchRooms(params: URLSearchParams): Promise<SearchResponse> {
   const res = await fetch(`/api/rooms/search?${params.toString()}`);
   if (!res.ok) throw new Error("Search failed");
-  return res.json();
+  const data = (await res.json()) as SearchResponse | Room[];
+  if (Array.isArray(data)) {
+    return { rooms: data };
+  }
+  return data;
 }
 
 function SearchPageContent() {
@@ -77,28 +88,39 @@ function SearchPageContent() {
   );
 
   const queryParams = useMemo(() => {
+    const defaults = defaultSearchDates();
     const p = new URLSearchParams();
-    if (hotelId) p.set("hotels", hotelId);
+    if (hotelId) p.set("hotel", hotelId);
+    p.set("checkIn", checkIn || defaults.check_in);
+    p.set("checkOut", checkOut || defaults.check_out);
+    p.set("guests", String(storeGuests.adults || 2));
     if (roomTypes.length) p.set("roomTypes", roomTypes.join(","));
     p.set("priceMin", String(priceRange[0]));
     p.set("priceMax", String(priceRange[1]));
     if (donorExclusive) p.set("donorExclusive", "true");
     return p;
-  }, [hotelId, roomTypes, priceRange, donorExclusive]);
+  }, [hotelId, checkIn, checkOut, storeGuests.adults, roomTypes, priceRange, donorExclusive]);
 
-  const { data: rooms, isLoading, isFetching, error } = useQuery({
+  const { data: searchResult, isLoading, isFetching, error } = useQuery({
     queryKey: ["rooms-search", queryParams.toString()],
     queryFn: () => fetchRooms(queryParams),
   });
+
+  const rooms = searchResult?.rooms;
 
   return (
     <div className="pt-20 pb-16 bg-white">
       <div className="mx-auto max-w-7xl px-4 lg:px-8">
         <h1 className="font-display text-2xl md:text-4xl text-charcoal mb-2 font-bold">Search Rooms</h1>
-        {(checkIn || checkOut) && (
-          <p className="text-charcoal/80 text-base font-semibold mb-6">
-            {checkIn && `Check-in: ${checkIn}`}
-            {checkOut && ` · Check-out: ${checkOut}`}
+        <p className="text-charcoal/80 text-base font-semibold mb-2">
+          {queryParams.get("checkIn") && `Check-in: ${queryParams.get("checkIn")}`}
+          {queryParams.get("checkOut") && ` · Check-out: ${queryParams.get("checkOut")}`}
+        </p>
+        {error && (
+          <p className="text-xs text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2 mb-4">
+            {error instanceof Error ? error.message : "Could not load rooms."} Ensure the
+            backend is running and run{" "}
+            <code className="text-[11px]">python manage.py seed_demo_hotels</code>.
           </p>
         )}
 
@@ -152,7 +174,7 @@ function SearchPageContent() {
                   >
                     <div className="relative aspect-[4/3] w-full shrink-0 overflow-hidden lg:aspect-auto lg:w-52 xl:w-60 lg:min-h-[10.5rem]">
                       <Image
-                        src={room.images[0]}
+                        src={getRoomImageUrl(room)}
                         alt={room.name}
                         fill
                         className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"

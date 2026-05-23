@@ -25,6 +25,18 @@ export function isValidIndianMobile(phone: string): boolean {
   return /^\+91[6-9]\d{9}$/.test(normalized);
 }
 
+/** 10-digit Indian mobile for Django API (accounts/staff serializers). */
+export function toBackendPhone(input: string): string {
+  const digits = normalizePhone(input).replace(/\D/g, "");
+  if (digits.length === 12 && digits.startsWith("91")) {
+    return digits.slice(2);
+  }
+  if (digits.length >= 10) {
+    return digits.slice(-10);
+  }
+  return digits;
+}
+
 export function formatPhoneDisplay(phone: string): string {
   const normalized = normalizePhone(phone);
   const local = normalized.replace(/^\+91/, "");

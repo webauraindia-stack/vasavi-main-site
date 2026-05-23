@@ -1,6 +1,17 @@
 import { NextResponse } from "next/server";
-import { HOTELS } from "@/lib/data/hotels";
+import { fetchHotels } from "@/lib/hotels/api";
+import { parseApiErrorMessage } from "@/lib/api/parse-error";
 
+/** Live guest houses from Django branches. */
 export async function GET() {
-  return NextResponse.json(HOTELS);
+  try {
+    const hotels = await fetchHotels();
+    return NextResponse.json(hotels);
+  } catch (error) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : parseApiErrorMessage(error, "Could not load guest houses.");
+    return NextResponse.json({ error: message }, { status: 502 });
+  }
 }
