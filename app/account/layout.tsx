@@ -4,26 +4,29 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { cn } from "@/lib/utils";
-
-const links = [
-  { href: "/account/bookings", label: "My Bookings" },
-  { href: "/account/profile", label: "My Profile" },
-  { href: "/account/donor", label: "Donor Benefits", donorOnly: true },
-];
+import { useAppLanguage } from "@/hooks/use-app-language";
 
 export default function AccountLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const { t } = useAppLanguage();
   const pathname = usePathname();
   const { data: session } = useSession();
   const isDonor = (session?.user as { isDonor?: boolean })?.isDonor;
 
+  const links = [
+    { href: "/account/notifications", label: t("nav.notifications") },
+    { href: "/account/bookings", label: t("account.myBookings") },
+    { href: "/account/profile", label: t("account.myProfile") },
+    { href: "/account/donor", label: t("account.donorBenefits"), donorOnly: true },
+  ];
+
   return (
     <div className="pt-20 pb-16">
-      <div className="mx-auto max-w-5xl px-4 lg:px-8">
-        <h1 className="font-display text-3xl text-charcoal mb-8">My Account</h1>
+      <div className="page-container max-w-4xl">
+        <h1 className="font-display text-3xl text-charcoal mb-8">{t("account.title")}</h1>
         <div className="flex flex-col md:flex-row gap-8">
           <nav className="md:w-48 shrink-0 flex md:flex-col gap-1">
             {links
@@ -36,7 +39,9 @@ export default function AccountLayout({
                     "px-4 py-2 rounded-lg text-sm transition-colors",
                     pathname === link.href ||
                     (link.href === "/account/bookings" &&
-                      pathname.startsWith("/account/bookings/"))
+                      pathname.startsWith("/account/bookings/")) ||
+                    (link.href === "/account/notifications" &&
+                      pathname.startsWith("/account/notifications"))
                       ? "bg-champagne/20 text-champagne"
                       : "text-muted hover:text-charcoal hover:bg-surface"
                   )}

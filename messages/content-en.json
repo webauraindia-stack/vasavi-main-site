@@ -1,0 +1,265 @@
+{
+  "schemeContent": {
+    "kcgf": {
+      "shortName": "KCGF",
+      "name": "K.C. Gupta Fellow (KCGF) — Corpus Fund",
+      "summary": "A corpus fund created to meet the educational needs of poor students through financial assistance, distribution of notebooks, and other support.",
+      "description": "KCGF is a permanent corpus fund. Contribution amounts are deposited under fixed deposits in banks; only the interest earned is utilised to support education — notebooks, fees, and emergency student aid across the Vasavi community.\n\nHotelHub donor tiers (Bronze through Platinum) are aligned with KCGF contribution levels. Your hospitality donations directly strengthen this corpus while unlocking exclusive stays and discounts.",
+      "hotelBenefit": "Donor tier discounts of 10%–50% on all HotelHub properties"
+    },
+    "vksp": {
+      "shortName": "VKSP",
+      "name": "Vasavi Kutumba Suraksha Padhakam (VKSP)",
+      "summary": "A benevolent fund for members of Vasavi Clubs International in good standing.",
+      "description": "VKSP provides family security and welfare support to Vasavi Club members. Any member from any club in good standing is eligible to join this fund.\n\nHotelHub guests who are verified VKSP members may link their membership in the donor portal for combined welfare and booking benefits.",
+      "hotelBenefit": "Priority check-in and member recognition at all eleven hotels"
+    },
+    "vasavi-saraswathi": {
+      "shortName": "Saraswathi Padhakam",
+      "name": "Vasavi Saraswathi Padhakam",
+      "summary": "Educational support funded by KCGF interest — supporting students in times of need.",
+      "description": "KCGF contributions are deposited permanently under FDs in banks from day one. Only the interest earned is utilised during times of natural calamities and educational emergencies.\n\nA portion of HotelHub community donations is earmarked for Saraswathi Padhakam initiatives at each property.",
+      "hotelBenefit": "Annual educational outreach events hosted at partner hotels"
+    },
+    "self-employment": {
+      "shortName": "Self Employment",
+      "name": "Vasavi Self Employment Scheme",
+      "summary": "Interest-free loans of ₹20,000 to economically backward families to start or improve business (since 2004–05).",
+      "description": "Introduced in 2004–05 to provide self-employment to economically backward families with ₹20,000 as interest-free loans to start a business or improve an existing one.\n\nHotelHub's Sreyobhilashi-aligned giving channel routes select donations toward micro-enterprise support in communities surrounding our hotels.",
+      "hotelBenefit": "Local artisan and vendor partnerships at hotel properties"
+    },
+    "sreyobhilashi": {
+      "shortName": "Sreyobhilashi",
+      "name": "Sreyobhilashi Scheme",
+      "summary": "Donation-driven self-employment loans for economically backward families (since 2019).",
+      "description": "Considering requests from Vasavians, Sreyobhilashi was introduced in 2019 to provide self-employment support through community donations to economically backward families.\n\nHotelHub donors may designate contributions to Sreyobhilashi when completing a donation on the Donor Program page.",
+      "hotelBenefit": "Named recognition in annual community impact report"
+    },
+    "vksp-senior": {
+      "shortName": "VKSP (Sr.)",
+      "name": "Vasavi Kutumba Suraksha Padhakam (Senior)",
+      "summary": "Extended benevolent coverage for senior members and their families.",
+      "description": "VKSP Senior extends the Vasavi Kutumba Suraksha Padhakam framework to senior members, ensuring dignity and support in later years.\n\nSenior Vasavi members receive complimentary late checkout and priority room allocation when booking through HotelHub.",
+      "hotelBenefit": "Senior-friendly rooms and assistance at all properties"
+    }
+  },
+  "schemeCard": {
+    "hotelHubLabel": "HotelHub:",
+    "readMore": "Read more",
+    "vciWebsite": "VCI website"
+  },
+  "roomTemplates": {
+    "standardNonAc": {
+      "name": "Standard Non-AC",
+      "description": "Simple, clean room with twin beds and a fan. Ideal for single pilgrims or couples on a budget darshan trip.",
+      "bedType": "Twin"
+    },
+    "standardAc": {
+      "name": "Standard AC",
+      "description": "Comfortable air-conditioned room with attached bath. Perfect for families seeking rest after temple visits.",
+      "bedType": "Queen"
+    },
+    "familyRoom": {
+      "name": "Family Room",
+      "description": "Spacious room with multiple beds, perfect for families traveling together for Darshan.",
+      "bedType": "2 Queen"
+    },
+    "donorAcRoom": {
+      "name": "Donor AC Room",
+      "description": "Reserved AC accommodation for our community donors.",
+      "bedType": "Queen"
+    },
+    "penthouseSuite": {
+      "name": "Penthouse Suite",
+      "description": "Premium top-floor suite with panoramic views and dedicated seva desk.",
+      "bedType": "King"
+    }
+  },
+  "hotels": {
+    "vasavi-nityannadana-residency-hyderabad": {
+      "name": "Sri Vasavi Nityannadana Residency",
+      "description": "A premium heritage-style hotel designed for families and corporate visitors of the Vysya community. Offering traditional Satvik dining, luxury suites, and elegant prayer halls near the heritage markets."
+    },
+    "tirumala-venkateswara-stay": {
+      "name": "Sri Venkateswara Pilgrim Stay",
+      "description": "Affordable and highly trusted accommodations near Tirumala foothills. Offers special counters for Darshan guidance, community kitchens, and free bus shuttles to Alipiri."
+    },
+    "vasavi-kanyaka-grand-vijayawada": {
+      "name": "Sri Vasavi Kanyaka Grand",
+      "description": "Overlooking the beautiful Krishna River and near the sacred Kanaka Durga Temple. A luxury traditional hotel offering spiritual suites, pure Satvik food, and community congregation halls."
+    },
+    "vizag-ocean-view-retreat": {
+      "name": "Vizag Ocean View Vasavi Retreat",
+      "description": "A clean, family-friendly hotel facing the scenic RK Beach. Melding coastal wellness with rich South Indian cultural aesthetics, perfect for weekend pilgrim getaways."
+    },
+    "bengaluru-vasavi-royal-heritage": {
+      "name": "Bengaluru Vasavi Royal Heritage",
+      "description": "Located near traditional business hubs, offering majestic rosewood interiors and traditional South Indian temple architecture coupled with elite donor suites."
+    },
+    "chennai-kanyaka-parameswari-lodge": {
+      "name": "Chennai Kanyaka Parameswari Lodge",
+      "description": "Located in the bustling heritage streets of George Town, this lodge provides sacred comfort, traditional pure-vegetarian catering, and proximity to local temples."
+    },
+    "srisailam-mallikarjuna-retreat": {
+      "name": "Srisailam Mallikarjuna Devotee Stay",
+      "description": "A calm devotional guest property amidst the sacred forests. Connect with Lord Shiva in absolute spiritual peace with basic, clean amenities for pilgrims."
+    },
+    "warangal-bhadrakali-niwas": {
+      "name": "Warangal Vasavi Bhadrakali Niwas",
+      "description": "Exquisite hotel highlighting the Kakatiya stone art aesthetics, located adjacent to the ancient Bhadrakali Temple. Enjoy peaceful chanting views and traditional community dining."
+    },
+    "rajahmundry-vasavi-godavari-sadan": {
+      "name": "Rajahmundry Vasavi Godavari Sadan",
+      "description": "Perfect for families coming for Pushkaram ghat rituals. Enjoy panoramic river views, clean marble-floored AC rooms, and pure Satvik meals cooked by community chefs."
+    },
+    "kakinada-vasavi-grand": {
+      "name": "Kakinada Vasavi Grand Stay",
+      "description": "A modern-traditional business and pilgrim hybrid hotel in the heart of Kakinada, popular for its rich Andhra-style hospitality, warm interiors, and spacious community function halls."
+    },
+    "mysore-vasavi-chamundeshwari-palace": {
+      "name": "Mysore Vasavi Chamundeshwari Palace",
+      "description": "A royal palace-inspired heritage stay located close to the Chamundi Hills. Embellished with beautiful traditional rosewood carvings, courtyard gardens, and spiritual luxury."
+    }
+  },
+  "amenities": {
+    "Sacred Corridors": "Sacred Corridors",
+    "Meditation Room": "Meditation Room",
+    "Temple View": "Temple View",
+    "Temple Transport": "Temple Transport",
+    "Annadanam": "Annadanam",
+    "Spiritual Library": "Spiritual Library",
+    "Pooja Services": "Pooja Services",
+    "Satsang Hall": "Satsang Hall",
+    "Community Kitchen": "Community Kitchen",
+    "Room Service": "Room Service",
+    "Airport Shuttle": "Airport Shuttle",
+    "Satsang Hall": "Satsang Hall"
+  },
+  "founder": {
+    "pageTitle": "Our Founder — K.C. Gupta",
+    "freedomFighter": "Freedom Fighter",
+    "portraitCourtesy": "Portrait courtesy of",
+    "vciName": "Vasavi Clubs International",
+    "heritageEyebrow": "Heritage · Vasavi Movement",
+    "dates": "{{born}} — {{died}}",
+    "honorific": "K.C. Gupta",
+    "title": "Freedom Fighter & Founder of the Vasavi Movement",
+    "dates": "{{born}} — {{died}}",
+    "bio": "A need was strongly felt to bring all Vysya Community to a common platform and to enable them to exchange ideas and views, and also to felicitate Arya Vysyas who were qualified as IAS, Doctors, Engineers, and Advocates, as well as those who visited foreign countries.\n\nWith these modest aims and objectives, the FIRST VASAVI CLUB was started on 1 October 1961 with eleven members at Hyderabad by Late Sri Kalvakuntla Chandrasena Gupta (K.C. Gupta), Freedom Fighter — regarded as not only the Founder but also the \"Father of the Vasavi Movement.\"",
+    "communitySchemesBtn": "Community Schemes",
+    "donorProgramBtn": "Donor Program",
+    "lifeOfService": "A Life of Service",
+    "bioData": "Bio-Data",
+    "asRecordedBy": "As recorded by",
+    "founded": "Founded",
+    "firstClub": "First club",
+    "members": "Members",
+    "politicalLife": "Political Life",
+    "orgsFounded": "Organisations Founded",
+    "socialRoles": "Social Roles",
+    "publications": "Publications",
+    "awards": "Awards & Honours",
+    "booksDedicated": "Books Dedicated to Him",
+    "legacyTitle": "His Legacy Lives On",
+    "legacy": "Today, Vasavi Clubs International spans hundreds of clubs across India and abroad. Vasavi Hotels extends this legacy of community, service, and fellowship through guest houses and pilgrim stays where members gather, celebrate, and give back.",
+    "bookGuestHouse": "Book a Guest House",
+    "visitVci": "Visit Vasavi Clubs International"
+  },
+  "booking": {
+    "blessedJourneyConfirmed": "Blessed journey confirmed",
+    "reserveRoom": "Reserve {{roomName}}",
+    "closeBooking": "Close booking",
+    "retreat": "Retreat",
+    "stayDates": "Stay dates",
+    "selectBelow": "Select below",
+    "stayDuration": "Stay duration",
+    "night": "night",
+    "nights": "nights",
+    "room": "room",
+    "rooms": "rooms",
+    "adults": "adults",
+    "children": "children",
+    "estimatedSubtotal": "Estimated subtotal",
+    "cancel": "Cancel",
+    "back": "Back",
+    "continue": "Continue",
+    "guestIntro": "Guest details for temple-town check-in & WhatsApp confirmation.",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "email": "Email",
+    "code": "Code",
+    "phoneWhatsapp": "Phone (WhatsApp)",
+    "arrivalTime": "Arrival time",
+    "firstNameRequired": "First name required",
+    "lastNameRequired": "Last name required",
+    "emailRequired": "Valid email required",
+    "phoneRequired": "Valid phone required",
+    "arrivalRequired": "Select arrival time",
+    "memberIntro": "Verify your Vasavi Clubs International membership to unlock free stays, compensation wallet, festival coupons, and donor rewards.",
+    "memberIdPlaceholder": "Member ID e.g. DH-2024-8842",
+    "verify": "Verify",
+    "memberNotFound": "Member ID not found. Try DH-2024-8842, VCI-HYD-2841, or VCI-SEC-1092",
+    "demoProfiles": "Demo profiles — tap to verify",
+    "freeStays": "{{count}} free",
+    "donor": "Donor",
+    "viewBlessings": "View blessings",
+    "continueAsGuest": "Continue as guest",
+    "applyBlessings": "Apply community blessings",
+    "clearAll": "Clear all",
+    "noCoupons": "No coupons in wallet. Visit Community Givers to earn blessings.",
+    "communityGivers": "Community Givers",
+    "applyWallet": "Apply compensation wallet ({{amount}} available)",
+    "confirmBlessedStay": "Confirm blessed stay",
+    "rewardsAwait": "Community rewards await",
+    "rewardsHint": "Verify your member ID on the previous step, or sign in at the donor portal to apply free stays and compensation credits.",
+    "sevaTitle": "Optional seva — strengthen KCGF",
+    "sevaDesc": "Add a devotional contribution to the K.C. Gupta Fellow corpus. Your seva compounds community education while earning reward points.",
+    "none": "None",
+    "paymentMethod": "Payment method",
+    "upi": "UPI / GPay / PhonePe",
+    "card": "Credit / Debit Card",
+    "netbanking": "Net Banking",
+    "whatsappConfirm": "Send WhatsApp confirmation",
+    "payAmount": "Pay {{amount}}",
+    "confirmBooking": "Confirm booking",
+    "blessedStayConfirmed": "Blessed stay confirmed",
+    "reservationConfirmed": "Reservation confirmed",
+    "confirmBody": "Your pilgrimage shelter at {{hotelName}} is reserved with Vasavi community blessings. May your journey be peaceful and fulfilling.",
+    "reference": "Reference",
+    "checkIn": "Check-in",
+    "communitySavings": "Community savings",
+    "qrHint": "Express QR check-in at temple reception — contactless & warm welcome",
+    "whatsappSent": "WhatsApp confirmation sent to {{phone}}",
+    "quote": "In service to community, we find the divine.",
+    "quoteAttribution": "— Vasavi Clubs International · Est. 1961, Hyderabad",
+    "done": "Done",
+    "myBookings": "My bookings",
+    "stepStay": "Stay",
+    "stepGuest": "Guest",
+    "stepMember": "Member",
+    "stepBlessings": "Blessings",
+    "stepSeva": "Seva",
+    "stepPay": "Pay",
+    "stepDone": "Done",
+    "toastConfirmed": "Booking Confirmed!",
+    "toastAt": "{{room}} at {{hotel}}",
+    "toastCheckIn": "Check-in: {{date}}",
+    "toastWhatsapp": "WhatsApp confirmation sent",
+    "dismiss": "Dismiss",
+    "paymentBreakdown": "Payment breakdown",
+    "roomNights": "Room ({{nights}} nights)",
+    "gst": "GST (12%)",
+    "totalPayable": "Total payable",
+    "tierDiscount": "Tier blessing",
+    "dismiss": "Dismiss",
+    "couponDiscount": "Coupon savings",
+    "walletApplied": "Wallet applied",
+    "sevaDonation": "Seva donation"
+  },
+  "brand": {
+    "vasavi": "Vasavi",
+    "spiritualStays": "Spiritual Stays",
+    "spiritualStaysFull": "VASAVI SPIRITUAL STAYS",
+    "hotels": "VASAVI HOTELS"
+  }
+}

@@ -12,18 +12,21 @@ import {
   Check,
   type LucideIcon,
 } from "lucide-react";
+import { useAppLanguage } from "@/hooks/use-app-language";
 
-const STEPS: { num: BookingStep; label: string; icon: LucideIcon }[] = [
-  { num: 1, label: "Stay", icon: Calendar },
-  { num: 2, label: "Guest", icon: User },
-  { num: 3, label: "Member", icon: ShieldCheck },
-  { num: 4, label: "Blessings", icon: Gift },
-  { num: 5, label: "Seva", icon: HeartHandshake },
-  { num: 6, label: "Pay", icon: CreditCard },
-  { num: 7, label: "Done", icon: Check },
+const STEPS: { num: BookingStep; key: string; icon: LucideIcon }[] = [
+  { num: 1, key: "stepStay", icon: Calendar },
+  { num: 2, key: "stepGuest", icon: User },
+  { num: 3, key: "stepMember", icon: ShieldCheck },
+  { num: 4, key: "stepBlessings", icon: Gift },
+  { num: 5, key: "stepSeva", icon: HeartHandshake },
+  { num: 6, key: "stepPay", icon: CreditCard },
+  { num: 7, key: "stepDone", icon: Check },
 ];
 
 export function BookingStepper({ step }: { step: BookingStep }) {
+  const { t } = useAppLanguage();
+
   return (
     <div className="px-4 pb-3 shrink-0 overflow-x-auto scrollbar-hide">
       <div className="flex items-center gap-0.5 min-w-max mx-auto">
@@ -34,7 +37,7 @@ export function BookingStepper({ step }: { step: BookingStep }) {
           return (
             <StepDot
               key={s.num}
-              label={s.label}
+              label={t(`booking.${s.key}`)}
               active={active}
               done={done}
               Icon={Icon}
@@ -70,8 +73,8 @@ function StepDot({
           active
             ? "border-champagne-dark bg-champagne/10 text-champagne shadow-warm"
             : done
-            ? "border-champagne-dark/60 bg-champagne-dark/15 text-champagne-dark"
-            : "border-beige bg-surface text-muted"
+              ? "border-champagne-dark/60 bg-champagne-dark/15 text-champagne-dark"
+              : "border-beige bg-surface text-muted"
         )}
       >
         <Icon className="h-3.5 w-3.5" />

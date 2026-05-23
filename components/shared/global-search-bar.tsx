@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { format, isBefore, startOfDay } from "date-fns";
 import type { DateRange } from "react-day-picker";
-import { ChevronDown, Minus, Plus, Search, MapPin } from "lucide-react";
+import { Minus, Plus, Search, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -18,6 +18,7 @@ import { normalizeStayDates } from "@/lib/date-range-selection";
 import { parseGuestParams, parseSearchDate } from "@/lib/parse-search-params";
 import { useSearchStore } from "@/stores/search-store";
 import { cn } from "@/lib/utils";
+import { useAppLanguage } from "@/hooks/use-app-language";
 import "react-day-picker/style.css";
 
 interface GlobalSearchBarProps {
@@ -27,25 +28,31 @@ interface GlobalSearchBarProps {
 
 const FIELD_H = "h-[3.25rem] min-h-[3.25rem]";
 
-function getHotelLabels(id: string | null) {
+function getHotelLabels(
+  id: string | null,
+  allLabel: string,
+  labelFor: (hotel: (typeof HOTELS)[number]) => { name: string; city: string }
+) {
   if (!id) {
-    return { full: "All guest houses", short: "All guest houses" };
+    return { full: allLabel, short: allLabel };
   }
   const hotel = HOTELS.find((h) => h.id === id);
   if (!hotel) {
-    return { full: "All guest houses", short: "All guest houses" };
+    return { full: allLabel, short: allLabel };
   }
-  const shortName = hotel.name
+  const { name, city } = labelFor(hotel);
+  const shortName = name
     .replace(/^Sri\s+/i, "")
     .replace(/\s+(Residency|Stay|Grand|Hotel)$/i, "")
     .trim();
   return {
-    full: `${hotel.name} — ${hotel.city}`,
-    short: `${shortName} · ${hotel.city}`,
+    full: `${name} — ${city}`,
+    short: `${shortName} · ${city}`,
   };
 }
 
 export function GlobalSearchBar({ className, variant = "hero" }: GlobalSearchBarProps) {
+  const { t, language } = useAppLanguage();
   const router = useRouter();
   const searchParams = useSearchParams();
   const { hotelId, checkIn, checkOut, guests, setHotel, setDates, setGuests } =
@@ -98,7 +105,20 @@ export function GlobalSearchBar({ className, variant = "hero" }: GlobalSearchBar
     if (Object.keys(guestUpdates).length > 0) setGuests(guestUpdates);
   }, [searchParams, calendarOpen, setHotel, setDates, setGuests]);
 
-  const hotelLabels = useMemo(() => getHotelLabels(hotelId), [hotelId]);
+  const allGuestHouses = t("search.allGuestHouses");
+
+  const labelForHotel = useCallback(
+    (hotel: (typeof HOTELS)[number]) => ({
+      name: t(`hotels.${hotel.slug}.name`, { defaultValue: hotel.name }),
+      city: t(`cities.${hotel.city}`, { defaultValue: hotel.city }),
+    }),
+    [t]
+  );
+
+  const hotelLabels = useMemo(
+    () => getHotelLabels(hotelId, allGuestHouses, labelForHotel),
+    [hotelId, allGuestHouses, labelForHotel]
+  );
 
   const handleRangeChange = useCallback(
     (next: DateRange | undefined, complete: boolean) => {
@@ -115,13 +135,13 @@ export function GlobalSearchBar({ className, variant = "hero" }: GlobalSearchBar
 
   const handleSearch = () => {
     if (!range?.from || !range?.to) {
-      setDateHint("Please select check-in and check-out dates");
+      setDateHint(t("search.selectDates"));
       setCalendarOpen(true);
       return;
     }
 
     if (isBefore(startOfDay(range.to), startOfDay(range.from))) {
-      setDateHint("Check-out must be after check-in");
+      setDateHint(t("search.checkoutAfterCheckin"));
       setCalendarOpen(true);
       return;
     }
@@ -150,6 +170,7 @@ export function GlobalSearchBar({ className, variant = "hero" }: GlobalSearchBar
 
   const hotelSelect = (
     <Select
+      key={`hotel-select-${language}`}
       value={hotelId ?? "all"}
       onValueChange={(v) => setHotel(v === "all" ? null : v)}
     >
@@ -157,7 +178,8 @@ export function GlobalSearchBar({ className, variant = "hero" }: GlobalSearchBar
         className={cn(
           fieldShell,
           FIELD_H,
-          "w-full gap-2 px-3.5 font-semibold hover:border-champagne/35 focus:ring-champagne/30 [&>svg]:hidden"
+          "w-full cursor-pointer gap-2 px-3.5 font-semibold hover:border-champagne/35 focus:ring-champagne/30",
+          "[&>svg:last-child]:h-4 [&>svg:last-child]:w-4 [&>svg:last-child]:shrink-0 [&>svg:last-child]:text-charcoal/55"
         )}
       >
         <MapPin className="h-4 w-4 shrink-0 text-champagne" aria-hidden />
@@ -165,17 +187,24 @@ export function GlobalSearchBar({ className, variant = "hero" }: GlobalSearchBar
           className="truncate text-left flex-1 min-w-0"
           title={hotelLabels.full}
         >
-          {hotelId ? hotelLabels.short : "All guest houses"}
+          {hotelId ? hotelLabels.short : allGuestHouses}
         </span>
-        <ChevronDown className="h-4 w-4 shrink-0 text-charcoal/50" aria-hidden />
       </SelectTrigger>
-      <SelectContent className="z-[250] max-h-[min(20rem,70dvh)]">
-        <SelectItem value="all">All guest houses</SelectItem>
-        {HOTELS.map((h) => (
-          <SelectItem key={h.id} value={h.id}>
-            {h.name} — {h.city}
-          </SelectItem>
-        ))}
+      <SelectContent
+        className={cn(
+          "max-h-[min(20rem,70dvh)]",
+          variant === "hero" ? "z-[500]" : "z-[250]"
+        )}
+      >
+        <SelectItem value="all">{allGuestHouses}</SelectItem>
+        {HOTELS.map((h) => {
+          const { name, city } = labelForHotel(h);
+          return (
+            <SelectItem key={h.id} value={h.id}>
+              {name} — {city}
+            </SelectItem>
+          );
+        })}
       </SelectContent>
     </Select>
   );
@@ -187,8 +216,8 @@ export function GlobalSearchBar({ className, variant = "hero" }: GlobalSearchBar
       open={calendarOpen}
       onOpenChange={setCalendarOpen}
       triggerClassName={dateTriggerClass}
-      numberOfMonths={isDesktop ? 2 : 1}
-      align={isDesktop ? "start" : "center"}
+      numberOfMonths={isDesktop && variant !== "hero" ? 2 : 1}
+      align={isDesktop && variant !== "hero" ? "start" : "center"}
     />
   );
 
@@ -196,33 +225,33 @@ export function GlobalSearchBar({ className, variant = "hero" }: GlobalSearchBar
     <div
       className={cn(
         fieldShell,
-        isDesktop
+        isDesktop && variant !== "hero"
           ? cn(FIELD_H, "flex shrink-0 items-stretch divide-x divide-charcoal/12")
           : "grid grid-cols-3 gap-1 p-3"
       )}
     >
       <GuestStepper
-        label="Adults"
+        label={t("search.adults")}
         value={guests.adults}
         min={1}
         max={8}
-        layout={isDesktop ? "desktop" : "mobile"}
+        layout={isDesktop && variant !== "hero" ? "desktop" : "mobile"}
         onChange={(v) => setGuests({ adults: v })}
       />
       <GuestStepper
-        label="Children"
+        label={t("search.children")}
         value={guests.children}
         min={0}
         max={6}
-        layout={isDesktop ? "desktop" : "mobile"}
+        layout={isDesktop && variant !== "hero" ? "desktop" : "mobile"}
         onChange={(v) => setGuests({ children: v })}
       />
       <GuestStepper
-        label="Rooms"
+        label={t("search.rooms")}
         value={guests.rooms}
         min={1}
         max={5}
-        layout={isDesktop ? "desktop" : "mobile"}
+        layout={isDesktop && variant !== "hero" ? "desktop" : "mobile"}
         onChange={(v) => setGuests({ rooms: v })}
       />
     </div>
@@ -236,28 +265,36 @@ export function GlobalSearchBar({ className, variant = "hero" }: GlobalSearchBar
       className={cn(
         FIELD_H,
         "rounded-xl font-bold shadow-warm bg-champagne hover:bg-champagne/90 text-white",
-        isDesktop ? "shrink-0 px-7 text-base" : "w-full"
+        variant === "hero" && "sm:rounded-2xl",
+        isDesktop && variant !== "hero" ? "shrink-0 px-7 text-base" : "w-full"
       )}
     >
       <Search className="h-4 w-4 mr-2 shrink-0" />
-      Search Rooms
+      {t("search.searchRooms")}
     </Button>
   );
 
   return (
     <div
       className={cn(
-        "search-card gold-glow relative z-20 w-full rounded-2xl border border-charcoal/10 bg-white p-3 sm:p-3.5",
-        variant === "hero" ? "max-w-6xl mx-auto" : "",
+        "relative z-20 w-full rounded-[var(--radius-devotional)] p-3 sm:p-4",
+        variant === "hero" ? "devotional-search max-w-none" : "search-card gold-glow border border-charcoal/10 bg-white",
         className
       )}
     >
-      {isDesktop ? (
+      {isDesktop && variant !== "hero" ? (
         <div className="flex items-stretch gap-2">
           <div className={cn("min-w-0 flex-[1.15]", FIELD_H)}>{hotelSelect}</div>
           <div className={cn("min-w-0 flex-1", FIELD_H)}>{datePicker}</div>
           {guestPanel}
           {searchButton}
+        </div>
+      ) : variant === "hero" && isDesktop ? (
+        <div className="grid grid-cols-2 gap-3">
+          <div className="col-span-2">{hotelSelect}</div>
+          <div className="col-span-2">{datePicker}</div>
+          <div className="col-span-2">{guestPanel}</div>
+          <div className="col-span-2">{searchButton}</div>
         </div>
       ) : (
         <div className="flex flex-col gap-3">
@@ -295,6 +332,7 @@ function GuestStepper({
   layout: "desktop" | "mobile";
   onChange: (v: number) => void;
 }) {
+  const { t } = useAppLanguage();
   const stepBtn =
     "flex items-center justify-center rounded-md border border-charcoal/12 bg-white text-charcoal hover:border-champagne/40 hover:bg-champagne/5 disabled:opacity-35 disabled:pointer-events-none transition-colors";
 
@@ -310,7 +348,7 @@ function GuestStepper({
             onClick={() => onChange(Math.max(min, value - 1))}
             disabled={value <= min}
             className={cn(stepBtn, "h-7 w-7")}
-            aria-label={`Decrease ${label}`}
+            aria-label={t("search.decrease", { label })}
           >
             <Minus className="h-3 w-3" />
           </button>
@@ -322,7 +360,7 @@ function GuestStepper({
             onClick={() => onChange(Math.min(max, value + 1))}
             disabled={value >= max}
             className={cn(stepBtn, "h-7 w-7")}
-            aria-label={`Increase ${label}`}
+            aria-label={t("search.increase", { label })}
           >
             <Plus className="h-3 w-3" />
           </button>

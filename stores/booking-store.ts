@@ -30,6 +30,7 @@ interface BookingState {
   showToast: boolean;
   toastData: {
     hotelName: string;
+    hotelSlug: string;
     roomType: string;
     checkIn: string;
     whatsappSent?: boolean;
@@ -168,6 +169,7 @@ export const useBookingStore = create<BookingState>((set, get) => ({
       toastData: selectedRoom
         ? {
             hotelName: selectedRoom.hotelName,
+            hotelSlug: selectedRoom.hotelSlug,
             roomType: selectedRoom.name,
             checkIn: checkIn?.toISOString() ?? new Date().toISOString(),
             whatsappSent: whatsappConfirm,

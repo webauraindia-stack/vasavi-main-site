@@ -190,7 +190,7 @@ export default function DonorPortalPage() {
         )}
       </AnimatePresence>
 
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+      <div className="page-container">
         
         {/* Profile Card Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10 bg-white/70 backdrop-blur-md border border-slate-200/70 p-6 sm:p-8 rounded-3xl shadow-sm">

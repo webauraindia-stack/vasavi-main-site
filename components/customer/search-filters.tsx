@@ -7,6 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
 import { formatCurrency, cn } from "@/lib/utils";
 import type { RoomCategory } from "@/types";
+import { useAppLanguage } from "@/hooks/use-app-language";
 
 const ROOM_TYPES: RoomCategory[] = ["Standard", "Deluxe", "Suite", "Penthouse"];
 
@@ -40,6 +41,7 @@ export function SearchFilters({
   resultCount,
   isApplying = false,
 }: SearchFiltersProps) {
+  const { t } = useAppLanguage();
   const [openPanel, setOpenPanel] = useState<OpenPanel>(null);
   const [priceDraft, setPriceDraft] = useState<[number, number]>(filters.priceRange);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -92,10 +94,10 @@ export function SearchFilters({
 
   const roomLabel =
     filters.roomTypes.length === 0
-      ? "Room type"
+      ? t("search.roomType")
       : filters.roomTypes.length === 1
-        ? filters.roomTypes[0]
-        : `${filters.roomTypes.length} types`;
+        ? t(`roomTypes.${filters.roomTypes[0]}`)
+        : t("search.typesCount", { count: filters.roomTypes.length });
 
   const priceActive =
     filters.priceRange[0] !== SEARCH_PRICE_MIN || filters.priceRange[1] !== SEARCH_PRICE_MAX;
@@ -118,7 +120,7 @@ export function SearchFilters({
       <div className="flex flex-wrap items-center gap-2">
         <span className="inline-flex shrink-0 items-center gap-1.5 text-sm font-bold text-charcoal mr-0.5">
           <SlidersHorizontal className="h-4 w-4" />
-          <span className="hidden sm:inline">Filters</span>
+          <span className="hidden sm:inline">{t("search.filters")}</span>
         </span>
 
         {/* Room type */}
@@ -139,7 +141,7 @@ export function SearchFilters({
           {openPanel === "room" && (
             <FilterPanel>
               <p className="text-xs font-semibold uppercase tracking-wider text-muted mb-3">
-                Room type
+                {t("search.roomType")}
               </p>
               <div className="space-y-1" role="listbox">
                 {ROOM_TYPES.map((type) => (
@@ -151,7 +153,7 @@ export function SearchFilters({
                       checked={filters.roomTypes.includes(type)}
                       onCheckedChange={(checked) => setRoomTypeChecked(type, checked === true)}
                     />
-                    <span className="text-base font-semibold text-charcoal">{type}</span>
+                    <span className="text-base font-semibold text-charcoal">{t(`roomTypes.${type}`)}</span>
                   </label>
                 ))}
               </div>
@@ -163,10 +165,10 @@ export function SearchFilters({
                   className="flex-1"
                   onClick={() => onRoomTypesChange([])}
                 >
-                  Clear
+                  {t("search.clear")}
                 </Button>
                 <Button type="button" size="sm" className="flex-1" onClick={closePanel}>
-                  Done
+                  {t("search.done")}
                 </Button>
               </div>
             </FilterPanel>
@@ -189,9 +191,9 @@ export function SearchFilters({
           </FilterTrigger>
 
           {openPanel === "price" && (
-            <FilterPanel className="w-[min(100vw-2rem,20rem)]">
+            <FilterPanel className="w-[min(100vw-2rem,20rem)] right-0 md:right-auto md:left-0">
               <p className="text-xs font-semibold uppercase tracking-wider text-muted mb-3">
-                Price per night
+                {t("hotels.pricePerNight")}
               </p>
               <Slider
                 min={SEARCH_PRICE_MIN}
@@ -200,7 +202,7 @@ export function SearchFilters({
                 minStepsBetweenThumbs={0}
                 value={priceDraft}
                 onValueChange={(v) => setPriceDraft([v[0], v[1]])}
-                className="my-4"
+                className="my-4 px-2"
               />
               <p className="text-sm text-charcoal text-center font-medium tabular-nums">{priceLabel}</p>
               <div className="flex gap-2 mt-4">
@@ -211,10 +213,10 @@ export function SearchFilters({
                   className="flex-1"
                   onClick={() => setPriceDraft([SEARCH_PRICE_MIN, SEARCH_PRICE_MAX])}
                 >
-                  Reset
+                  {t("search.reset")}
                 </Button>
                 <Button type="button" size="sm" className="flex-1" onClick={applyPrice}>
-                  Apply
+                  {t("search.apply")}
                 </Button>
               </div>
             </FilterPanel>
@@ -233,7 +235,7 @@ export function SearchFilters({
               : "border-charcoal/15 bg-white text-charcoal hover:border-champagne/40 shadow-warm"
           )}
         >
-          Donor rooms
+          {t("search.donorRooms")}
         </button>
 
         {activeCount > 0 && (
@@ -246,7 +248,7 @@ export function SearchFilters({
             className="inline-flex shrink-0 items-center gap-1 text-sm text-muted hover:text-champagne min-h-11 px-2"
           >
             <X className="h-4 w-4" />
-            Clear all
+            {t("search.clearAll")}
           </button>
         )}
       </div>
@@ -255,12 +257,10 @@ export function SearchFilters({
         {isApplying ? (
           <>
             <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-champagne border-t-transparent" />
-            Updating results…
+            {t("search.updating")}
           </>
         ) : resultCount !== undefined ? (
-          <>
-            {resultCount} room{resultCount !== 1 ? "s" : ""} found
-          </>
+          <>{t("search.roomsFound", { count: resultCount })}</>
         ) : null}
       </p>
     </div>
@@ -305,7 +305,8 @@ function FilterPanel({
   return (
     <div
       className={cn(
-        "absolute left-0 top-[calc(100%+0.5rem)] z-[300] w-[min(100vw-2rem,18rem)] rounded-xl border border-charcoal/10 bg-white p-4 text-charcoal shadow-warm-lg",
+        "absolute top-[calc(100%+0.5rem)] z-[300] w-[min(100vw-2rem,18rem)] rounded-xl border border-charcoal/10 bg-white p-4 text-charcoal shadow-warm-lg",
+        !className?.includes("left-") && !className?.includes("right-") && "left-0",
         className
       )}
     >

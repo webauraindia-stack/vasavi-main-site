@@ -221,7 +221,7 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="pt-24 pb-16 min-h-screen bg-slate-50/50 text-slate-800">
-      <div className="mx-auto max-w-7xl px-4 lg:px-8">
+      <div className="page-container">
         
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 mb-8 bg-white p-6 rounded-3xl border border-slate-200/60 shadow-xs">

@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { formatPhoneDisplay } from "@/lib/auth/phone";
 import type { CustomerProfileForm } from "@/lib/auth/customer-profile";
+import { useAppLanguage } from "@/hooks/use-app-language";
 
 type Step = "phone" | "otp" | "profile";
 
@@ -25,6 +26,7 @@ const EMPTY_PROFILE: CustomerProfileForm = {
 };
 
 function LoginPageContent() {
+  const { t } = useAppLanguage();
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") ?? "/account/bookings";
@@ -69,7 +71,7 @@ function LoginPageContent() {
       };
 
       if (!response.ok) {
-        setError(data.error ?? "Could not send OTP.");
+        setError(data.error ?? t("login.otpSendFail"));
         if (response.status === 429 && data.error) {
           const match = data.error.match(/(\d+)s/);
           if (match) setCooldown(Number(match[1]));
@@ -79,11 +81,11 @@ function LoginPageContent() {
 
       setStep("otp");
       setOtp("");
-      setInfo(data.message ?? "OTP sent on WhatsApp.");
+      setInfo(data.message ?? t("login.otpSent"));
       setDemoCode(data.demoCode ?? null);
       setCooldown(data.cooldownSeconds ?? 60);
     } catch {
-      setError("Network error. Please try again.");
+      setError(t("common.networkError"));
     } finally {
       setLoading(false);
     }
@@ -113,7 +115,7 @@ function LoginPageContent() {
       };
 
       if (!response.ok) {
-        setError(data.error ?? "Invalid or expired OTP.");
+        setError(data.error ?? t("login.otpInvalid"));
         return;
       }
 
@@ -121,12 +123,10 @@ function LoginPageContent() {
       setProfile(data.profile ?? EMPTY_PROFILE);
       setStep("profile");
       setInfo(
-        data.profile?.isKnownMember
-          ? "We found your community profile. Details are filled automatically."
-          : "Please complete your customer details to continue."
+        data.profile?.isKnownMember ? t("login.profileKnownHint") : t("login.profileNewHint")
       );
     } catch {
-      setError("Network error. Please try again.");
+      setError(t("common.networkError"));
     } finally {
       setLoading(false);
     }
@@ -149,7 +149,7 @@ function LoginPageContent() {
     setLoading(false);
 
     if (result?.error) {
-      setError("Could not complete sign in. Please try again from the OTP step.");
+      setError(t("login.signInFail"));
       return;
     }
 
@@ -162,27 +162,27 @@ function LoginPageContent() {
   };
 
   return (
-    <div className="pt-24 pb-16 min-h-[80vh] flex items-center justify-center px-4">
-      <div className="w-full max-w-md bg-white rounded-2xl p-8 border border-charcoal/10 shadow-warm-md">
+    <div className="pt-24 pb-16 min-h-[80vh] flex items-center justify-center px-4 devotional-gradient section-shell">
+      <div className="relative w-full max-w-md bg-white rounded-[var(--radius-devotional)] p-8 border border-beige/70 shadow-warm-lg">
         <div className="flex justify-center mb-4">
           <div className="h-12 w-12 rounded-full bg-[#25D366]/10 flex items-center justify-center">
             <MessageCircle className="h-6 w-6 text-[#25D366]" />
           </div>
         </div>
 
-        <h1 className="font-display text-3xl text-charcoal text-center mb-2">Welcome Back</h1>
+        <h1 className="font-display text-3xl text-charcoal text-center mb-2">{t("login.welcome")}</h1>
         <p className="text-sm text-muted text-center mb-8">
           {step === "profile"
             ? profile.isKnownMember
-              ? "Confirm your details and continue."
-              : "Tell us a little about yourself to finish signing in."
-            : "Sign in with your mobile number. We'll send a one-time code on WhatsApp."}
+              ? t("login.profileKnown")
+              : t("login.profileNew")
+            : t("login.phoneIntro")}
         </p>
 
         {step === "phone" && (
           <form onSubmit={handlePhoneSubmit} className="space-y-4">
             <div>
-              <Label htmlFor="phone">Mobile number</Label>
+              <Label htmlFor="phone">{t("login.mobile")}</Label>
               <div className="mt-1 flex rounded-lg border border-charcoal/15 overflow-hidden focus-within:ring-2 focus-within:ring-champagne/30">
                 <span className="inline-flex items-center px-3 text-sm font-semibold text-muted bg-surface border-r border-charcoal/10">
                   +91
@@ -205,7 +205,7 @@ function LoginPageContent() {
 
             <Button type="submit" className="w-full gap-2" disabled={loading || phone.length < 10}>
               <MessageCircle className="h-4 w-4" />
-              {loading ? "Sending..." : "Send OTP on WhatsApp"}
+              {loading ? t("login.sending") : t("login.sendOtp")}
             </Button>
           </form>
         )}
@@ -213,12 +213,12 @@ function LoginPageContent() {
         {step === "otp" && (
           <form onSubmit={handleOtpSubmit} className="space-y-4">
             <div className="rounded-xl bg-surface border border-charcoal/10 px-4 py-3 text-sm">
-              <p className="text-muted">Code sent to</p>
+              <p className="text-muted">{t("login.codeSentTo")}</p>
               <p className="font-semibold text-charcoal">{formatPhoneDisplay(phone)}</p>
             </div>
 
             <div>
-              <Label htmlFor="otp">WhatsApp OTP</Label>
+              <Label htmlFor="otp">{t("login.whatsappOtp")}</Label>
               <Input
                 id="otp"
                 type="text"
@@ -236,13 +236,13 @@ function LoginPageContent() {
             {info && <p className="text-sm text-emerald-700">{info}</p>}
             {demoCode && (
               <p className="text-xs text-center rounded-lg bg-amber-50 border border-amber-200 text-amber-900 px-3 py-2">
-                Demo OTP: <span className="font-bold tracking-widest">{demoCode}</span>
+                {t("login.demoOtp")}: <span className="font-bold tracking-widest">{demoCode}</span>
               </p>
             )}
             {error && <p className="text-sm text-red-600">{error}</p>}
 
             <Button type="submit" className="w-full" disabled={loading || otp.length !== 6}>
-              {loading ? "Verifying..." : "Verify OTP"}
+              {loading ? t("login.verifying") : t("login.verifyOtp")}
             </Button>
 
             <div className="flex items-center justify-between gap-2">
@@ -258,7 +258,7 @@ function LoginPageContent() {
                 className="inline-flex items-center gap-1 text-sm text-muted hover:text-charcoal"
               >
                 <ArrowLeft className="h-3.5 w-3.5" />
-                Change number
+                {t("login.changeNumber")}
               </button>
               <button
                 type="button"
@@ -266,7 +266,7 @@ function LoginPageContent() {
                 disabled={loading || cooldown > 0}
                 className="text-sm text-champagne-dark hover:underline disabled:opacity-50"
               >
-                {cooldown > 0 ? `Resend in ${cooldown}s` : "Resend OTP"}
+                {cooldown > 0 ? t("login.resendIn", { seconds: cooldown }) : t("login.resendOtp")}
               </button>
             </div>
           </form>
@@ -283,7 +283,7 @@ function LoginPageContent() {
                 )}
                 <div>
                   <p className="text-sm font-semibold text-charcoal">
-                    {profile.isKnownMember ? "Profile found" : "New customer details"}
+                    {profile.isKnownMember ? t("login.profileFound") : t("login.newCustomer")}
                   </p>
                   <p className="text-xs text-muted mt-1">{info}</p>
                   {profile.isKnownMember && profile.categoryLabel && (
@@ -296,7 +296,7 @@ function LoginPageContent() {
             </div>
 
             <div>
-              <Label htmlFor="profile-phone">Mobile number</Label>
+              <Label htmlFor="profile-phone">{t("login.mobile")}</Label>
               <Input
                 id="profile-phone"
                 value={profile.phone || formatPhoneDisplay(phone)}
@@ -306,7 +306,7 @@ function LoginPageContent() {
             </div>
 
             <div>
-              <Label htmlFor="profile-name">Full name</Label>
+              <Label htmlFor="profile-name">{t("login.fullName")}</Label>
               <Input
                 id="profile-name"
                 value={profile.name}
@@ -314,12 +314,12 @@ function LoginPageContent() {
                 required
                 readOnly={profile.isKnownMember}
                 className={`mt-1 ${profile.isKnownMember ? "opacity-70" : ""}`}
-                placeholder="Enter your full name"
+                placeholder={t("login.namePlaceholder")}
               />
             </div>
 
             <div>
-              <Label htmlFor="profile-email">Email</Label>
+              <Label htmlFor="profile-email">{t("login.email")}</Label>
               <Input
                 id="profile-email"
                 type="email"
@@ -328,25 +328,25 @@ function LoginPageContent() {
                 required
                 readOnly={profile.isKnownMember}
                 className={`mt-1 ${profile.isKnownMember ? "opacity-70" : ""}`}
-                placeholder="you@example.com"
+                placeholder={t("login.emailPlaceholder")}
               />
             </div>
 
             <div>
-              <Label htmlFor="profile-city">City</Label>
+              <Label htmlFor="profile-city">{t("login.city")}</Label>
               <Input
                 id="profile-city"
                 value={profile.city}
                 onChange={(e) => updateProfile("city", e.target.value)}
                 readOnly={profile.isKnownMember}
                 className={`mt-1 ${profile.isKnownMember ? "opacity-70" : ""}`}
-                placeholder="Hyderabad"
+                placeholder={t("login.cityPlaceholder")}
               />
             </div>
 
             {profile.isKnownMember && profile.memberId && (
               <div>
-                <Label htmlFor="profile-member-id">Member / Donor ID</Label>
+                <Label htmlFor="profile-member-id">{t("login.memberId")}</Label>
                 <Input
                   id="profile-member-id"
                   value={profile.memberId}
@@ -368,7 +368,11 @@ function LoginPageContent() {
                 (!profile.isKnownMember && !profile.email.includes("@"))
               }
             >
-              {loading ? "Signing in..." : profile.isKnownMember ? "Continue" : "Save & Sign In"}
+              {loading
+                ? t("login.signingIn")
+                : profile.isKnownMember
+                  ? t("login.continueBtn")
+                  : t("login.saveSignIn")}
             </Button>
 
             <button
@@ -381,7 +385,7 @@ function LoginPageContent() {
               className="inline-flex items-center gap-1 text-sm text-muted hover:text-charcoal"
             >
               <ArrowLeft className="h-3.5 w-3.5" />
-              Back to OTP
+              {t("login.backToOtp")}
             </button>
           </form>
         )}
@@ -389,10 +393,7 @@ function LoginPageContent() {
         <div className="mt-8 rounded-xl border border-charcoal/10 bg-surface/60 px-4 py-3">
           <div className="flex items-start gap-2">
             <ShieldCheck className="h-4 w-4 text-champagne-dark mt-0.5 shrink-0" />
-            <p className="text-xs text-muted leading-relaxed">
-              Demo: <strong>9848012345</strong> auto-fills a Gold donor profile. Any other number
-              shows an empty customer form after OTP verification.
-            </p>
+            <p className="text-xs text-muted leading-relaxed">{t("login.demoHint")}</p>
           </div>
         </div>
       </div>
@@ -400,9 +401,14 @@ function LoginPageContent() {
   );
 }
 
+function LoginLoadingFallback() {
+  const { t } = useAppLanguage();
+  return <div className="pt-32 text-center text-muted">{t("common.loading")}</div>;
+}
+
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="pt-32 text-center text-muted">Loading...</div>}>
+    <Suspense fallback={<LoginLoadingFallback />}>
       <LoginPageContent />
     </Suspense>
   );

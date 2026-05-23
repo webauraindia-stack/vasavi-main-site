@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { useAppLanguage } from "@/hooks/use-app-language";
 
 const STORAGE_KEY = "hotelhub-cookie-consent";
 
@@ -16,6 +17,7 @@ interface CookiePreferences {
 }
 
 export function CookieConsent() {
+  const { t } = useAppLanguage();
   const [visible, setVisible] = useState(false);
   const [showPrefs, setShowPrefs] = useState(false);
   const [prefs, setPrefs] = useState<CookiePreferences>({
@@ -52,50 +54,49 @@ export function CookieConsent() {
               <div className="flex flex-col md:flex-row md:items-center gap-4">
                 <div className="flex-1">
                   <p className="font-display text-lg text-charcoal mb-1">
-                    We value your privacy
+                    {t("cookies.title")}
                   </p>
                   <p className="text-sm text-muted">
-                    We use cookies to enhance your browsing experience and analyze
-                    site traffic. Read our{" "}
+                    {t("cookies.description")}{" "}
                     <Link href="/privacy" className="text-champagne hover:underline">
-                      Privacy Policy
+                      {t("common.privacyPolicy")}
                     </Link>
                     .
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2 shrink-0">
                   <Button variant="outline" onClick={() => setShowPrefs(true)}>
-                    Manage Preferences
+                    {t("cookies.manage")}
                   </Button>
-                  <Button onClick={acceptAll}>Accept All</Button>
+                  <Button onClick={acceptAll}>{t("cookies.acceptAll")}</Button>
                 </div>
               </div>
             ) : (
               <div className="space-y-4">
-                <p className="font-display text-lg text-charcoal">Cookie Preferences</p>
+                <p className="font-display text-lg text-charcoal">{t("cookies.preferencesTitle")}</p>
                 <PreferenceRow
-                  label="Necessary"
-                  description="Required for the site to function."
+                  label={t("cookies.necessary")}
+                  description={t("cookies.necessaryDesc")}
                   checked
                   disabled
                 />
                 <PreferenceRow
-                  label="Analytics"
-                  description="Help us understand how visitors use our site."
+                  label={t("cookies.analytics")}
+                  description={t("cookies.analyticsDesc")}
                   checked={prefs.analytics}
                   onCheckedChange={(v) => setPrefs({ ...prefs, analytics: v })}
                 />
                 <PreferenceRow
-                  label="Marketing"
-                  description="Personalized offers and promotions."
+                  label={t("cookies.marketing")}
+                  description={t("cookies.marketingDesc")}
                   checked={prefs.marketing}
                   onCheckedChange={(v) => setPrefs({ ...prefs, marketing: v })}
                 />
                 <div className="flex gap-2 pt-2">
                   <Button variant="outline" onClick={() => setShowPrefs(false)}>
-                    Back
+                    {t("cookies.back")}
                   </Button>
-                  <Button onClick={() => save(prefs)}>Save Preferences</Button>
+                  <Button onClick={() => save(prefs)}>{t("cookies.savePreferences")}</Button>
                 </div>
               </div>
             )}

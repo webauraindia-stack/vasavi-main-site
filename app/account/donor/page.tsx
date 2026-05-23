@@ -8,8 +8,10 @@ import { Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getTierInfo } from "@/lib/donor-engine";
 import type { DonorTier } from "@/types";
+import { useAppLanguage } from "@/hooks/use-app-language";
 
 export default function DonorBenefitsPage() {
+  const { t } = useAppLanguage();
   const { data: session } = useSession();
   const router = useRouter();
   const isDonor = (session?.user as { isDonor?: boolean })?.isDonor;
@@ -23,29 +25,25 @@ export default function DonorBenefitsPage() {
   }, [session, isDonor, router]);
 
   if (!isDonor || !tierInfo) {
-    return (
-      <div className="text-muted">Loading donor benefits...</div>
-    );
+    return <div className="text-muted">{t("account.donorBenefitsLoading")}</div>;
   }
 
   return (
     <div>
       <h2 className="font-display text-xl text-charcoal mb-6 flex items-center gap-2">
         <Crown className="h-5 w-5 text-champagne" />
-        Donor Benefits
+        {t("account.donorBenefits")}
       </h2>
 
       <div className="card-surface rounded-xl p-6 border border-champagne/20 mb-6">
-        <p className="text-sm text-muted mb-1">Your tier</p>
-        <p className="font-display text-3xl text-champagne capitalize mb-2">
-          {tierInfo.name}
-        </p>
+        <p className="text-sm text-muted mb-1">{t("account.yourTier")}</p>
+        <p className="font-display text-3xl text-champagne capitalize mb-2">{tierInfo.name}</p>
         <p className="text-charcoal/80">
-          {tierInfo.discountPercent}% discount on all eligible bookings
+          {t("account.discountOnStays", { percent: tierInfo.discountPercent })}
         </p>
       </div>
 
-      <h3 className="font-display text-lg text-charcoal mb-3">Included Benefits</h3>
+      <h3 className="font-display text-lg text-charcoal mb-3">{t("account.includedBenefits")}</h3>
       <ul className="space-y-2 mb-8">
         {tierInfo.benefits.map((b) => (
           <li key={b} className="text-muted flex gap-2 text-sm">
@@ -56,10 +54,10 @@ export default function DonorBenefitsPage() {
 
       <div className="flex gap-3">
         <Link href="/search?donorExclusive=true">
-          <Button>Book Donor Room</Button>
+          <Button>{t("account.bookDonorRoom")}</Button>
         </Link>
         <Link href="/donor-portal">
-          <Button variant="outline">Donor Portal</Button>
+          <Button variant="outline">{t("account.donorPortal")}</Button>
         </Link>
       </div>
     </div>

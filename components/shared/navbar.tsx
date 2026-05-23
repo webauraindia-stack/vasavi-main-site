@@ -15,33 +15,36 @@ import {
   Globe,
   Heart,
   CircleUser,
+  Bell,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { HOTELS } from "@/lib/data/hotels";
 import { useBodyScrollLock } from "@/lib/use-body-scroll-lock";
-import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
-
-const LANGUAGES = [
-  { code: "en", short: "EN", label: "English" },
-  { code: "te", short: "TE", label: "తెలుగు" },
-  { code: "hi", short: "HI", label: "हिंदी" },
-  { code: "ta", short: "TA", label: "தமிழ்" },
-  { code: "kn", short: "KN", label: "ಕನ್ನಡ" },
-] as const;
+import { useAppLanguage } from "@/hooks/use-app-language";
+import type { AppLanguage } from "@/lib/i18n";
+import { NotificationsMenu } from "@/components/shared/notifications-menu";
 
 export function Navbar() {
-  const { t, i18n } = useTranslation();
+  const { t, languages, changeLanguage } = useAppLanguage();
   const { data: session } = useSession();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [megaOpen, setMegaOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
   const isDonor = (session?.user as { isDonor?: boolean })?.isDonor;
+  const [scrolled, setScrolled] = useState(false);
 
   useBodyScrollLock(mobileOpen);
 
   const closeMobile = () => setMobileOpen(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 12);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   useEffect(() => {
     if (!userMenuOpen) return;
@@ -59,6 +62,7 @@ export function Navbar() {
     { href: "/schemes", label: t("nav.schemes") },
     { href: "/founder", label: t("nav.founder") },
     { href: "/about", label: t("nav.about") },
+    { href: "/health-centre", label: t("nav.healthCentre") },
     { href: "/contact", label: t("nav.contact") },
   ];
 
@@ -69,29 +73,38 @@ export function Navbar() {
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-charcoal/10">
+      <header
+        className={cn(
+          "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
+          scrolled ? "navbar-glass-scrolled" : "navbar-glass"
+        )}
+      >
         <nav
-          className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-3 px-4 lg:h-16 lg:px-8"
+          className="page-container flex h-14 items-center justify-between gap-3 lg:h-16"
           aria-label="Main navigation"
         >
           {/* Logo — Trivago-style wordmark */}
           <Link
             href="/"
-            className="select-none shrink-0 hover:opacity-90 transition-opacity"
+            className="select-none shrink-0 hover:opacity-90 transition-opacity group"
             aria-label="Vasavi Hotels home"
           >
-            <span className="flex items-center gap-2">
-              <span className="relative hidden h-8 w-8 shrink-0 sm:block">
+            <span className="flex items-center gap-2.5">
+              <span className="relative hidden h-9 w-9 shrink-0 sm:block rounded-full border border-champagne-dark/35 p-1 bg-white shadow-warm">
                 <Image
                   src="/images/vasavi-club-logo.svg"
                   alt=""
                   fill
-                  className="object-contain"
+                  className="object-contain p-0.5"
                 />
               </span>
-              <span className="font-display text-xl font-black tracking-tight text-charcoal lowercase sm:text-2xl">
-                vasavi
-                <span className="text-champagne">hotels</span>
+              <span className="flex flex-col leading-none">
+                <span className="font-display text-[1.05rem] sm:text-xl font-black tracking-[0.04em] text-charcoal uppercase">
+                  {t("brand.vasavi")}
+                </span>
+                <span className="text-[0.65rem] sm:text-xs font-bold uppercase tracking-[0.22em] text-champagne-dark">
+                  {t("brand.spiritualStays")}
+                </span>
               </span>
             </span>
           </Link>
@@ -119,7 +132,7 @@ export function Navbar() {
                     exit={{ opacity: 0, y: -8 }}
                     className="absolute left-1/2 top-full -translate-x-1/2 pt-4 w-screen max-w-5xl"
                   >
-                    <div className="bg-white rounded-xl p-6 grid grid-cols-3 gap-4 border border-charcoal/10 shadow-warm-md">
+                    <div className="bg-white rounded-[var(--radius-devotional)] p-6 grid grid-cols-3 gap-4 border border-beige/70 shadow-warm-lg">
                       {HOTELS.map((hotel) => (
                         <Link
                           key={hotel.id}
@@ -156,7 +169,7 @@ export function Navbar() {
               <Link
                 key={link.href}
                 href={link.href}
-                className="text-base font-semibold text-charcoal hover:text-champagne transition-colors whitespace-nowrap"
+                className="text-sm font-bold text-charcoal hover:text-champagne transition-colors whitespace-nowrap relative after:absolute after:-bottom-1 after:left-0 after:h-0.5 after:w-0 after:bg-champagne-dark after:transition-all hover:after:w-full"
               >
                 {link.label}
               </Link>
@@ -165,20 +178,22 @@ export function Navbar() {
 
           {/* Right icons — Trivago-style cluster */}
           <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
-            <LanguageSelect variant="desktop" value={i18n.language} onChange={i18n.changeLanguage} />
-            <LanguageSelect variant="mobile" value={i18n.language} onChange={i18n.changeLanguage} />
+            <LanguageSelect variant="desktop" languages={languages} onChange={changeLanguage} />
+            <LanguageSelect variant="mobile" languages={languages} onChange={changeLanguage} />
 
             <NavIconButton
               href={session ? "/account/bookings" : "/search"}
-              label={session ? "Saved stays" : "Search stays"}
+              label={session ? t("common.savedStays") : t("common.searchStays")}
               className="hidden md:inline-flex"
             >
               <Heart className="h-6 w-6 stroke-[1.75]" />
             </NavIconButton>
 
+            <NotificationsMenu />
+
             <div className="relative" ref={userMenuRef}>
               <NavIconButton
-                label={session ? "Account menu" : "Sign in"}
+                label={session ? t("common.accountMenu") : t("common.signIn")}
                 active={userMenuOpen || !!session}
                 onClick={() => setUserMenuOpen((o) => !o)}
                 aria-expanded={userMenuOpen}
@@ -203,15 +218,18 @@ export function Navbar() {
                   >
                     {session ? (
                       <>
+                        <DropdownLink href="/account/notifications" onClick={() => setUserMenuOpen(false)}>
+                          {t("nav.notifications")}
+                        </DropdownLink>
                         <DropdownLink href="/account/bookings" onClick={() => setUserMenuOpen(false)}>
-                          My Bookings
+                          {t("nav.myBookings")}
                         </DropdownLink>
                         <DropdownLink href="/account/profile" onClick={() => setUserMenuOpen(false)}>
-                          My Profile
+                          {t("nav.myProfile")}
                         </DropdownLink>
                         {isDonor && (
                           <DropdownLink href="/account/donor" onClick={() => setUserMenuOpen(false)}>
-                            Donor Benefits
+                            {t("nav.donorBenefits")}
                           </DropdownLink>
                         )}
                         <button
@@ -222,12 +240,12 @@ export function Navbar() {
                           }}
                           className="w-full text-left px-4 py-2.5 text-sm font-semibold text-red-600 hover:bg-surface"
                         >
-                          Sign Out
+                          {t("nav.logout")}
                         </button>
                       </>
                     ) : (
                       <DropdownLink href="/login" onClick={() => setUserMenuOpen(false)}>
-                        Sign in
+                        {t("nav.login")}
                       </DropdownLink>
                     )}
                   </motion.div>
@@ -236,7 +254,7 @@ export function Navbar() {
             </div>
 
             <NavIconButton
-              label="Open menu"
+              label={t("common.openMenu")}
               onClick={() => setMobileOpen(true)}
               className="lg:hidden"
             >
@@ -268,12 +286,21 @@ export function Navbar() {
                 <span className="font-display text-lg font-bold lowercase">
                   vasavi<span className="text-champagne">hotels</span>
                 </span>
-                <NavIconButton label="Close menu" onClick={closeMobile}>
+                <NavIconButton label={t("common.closeMenu")} onClick={closeMobile}>
                   <X className="h-6 w-6" />
                 </NavIconButton>
               </div>
 
               <div className="flex-1 overflow-y-auto px-4 py-2">
+                <Link
+                  href="/account/notifications"
+                  onClick={closeMobile}
+                  className="flex min-h-12 items-center gap-2 border-b border-charcoal/8 text-base font-bold text-charcoal hover:text-champagne transition-colors"
+                >
+                  <Bell className="h-5 w-5" aria-hidden />
+                  {t("nav.notifications")}
+                </Link>
+
                 <nav>
                   {drawerLinks.map((link) => (
                     <Link
@@ -287,7 +314,7 @@ export function Navbar() {
                   ))}
                 </nav>
 
-                <p className="text-label mt-6 mb-3">Hotels</p>
+                <p className="text-label mt-6 mb-3">{t("nav.hotelsSection")}</p>
                 <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2">
                   {HOTELS.map((h) => (
                     <Link
@@ -316,11 +343,11 @@ export function Navbar() {
                     }}
                     className="w-full"
                   >
-                    Sign Out
+                    {t("nav.logout")}
                   </Button>
                 ) : (
                   <Link href="/login" onClick={closeMobile}>
-                    <Button className="w-full">Sign in</Button>
+                    <Button className="w-full">{t("nav.login")}</Button>
                   </Link>
                 )}
               </div>
@@ -334,28 +361,30 @@ export function Navbar() {
 
 function LanguageSelect({
   variant,
-  value,
+  languages,
   onChange,
 }: {
   variant: "desktop" | "mobile";
-  value: string;
-  onChange: (lang: string) => void;
+  languages: readonly { code: AppLanguage; label: string }[];
+  onChange: (lang: AppLanguage) => void | Promise<void>;
 }) {
-  const current = LANGUAGES.find((l) => l.code === value) ?? LANGUAGES[0];
+  const { language } = useAppLanguage();
+  const current = languages.find((l) => l.code === language) ?? languages[0];
+  const short = current.code.toUpperCase();
 
   if (variant === "desktop") {
     return (
       <div className="hidden md:flex items-center gap-1 mr-1 text-charcoal">
         <Globe className="h-4 w-4 shrink-0" aria-hidden />
         <select
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
+          value={language}
+          onChange={(e) => void onChange(e.target.value as AppLanguage)}
           className="bg-transparent text-sm font-semibold focus:outline-none appearance-none cursor-pointer pr-1"
           aria-label="Select language"
         >
-          {LANGUAGES.map((lang) => (
+          {languages.map((lang) => (
             <option key={lang.code} value={lang.code}>
-              {lang.short}
+              {lang.code.toUpperCase()}
             </option>
           ))}
         </select>
@@ -372,14 +401,14 @@ function LanguageSelect({
       aria-label="Select language"
     >
       <Globe className="h-5 w-5 shrink-0" aria-hidden />
-      <span className="text-[10px] font-bold leading-none">{current.short}</span>
+      <span className="text-[10px] font-bold leading-none">{short}</span>
       <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
+        value={language}
+        onChange={(e) => void onChange(e.target.value as AppLanguage)}
         className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
         aria-label="Select language"
       >
-        {LANGUAGES.map((lang) => (
+        {languages.map((lang) => (
           <option key={lang.code} value={lang.code}>
             {lang.label}
           </option>

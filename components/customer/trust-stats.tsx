@@ -2,8 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import { motion, useInView } from "framer-motion";
+import { HeartHandshake, Landmark, Building2, Users } from "lucide-react";
 import { TRUST_STATS } from "@/lib/data/hotels";
-import { useTranslation } from "react-i18next";
+import { useAppLanguage } from "@/hooks/use-app-language";
 
 function CountUp({
   end,
@@ -38,37 +39,45 @@ function CountUp({
   );
 }
 
+const ICONS = [Users, Landmark, Building2, HeartHandshake];
+
 export function TrustStats() {
-  const { t } = useTranslation();
+  const { t } = useAppLanguage();
 
   const stats = [
-    { label: t("trust.devotees", "Happy Pilgrims"), value: TRUST_STATS.totalBookings, suffix: "+" },
-    { label: t("trust.years", "Years Serving"), value: TRUST_STATS.yearsOperating },
-    { label: t("trust.temples", "Temple Destinations"), value: TRUST_STATS.cities },
-    { label: t("trust.properties", "Community Guest Houses"), value: 11 },
+    { label: t("trust.devotees"), value: TRUST_STATS.totalBookings, suffix: "+" },
+    { label: t("trust.years"), value: TRUST_STATS.yearsOperating },
+    { label: t("trust.temples"), value: TRUST_STATS.cities },
+    { label: t("trust.properties"), value: 11 },
   ];
 
   return (
-    <section className="relative z-0 py-12 md:py-16 border-y border-champagne/10 bg-white">
-      <div className="mx-auto max-w-7xl px-4 lg:px-8">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 md:gap-10">
-          {stats.map((stat, i) => (
-            <motion.div
-              key={stat.label}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
-              className="flex flex-col items-center justify-start text-center min-h-[5.5rem]"
-            >
-              <p className="font-display text-3xl md:text-4xl lg:text-5xl text-champagne font-semibold leading-none tracking-tight mb-2 md:mb-3">
-                <CountUp end={stat.value} suffix={stat.suffix} />
-              </p>
-              <p className="text-xs sm:text-sm text-charcoal font-bold uppercase tracking-wide leading-snug max-w-[11rem] mx-auto">
-                {stat.label}
-              </p>
-            </motion.div>
-          ))}
+    <section className="relative z-10 -mt-8">
+      <div className="page-container">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+          {stats.map((stat, i) => {
+            const Icon = ICONS[i];
+            return (
+              <motion.div
+                key={stat.label}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.08 }}
+                className="rounded-[var(--radius-devotional)] border border-beige/70 bg-white p-4 sm:p-5 shadow-warm-md"
+              >
+                <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-champagne/10 text-champagne">
+                  <Icon className="h-5 w-5" />
+                </div>
+                <p className="font-display text-2xl sm:text-3xl lg:text-4xl text-champagne font-bold leading-none">
+                  <CountUp end={stat.value} suffix={stat.suffix} />
+                </p>
+                <p className="mt-2 text-xs sm:text-sm font-bold uppercase tracking-wide text-muted leading-snug">
+                  {stat.label}
+                </p>
+              </motion.div>
+            );
+          })}
         </div>
       </div>
     </section>

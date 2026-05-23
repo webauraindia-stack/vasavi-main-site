@@ -9,16 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { HOTELS } from "@/lib/data/hotels";
 import { cn } from "@/lib/utils";
-
-const companyLinks = [
-  { href: "/donors", label: "Donor Program" },
-  { href: "/schemes", label: "Community Schemes" },
-  { href: "/founder", label: "Our Founder" },
-  { href: "/admin", label: "ERP Admin Panel" },
-  { href: "/about", label: "About Us" },
-  { href: "/contact", label: "Contact" },
-  { href: "https://vasaviclubs.org/", label: "Vasavi Clubs International" },
-];
+import { useAppLanguage } from "@/hooks/use-app-language";
+import { useLocalizedHotel } from "@/hooks/use-localized-content";
 
 const social = [
   { Icon: Instagram, label: "Instagram" },
@@ -28,40 +20,44 @@ const social = [
 ];
 
 export function Footer() {
+  const { t } = useAppLanguage();
   const [email, setEmail] = useState("");
   const [openSection, setOpenSection] = useState<string | null>(null);
+
+  const companyLinks = [
+    { href: "/donors", label: t("nav.donorProgram") },
+    { href: "/schemes", label: t("nav.schemes") },
+    { href: "/founder", label: t("nav.founder") },
+    { href: "/about", label: t("nav.about") },
+    { href: "/health-centre", label: t("nav.healthCentre") },
+    { href: "/contact", label: t("nav.contact") },
+    { href: "https://vasaviclubs.org/", label: t("footer.vciLink") },
+  ];
 
   const toggle = (id: string) =>
     setOpenSection((prev) => (prev === id ? null : id));
 
   return (
-    <footer className="bg-surface border-t border-charcoal/10 mt-auto">
-      <div className="mx-auto max-w-7xl px-4 py-12 lg:px-8 lg:py-16">
-        {/* Mobile accordion sections */}
-        <div className="md:hidden space-y-0 divide-y divide-charcoal/10">
+    <footer className="footer-devotional relative text-beige/90 mt-auto border-t border-champagne-dark/20">
+      <div className="absolute inset-x-0 top-0 gold-divider opacity-50" />
+      <div className="page-container py-12 lg:py-16 relative">
+        <div className="md:hidden space-y-0 divide-y divide-white/10">
           <AccordionSection
             id="hotels"
-            title="Our Hotels"
+            title={t("footer.ourHotels")}
             open={openSection === "hotels"}
             onToggle={() => toggle("hotels")}
           >
             <ul className="space-y-2 pb-4">
               {HOTELS.map((h) => (
-                <li key={h.id}>
-                  <Link
-                    href={`/hotels/${h.slug}`}
-                    className="text-base font-semibold text-charcoal/80 hover:text-champagne transition-colors"
-                  >
-                    {h.name}
-                  </Link>
-                </li>
+                <FooterHotelLink key={h.id} slug={h.slug} name={h.name} description={h.description} variant="mobile" />
               ))}
             </ul>
           </AccordionSection>
 
           <AccordionSection
             id="company"
-            title="Company"
+            title={t("footer.company")}
             open={openSection === "company"}
             onToggle={() => toggle("company")}
           >
@@ -70,7 +66,7 @@ export function Footer() {
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="text-base font-semibold text-charcoal/80 hover:text-champagne transition-colors"
+                    className="text-base font-semibold text-beige/85 hover:text-champagne-dark transition-colors"
                   >
                     {link.label}
                   </Link>
@@ -80,38 +76,35 @@ export function Footer() {
           </AccordionSection>
         </div>
 
-        {/* Desktop grid */}
         <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-12">
           <div>
             <Link
               href="/"
-              className="select-none flex items-center gap-2 hover:opacity-90 transition-opacity mb-2 justify-start"
+              className="select-none flex items-center gap-3 hover:opacity-90 transition-opacity mb-4"
             >
-              <div className="relative h-9 w-9 shrink-0">
+              <div className="relative h-10 w-10 shrink-0 rounded-full border border-champagne-dark/40 p-1 bg-white/5">
                 <Image
                   src="/images/vasavi-club-logo.svg"
                   alt="Vasavi Clubs Logo"
                   fill
-                  className="object-contain rounded-full border-2 border-champagne-dark shadow-sm"
+                  className="object-contain p-0.5"
                 />
               </div>
-              <span className="font-display text-[1.15rem] tracking-wide flex items-center gap-1 uppercase">
-                <span className="text-champagne font-black">va</span>
-                <span className="text-champagne-dark font-black">sa</span>
-                <span className="text-champagne-dark font-black">vi</span>
-                <span className="text-champagne font-bold ml-1">hotels</span>
+              <span className="font-display text-lg tracking-wide uppercase text-white">
+                {t("brand.vasavi")}{" "}
+                <span className="text-champagne-dark">{t("brand.spiritualStays")}</span>
               </span>
             </Link>
-            <p className="text-base text-charcoal/80 mb-6 font-semibold leading-relaxed">
-              Simple, affordable spiritual stays for the Vysha community.
+            <p className="text-sm text-beige/75 mb-6 font-semibold leading-relaxed max-w-xs">
+              {t("footer.tagline")}
             </p>
-            <div className="flex justify-center md:justify-start gap-4">
+            <div className="flex gap-4">
               {social.map(({ Icon, label }) => (
                 <a
                   key={label}
                   href="#"
                   aria-label={label}
-                  className="text-muted hover:text-champagne-dark transition-colors"
+                  className="text-beige/60 hover:text-champagne-dark transition-colors"
                 >
                   <Icon className="h-5 w-5" />
                 </a>
@@ -120,29 +113,22 @@ export function Footer() {
           </div>
 
           <div>
-            <h3 className="font-display text-lg text-charcoal mb-4">Our Hotels</h3>
+            <h3 className="font-display text-lg text-white mb-4">{t("footer.ourHotels")}</h3>
             <ul className="space-y-2 max-h-48 overflow-y-auto scrollbar-hide">
               {HOTELS.map((h) => (
-                <li key={h.id}>
-                  <Link
-                    href={`/hotels/${h.slug}`}
-                    className="text-base font-semibold text-charcoal/80 hover:text-champagne transition-colors"
-                  >
-                    {h.name}
-                  </Link>
-                </li>
+                <FooterHotelLink key={h.id} slug={h.slug} name={h.name} description={h.description} variant="desktop" />
               ))}
             </ul>
           </div>
 
           <div>
-            <h3 className="font-display text-lg text-charcoal mb-4">Company</h3>
+            <h3 className="font-display text-lg text-white mb-4">{t("footer.company")}</h3>
             <ul className="space-y-2">
               {companyLinks.map((link) => (
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="text-base font-semibold text-charcoal/80 hover:text-champagne transition-colors"
+                    className="text-sm font-semibold text-beige/80 hover:text-champagne-dark transition-colors"
                   >
                     {link.label}
                   </Link>
@@ -152,63 +138,44 @@ export function Footer() {
           </div>
 
           <div>
-            <h3 className="font-display text-lg text-charcoal mb-4">Newsletter</h3>
-            <p className="text-base text-charcoal/80 font-semibold mb-4 leading-relaxed">
-              Curated travel inspiration from across our collection.
+            <h3 className="font-display text-lg text-white mb-4">{t("footer.newsletterTitle")}</h3>
+            <p className="text-sm text-beige/75 font-semibold mb-4 leading-relaxed">
+              {t("footer.newsletterDesc")}
             </p>
-            <NewsletterForm email={email} setEmail={setEmail} />
+            <NewsletterForm email={email} setEmail={setEmail} subscribeLabel={t("common.subscribe")} placeholder={t("footer.emailPlaceholder")} />
           </div>
         </div>
 
-        {/* Mobile: brand + social + newsletter */}
         <div className="md:hidden mt-8 space-y-6 text-center">
           <div>
-            <Link
-              href="/"
-              className="select-none flex items-center gap-2 hover:opacity-90 transition-opacity mb-2 justify-center"
-            >
-              <div className="relative h-9 w-9 shrink-0">
-                <Image
-                  src="/images/vasavi-club-logo.svg"
-                  alt="Vasavi Clubs Logo"
-                  fill
-                  className="object-contain rounded-full border-2 border-champagne-dark shadow-sm"
-                />
+            <Link href="/" className="inline-flex items-center gap-2 mb-2">
+              <div className="relative h-9 w-9 shrink-0 rounded-full border border-champagne-dark/40 p-1">
+                <Image src="/images/vasavi-club-logo.svg" alt="" fill className="object-contain p-0.5" />
               </div>
-              <span className="font-display text-[1.15rem] tracking-wide flex items-center gap-1 uppercase">
-                <span className="text-champagne font-black">va</span>
-                <span className="text-champagne-dark font-black">sa</span>
-                <span className="text-champagne-dark font-black">vi</span>
-                <span className="text-champagne font-bold ml-1">hotels</span>
-              </span>
+              <span className="font-display text-lg text-white uppercase">Vasavi Hotels</span>
             </Link>
-            <p className="text-base text-charcoal/80 font-semibold leading-relaxed">
-              Simple, affordable spiritual stays for the Vysha community.
+            <p className="text-sm text-beige/75 font-semibold leading-relaxed px-4">
+              {t("footer.mobileTagline")}
             </p>
           </div>
           <div className="flex justify-center gap-5">
             {social.map(({ Icon, label }) => (
-              <a
-                key={label}
-                href="#"
-                aria-label={label}
-                className="text-muted hover:text-champagne-dark transition-colors"
-              >
+              <a key={label} href="#" aria-label={label} className="text-beige/60 hover:text-champagne-dark">
                 <Icon className="h-5 w-5" />
               </a>
             ))}
           </div>
-          <div className="text-left">
-            <h3 className="font-display text-lg text-charcoal mb-3 text-center">Newsletter</h3>
-            <NewsletterForm email={email} setEmail={setEmail} stacked />
+          <div className="text-left px-1">
+            <h3 className="font-display text-lg text-white mb-3 text-center">{t("footer.newsletterTitle")}</h3>
+            <NewsletterForm email={email} setEmail={setEmail} stacked subscribeLabel={t("common.subscribe")} placeholder={t("footer.emailPlaceholder")} />
           </div>
         </div>
 
-        <div className="mt-10 pt-8 border-t border-charcoal/10 flex flex-col sm:flex-row justify-between gap-4 text-sm font-semibold text-charcoal/75">
-          <p>© {new Date().getFullYear()} vasavihotels. All rights reserved.</p>
+        <div className="mt-10 pt-8 border-t border-white/10 flex flex-col sm:flex-row justify-between gap-4 text-sm font-semibold text-beige/65">
+          <p>© {new Date().getFullYear()} Vasavi Hotels. {t("common.allRightsReserved")}</p>
           <div className="flex gap-6 justify-center sm:justify-end">
-            <Link href="/privacy" className="hover:text-champagne-dark">Privacy Policy</Link>
-            <Link href="/terms" className="hover:text-champagne-dark">Terms of Service</Link>
+            <Link href="/privacy" className="hover:text-champagne-dark">{t("common.privacyPolicy")}</Link>
+            <Link href="/terms" className="hover:text-champagne-dark">{t("common.termsOfService")}</Link>
           </div>
         </div>
       </div>
@@ -234,13 +201,13 @@ function AccordionSection({
       <button
         type="button"
         onClick={onToggle}
-        className="flex w-full items-center justify-between py-4 font-display text-lg text-charcoal"
+        className="flex w-full items-center justify-between py-4 font-display text-lg text-white"
         aria-expanded={open}
         aria-controls={`footer-${id}`}
       >
         {title}
         <ChevronDown
-          className={cn("h-5 w-5 text-muted transition-transform", open && "rotate-180")}
+          className={cn("h-5 w-5 text-beige/60 transition-transform", open && "rotate-180")}
         />
       </button>
       <AnimatePresence initial={false}>
@@ -265,10 +232,14 @@ function NewsletterForm({
   email,
   setEmail,
   stacked = false,
+  subscribeLabel,
+  placeholder,
 }: {
   email: string;
   setEmail: (v: string) => void;
   stacked?: boolean;
+  subscribeLabel: string;
+  placeholder: string;
 }) {
   return (
     <form
@@ -280,16 +251,48 @@ function NewsletterForm({
     >
       <Input
         type="email"
-        placeholder="Your email"
+        placeholder={placeholder}
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         aria-label="Newsletter email"
         required
-        className={stacked ? "w-full" : "flex-1"}
+        className={cn(
+          stacked ? "w-full" : "flex-1",
+          "bg-white/10 border-white/15 text-white placeholder:text-beige/50"
+        )}
       />
-      <Button type="submit" className={stacked ? "w-full" : "shrink-0"}>
-        Subscribe
+      <Button
+        type="submit"
+        className={cn(stacked ? "w-full" : "shrink-0", "bg-champagne-dark text-charcoal hover:bg-champagne-dark/90")}
+      >
+        {subscribeLabel}
       </Button>
     </form>
+  );
+}
+
+function FooterHotelLink({
+  slug,
+  name,
+  description,
+  variant,
+}: {
+  slug: string;
+  name: string;
+  description: string;
+  variant: "mobile" | "desktop";
+}) {
+  const localized = useLocalizedHotel(slug, { name, description });
+  const className =
+    variant === "mobile"
+      ? "text-base font-semibold text-beige/85 hover:text-champagne-dark transition-colors"
+      : "text-sm font-semibold text-beige/80 hover:text-champagne-dark transition-colors";
+
+  return (
+    <li>
+      <Link href={`/hotels/${slug}`} className={className}>
+        {localized.name}
+      </Link>
+    </li>
   );
 }

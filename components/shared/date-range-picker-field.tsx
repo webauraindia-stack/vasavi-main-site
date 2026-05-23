@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { format } from "date-fns";
+import { useAppLanguage } from "@/hooks/use-app-language";
 import { DayPicker, type DateRange } from "react-day-picker";
 import { Calendar } from "lucide-react";
 import {
@@ -31,12 +32,17 @@ export function DateRangePickerField({
   numberOfMonths = 1,
   align = "start",
 }: DateRangePickerFieldProps) {
-  const dateLabel =
-    range?.from && range?.to
-      ? `${format(range.from, "MMM d")} – ${format(range.to, "MMM d")}`
-      : range?.from
-        ? `${format(range.from, "MMM d")} – Checkout`
-        : "Check-in / Check-out";
+  const { t } = useAppLanguage();
+
+  const dateLabel = useMemo(() => {
+    if (range?.from && range?.to) {
+      return `${format(range.from, "MMM d")} – ${format(range.to, "MMM d")}`;
+    }
+    if (range?.from) {
+      return `${format(range.from, "MMM d")} – ${t("search.checkoutPending")}`;
+    }
+    return t("search.dateRangePlaceholder");
+  }, [range?.from, range?.to, t]);
 
   const handleSelect = useCallback(
     (selected: DateRange | undefined) => {

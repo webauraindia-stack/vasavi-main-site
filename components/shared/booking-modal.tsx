@@ -47,22 +47,27 @@ import { BenefitCouponCard } from "@/components/booking/benefit-coupon-card";
 import { PaymentBreakdownPanel } from "@/components/booking/payment-breakdown-panel";
 import { MemberProfileCard } from "@/components/booking/member-profile-card";
 import "react-day-picker/style.css";
+import { useAppLanguage } from "@/hooks/use-app-language";
+import { useLocalizedHotel, useLocalizedRoom } from "@/hooks/use-localized-content";
 
-const guestSchema = z.object({
-  firstName: z.string().min(2, "First name required"),
-  lastName: z.string().min(2, "Last name required"),
-  email: z.string().email("Valid email required"),
-  phone: z.string().min(10, "Valid phone required"),
-  countryCode: z.string().default("+91"),
-  arrivalTime: z.string().min(1, "Select arrival time"),
-  specialRequests: z.string().optional(),
-});
+function createGuestSchema(t: (key: string) => string) {
+  return z.object({
+    firstName: z.string().min(2, t("booking.firstNameRequired")),
+    lastName: z.string().min(2, t("booking.lastNameRequired")),
+    email: z.string().email(t("booking.emailRequired")),
+    phone: z.string().min(10, t("booking.phoneRequired")),
+    countryCode: z.string().default("+91"),
+    arrivalTime: z.string().min(1, t("booking.arrivalRequired")),
+    specialRequests: z.string().optional(),
+  });
+}
 
-type GuestForm = z.infer<typeof guestSchema>;
+type GuestForm = z.infer<ReturnType<typeof createGuestSchema>>;
 
 const SEVA_AMOUNTS = [0, 101, 501, 1001, 2501];
 
 export function BookingModal() {
+  const { t } = useAppLanguage();
   const { data: session } = useSession();
   const {
     isOpen,
@@ -214,6 +219,20 @@ export function BookingModal() {
     }
   }, [step, isMemberFlow, activeDonor, afterTierSubtotal, autoSuggested, setSelectedCouponIds]);
 
+  const guestSchema = useMemo(() => createGuestSchema(t), [t]);
+
+  const roomForI18n = selectedRoom ?? {
+    name: "",
+    description: "",
+    bedType: "",
+    category: "Standard",
+  };
+  const localizedRoom = useLocalizedRoom(roomForI18n);
+  const localizedHotel = useLocalizedHotel(selectedRoom?.hotelSlug ?? "", {
+    name: selectedRoom?.hotelName ?? "",
+    description: "",
+  });
+
   const form = useForm<GuestForm>({
     resolver: zodResolver(guestSchema),
     defaultValues: {
@@ -244,7 +263,7 @@ export function BookingModal() {
       setAutoSuggested(false);
       setSelectedCouponIds([]);
     } else {
-      setVerifyError("Member ID not found. Try DH-2024-8842, VCI-HYD-2841, or VCI-SEC-1092");
+      setVerifyError(t("booking.memberNotFound"));
     }
     setVerifying(false);
   };
@@ -336,16 +355,18 @@ export function BookingModal() {
                     id="booking-title"
                     className="font-display text-lg md:text-xl font-bold text-charcoal tracking-tight truncate"
                   >
-                    {step === 7 ? "Blessed journey confirmed" : `Reserve ${selectedRoom.name}`}
+                    {step === 7
+                      ? t("booking.blessedJourneyConfirmed")
+                      : t("booking.reserveRoom", { roomName: localizedRoom.name })}
                   </h2>
                   <p className="text-xs text-muted font-semibold truncate">
-                    {selectedRoom.hotelName}
+                    {localizedHotel.name}
                   </p>
                 </div>
                 <button
                   onClick={handleClose}
                   className="p-2 rounded-full hover:bg-surface transition-colors shrink-0"
-                  aria-label="Close booking"
+                  aria-label={t("booking.closeBooking")}
                 >
                   <X className="h-5 w-5 text-muted" />
                 </button>
@@ -367,18 +388,19 @@ export function BookingModal() {
                     />
                     <motion.div className="absolute inset-0 bg-gradient-to-t from-charcoal/60 to-transparent" />
                     <motion.p className="absolute bottom-3 left-3 text-white font-display font-bold text-sm">
-                      {selectedRoom.category} · {selectedRoom.bedType}
+                      {t(`roomTypes.${selectedRoom.category}`, { defaultValue: selectedRoom.category })} ·{" "}
+                      {localizedRoom.bedType}
                     </motion.p>
                   </div>
 
                   <div className="card-surface p-4 space-y-3 text-sm">
-                    <Row label="Retreat" value={selectedRoom.name} />
+                    <Row label={t("booking.retreat")} value={localizedRoom.name} />
                     <Row
-                      label="Stay dates"
+                      label={t("booking.stayDates")}
                       value={
                         checkIn && checkOut
                           ? `${formatDate(checkIn)} – ${formatDate(checkOut)}`
-                          : "Select below"
+                          : t("booking.selectBelow")
                       }
                       mono
                     />
@@ -403,27 +425,29 @@ export function BookingModal() {
                         className="rounded-xl bg-champagne/5 border border-champagne/20 px-3 py-2 text-center"
                       >
                         <p className="text-xs text-muted font-semibold uppercase tracking-wider">
-                          Stay duration
+                          {t("booking.stayDuration")}
                         </p>
                         <p className="font-display font-bold text-champagne text-lg">
-                          {nights} {nights === 1 ? "night" : "nights"} · {roomCount}{" "}
-                          {roomCount === 1 ? "room" : "rooms"}
+                          {nights}{" "}
+                          {nights === 1 ? t("booking.night") : t("booking.nights")} · {roomCount}{" "}
+                          {roomCount === 1 ? t("booking.room") : t("booking.rooms")}
                         </p>
                         <p className="text-[11px] text-muted">
-                          {guestCount.adults} adults
-                          {guestCount.children > 0 && `, ${guestCount.children} children`}
+                          {guestCount.adults} {t("booking.adults")}
+                          {guestCount.children > 0 &&
+                            `, ${guestCount.children} ${t("booking.children")}`}
                         </p>
                       </motion.div>
                     )}
                     <div className="border-t border-beige/40 pt-2 flex justify-between font-bold">
-                      <span>Estimated subtotal</span>
+                      <span>{t("booking.estimatedSubtotal")}</span>
                       <span className="font-mono text-champagne-dark">
                         {formatCurrency(pricing.subtotal)}
                       </span>
                     </div>
                   </div>
 
-                  <NavButtons onBack={handleClose} backLabel="Cancel" onNext={nextStep} nextDisabled={!checkIn || !checkOut} />
+                  <NavButtons onBack={handleClose} backLabel={t("booking.cancel")} onNext={nextStep} nextDisabled={!checkIn || !checkOut} />
                 </div>
               )}
 
@@ -431,30 +455,30 @@ export function BookingModal() {
               {step === 2 && (
                 <form onSubmit={handleGuestSubmit} className="space-y-4">
                   <p className="text-sm text-muted">
-                    Guest details for temple-town check-in & WhatsApp confirmation.
+                    {t("booking.guestIntro")}
                   </p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <Field label="First name" error={form.formState.errors.firstName?.message}>
+                    <Field label={t("booking.firstName")} error={form.formState.errors.firstName?.message}>
                       <Input {...form.register("firstName")} className="h-11 bg-surface/50" />
                     </Field>
-                    <Field label="Last name" error={form.formState.errors.lastName?.message}>
+                    <Field label={t("booking.lastName")} error={form.formState.errors.lastName?.message}>
                       <Input {...form.register("lastName")} className="h-11 bg-surface/50" />
                     </Field>
                   </div>
-                  <Field label="Email" error={form.formState.errors.email?.message}>
+                  <Field label={t("booking.email")} error={form.formState.errors.email?.message}>
                     <Input type="email" {...form.register("email")} className="h-11 bg-surface/50" />
                   </Field>
                   <div className="grid grid-cols-3 gap-2">
-                    <Field label="Code">
+                    <Field label={t("booking.code")}>
                       <Input {...form.register("countryCode")} className="h-11 bg-surface/50" />
                     </Field>
                     <div className="col-span-2">
-                      <Field label="Phone (WhatsApp)" error={form.formState.errors.phone?.message}>
+                      <Field label={t("booking.phoneWhatsapp")} error={form.formState.errors.phone?.message}>
                         <Input {...form.register("phone")} className="h-11 bg-surface/50" />
                       </Field>
                     </div>
                   </div>
-                  <Field label="Arrival time">
+                  <Field label={t("booking.arrivalTime")}>
                     <Input type="time" {...form.register("arrivalTime")} className="h-11 bg-surface/50" />
                   </Field>
                   <NavButtons onBack={prevStep} submit />
@@ -465,8 +489,7 @@ export function BookingModal() {
               {step === 3 && (
                 <div className="space-y-4">
                   <p className="text-sm text-muted leading-relaxed">
-                    Verify your Vasavi Clubs International membership to unlock free stays,
-                    compensation wallet, festival coupons, and donor rewards.
+                    {t("booking.memberIntro")}
                   </p>
 
                   {memberProfile ? (
@@ -475,7 +498,7 @@ export function BookingModal() {
                     <>
                       <div className="flex gap-2">
                         <Input
-                          placeholder="Member ID e.g. DH-2024-8842"
+                          placeholder={t("booking.memberIdPlaceholder")}
                           value={memberIdInput}
                           onChange={(e) => setMemberIdInput(e.target.value.toUpperCase())}
                           className="h-11 font-mono bg-surface/50"
@@ -486,14 +509,14 @@ export function BookingModal() {
                           disabled={verifying || !memberIdInput.trim()}
                           className="h-11 shrink-0 bg-champagne hover:bg-champagne/90 text-white font-bold"
                         >
-                          {verifying ? <Loader2 className="h-4 w-4 animate-spin" /> : "Verify"}
+                          {verifying ? <Loader2 className="h-4 w-4 animate-spin" /> : t("booking.verify")}
                         </Button>
                       </div>
                       {verifyError && (
                         <p className="text-xs text-rose-700 font-semibold">{verifyError}</p>
                       )}
                       <p className="text-[10px] font-bold uppercase tracking-wider text-muted">
-                        Demo profiles — tap to verify
+                        {t("booking.demoProfiles")}
                       </p>
                       <div className="grid gap-2">
                         {MOCK_MEMBER_PROFILES.map((p) => (
@@ -512,10 +535,10 @@ export function BookingModal() {
                             </div>
                             <span className="text-[10px] font-bold text-champagne shrink-0">
                               {p.freeStaysRemaining > 0
-                                ? `${p.freeStaysRemaining} free`
+                                ? t("booking.freeStays", { count: p.freeStaysRemaining })
                                 : p.compensationWallet > 0
-                                ? formatCurrency(p.compensationWallet)
-                                : "Donor"}
+                                  ? formatCurrency(p.compensationWallet)
+                                  : t("booking.donor")}
                             </span>
                           </button>
                         ))}
@@ -526,7 +549,7 @@ export function BookingModal() {
                   <NavButtons
                     onBack={prevStep}
                     onNext={nextStep}
-                    nextLabel={memberVerified ? "View blessings" : "Continue as guest"}
+                    nextLabel={memberVerified ? t("booking.viewBlessings") : t("booking.continueAsGuest")}
                   />
                 </div>
               )}
@@ -665,12 +688,9 @@ export function BookingModal() {
                   <div className="rounded-2xl border border-beige/50 bg-gradient-to-br from-amber-50/50 to-surface p-4">
                     <HeartHandshake className="h-8 w-8 text-champagne mb-2" />
                     <p className="font-display font-bold text-charcoal">
-                      Optional seva — strengthen KCGF
+                      {t("booking.sevaTitle")}
                     </p>
-                    <p className="text-sm text-muted mt-1 leading-relaxed">
-                      Add a devotional contribution to the K.C. Gupta Fellow corpus. Your seva
-                      compounds community education while earning reward points.
-                    </p>
+                    <p className="text-sm text-muted mt-1 leading-relaxed">{t("booking.sevaDesc")}</p>
                   </div>
 
                   <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
@@ -686,7 +706,7 @@ export function BookingModal() {
                             : "border-beige hover:border-champagne/30"
                         )}
                       >
-                        {amt === 0 ? "None" : `₹${amt}`}
+                        {amt === 0 ? t("booking.none") : `₹${amt}`}
                       </button>
                     ))}
                   </div>
@@ -702,7 +722,7 @@ export function BookingModal() {
                   <div className="grid md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <p className="text-xs font-bold uppercase tracking-wider text-muted">
-                        Payment method
+                        {t("booking.paymentMethod")}
                       </p>
                       {(["upi", "card", "netbanking"] as const).map((method) => (
                         <button
@@ -718,10 +738,10 @@ export function BookingModal() {
                         >
                           <CreditCard className="h-4 w-4 text-champagne" />
                           {method === "upi"
-                            ? "UPI / GPay / PhonePe"
+                            ? t("booking.upi")
                             : method === "card"
-                            ? "Credit / Debit Card"
-                            : "Net Banking"}
+                              ? t("booking.card")
+                              : t("booking.netbanking")}
                         </button>
                       ))}
 
@@ -736,7 +756,7 @@ export function BookingModal() {
                           className="text-sm font-semibold flex items-center gap-1.5 cursor-pointer"
                         >
                           <MessageCircle className="h-4 w-4 text-emerald-600" />
-                          Send WhatsApp confirmation
+                          {t("booking.whatsappConfirm")}
                         </label>
                       </div>
                     </div>
@@ -749,8 +769,8 @@ export function BookingModal() {
                     onNext={handlePayment}
                     nextLabel={
                       pricing.total > 0
-                        ? `Pay ${formatCurrency(pricing.total)}`
-                        : "Confirm booking"
+                        ? t("booking.payAmount", { amount: formatCurrency(pricing.total) })
+                        : t("booking.confirmBooking")
                     }
                     nextIcon={<IndianRupee className="h-4 w-4" />}
                   />
@@ -770,11 +790,12 @@ export function BookingModal() {
 
                   <div>
                     <h3 className="font-display text-2xl font-bold text-charcoal">
-                      {pricing.isFullyCovered ? "Blessed stay confirmed" : "Reservation confirmed"}
+                      {pricing.isFullyCovered
+                        ? t("booking.blessedStayConfirmed")
+                        : t("booking.reservationConfirmed")}
                     </h3>
                     <p className="text-sm text-muted mt-2 max-w-md mx-auto leading-relaxed">
-                      Your pilgrimage shelter at {selectedRoom.hotelName} is reserved with
-                      Vasavi community blessings. May your journey be peaceful and fulfilling.
+                      {t("booking.confirmBody", { hotelName: localizedHotel.name })}
                     </p>
                   </div>
 
@@ -784,18 +805,18 @@ export function BookingModal() {
 
                   <div className="card-surface p-4 max-w-sm mx-auto text-left space-y-2 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-muted">Reference</span>
+                      <span className="text-muted">{t("booking.reference")}</span>
                       <span className="font-mono font-bold">{bookingReference}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted">Check-in</span>
+                      <span className="text-muted">{t("booking.checkIn")}</span>
                       <span className="font-semibold">
                         {checkIn ? formatDate(checkIn) : "—"}
                       </span>
                     </div>
                     {pricing.couponDiscount + pricing.tierDiscount + pricing.walletApplied > 0 && (
                       <motion.div className="flex justify-between text-emerald-700 font-bold">
-                        <span>Community savings</span>
+                        <span>{t("booking.communitySavings")}</span>
                         <span className="font-mono">
                           {formatCurrency(
                             pricing.couponDiscount + pricing.tierDiscount + pricing.walletApplied
@@ -813,7 +834,7 @@ export function BookingModal() {
                       className="mx-auto"
                     />
                     <p className="text-[11px] text-muted mt-2 max-w-[200px] mx-auto">
-                      Express QR check-in at temple reception — contactless & warm welcome
+                      {t("booking.qrHint")}
                     </p>
                   </div>
 
@@ -824,17 +845,17 @@ export function BookingModal() {
                       className="flex items-center justify-center gap-2 text-sm text-emerald-800 font-semibold bg-emerald-50 border border-emerald-200/60 rounded-xl py-2.5 px-4 max-w-sm mx-auto"
                     >
                       <MessageCircle className="h-4 w-4" />
-                      WhatsApp confirmation sent to {form.getValues("phone") || "your number"}
+                      {t("booking.whatsappSent", {
+                        phone: form.getValues("phone") || "your number",
+                      })}
                     </motion.div>
                   )}
 
                   <div className="rounded-2xl bg-gradient-to-r from-champagne/10 via-amber-50/50 to-surface border border-champagne/20 p-4 max-w-md mx-auto">
                     <p className="font-display text-sm font-bold text-champagne italic">
-                      &ldquo;In service to community, we find the divine.&rdquo;
+                      &ldquo;{t("booking.quote")}&rdquo;
                     </p>
-                    <p className="text-[11px] text-muted mt-1">
-                      — Vasavi Clubs International · Est. 1961, Hyderabad
-                    </p>
+                    <p className="text-[11px] text-muted mt-1">{t("booking.quoteAttribution")}</p>
                   </div>
 
                   <div className="flex gap-2 pt-2">
@@ -842,14 +863,14 @@ export function BookingModal() {
                       onClick={handleClose}
                       className="flex-1 h-12 bg-champagne hover:bg-champagne/90 text-white font-bold rounded-xl"
                     >
-                      Done
+                      {t("booking.done")}
                     </Button>
                     <Button
                       variant="outline"
                       className="flex-1 h-12 rounded-xl font-bold border-beige"
                       asChild
                     >
-                      <Link href="/account/bookings">My bookings</Link>
+                      <Link href="/account/bookings">{t("booking.myBookings")}</Link>
                     </Button>
                   </div>
                 </div>
@@ -901,10 +922,10 @@ function Field({
 
 function NavButtons({
   onBack,
-  backLabel = "Back",
+  backLabel,
   onNext,
   onNextClick,
-  nextLabel = "Continue",
+  nextLabel,
   nextDisabled,
   submit,
   nextIcon,
@@ -918,11 +939,15 @@ function NavButtons({
   submit?: boolean;
   nextIcon?: React.ReactNode;
 }) {
+  const { t } = useAppLanguage();
+  const resolvedBack = backLabel ?? t("booking.back");
+  const resolvedNext = nextLabel ?? t("booking.continue");
+
   return (
     <div className="flex justify-between gap-2 pt-4 border-t border-beige/40">
       <Button type="button" variant="outline" onClick={onBack} className="h-11 rounded-xl">
         <ChevronLeft className="h-4 w-4 mr-1" />
-        {backLabel}
+        {resolvedBack}
       </Button>
       <Button
         type={submit ? "submit" : "button"}
@@ -930,7 +955,7 @@ function NavButtons({
         disabled={nextDisabled}
         className="h-11 rounded-xl bg-champagne hover:bg-champagne/90 text-white font-bold"
       >
-        {nextLabel}
+        {resolvedNext}
         {nextIcon ?? <ChevronRight className="h-4 w-4 ml-1" />}
       </Button>
     </div>

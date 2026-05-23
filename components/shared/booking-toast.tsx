@@ -5,12 +5,26 @@ import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle, MessageCircle, X } from "lucide-react";
 import { useBookingStore } from "@/stores/booking-store";
 import { formatDate } from "@/lib/utils";
+import { useAppLanguage } from "@/hooks/use-app-language";
+import { useLocalizedHotel, useLocalizedRoom } from "@/hooks/use-localized-content";
 
 const DURATION_MS = 7000;
 
 export function BookingToast() {
+  const { t } = useAppLanguage();
   const { showToast, toastData, dismissToast } = useBookingStore();
   const [progress, setProgress] = useState(100);
+
+  const roomLocalized = useLocalizedRoom({
+    name: toastData?.roomType ?? "",
+    description: "",
+    bedType: "",
+    category: "Standard",
+  });
+  const hotelLocalized = useLocalizedHotel(toastData?.hotelSlug ?? "", {
+    name: toastData?.hotelName ?? "",
+    description: "",
+  });
 
   useEffect(() => {
     if (!showToast) return;
@@ -44,24 +58,27 @@ export function BookingToast() {
             <div className="p-4 flex gap-3">
               <CheckCircle className="h-6 w-6 text-champagne-dark shrink-0 mt-0.5" />
               <div className="flex-1 min-w-0">
-                <p className="font-display text-charcoal font-bold">Booking Confirmed!</p>
+                <p className="font-display text-charcoal font-bold">{t("booking.toastConfirmed")}</p>
                 <p className="text-sm text-muted mt-1">
-                  {toastData.roomType} at {toastData.hotelName}
+                  {t("booking.toastAt", {
+                    room: roomLocalized.name || toastData.roomType,
+                    hotel: hotelLocalized.name || toastData.hotelName,
+                  })}
                 </p>
                 <p className="text-xs text-muted mt-0.5">
-                  Check-in: {formatDate(toastData.checkIn)}
+                  {t("booking.toastCheckIn", { date: formatDate(toastData.checkIn) })}
                 </p>
                 {toastData.whatsappSent && (
                   <p className="text-xs text-emerald-700 font-semibold mt-1.5 flex items-center gap-1">
                     <MessageCircle className="h-3.5 w-3.5" />
-                    WhatsApp confirmation sent
+                    {t("booking.toastWhatsapp")}
                   </p>
                 )}
               </div>
               <button
                 onClick={dismissToast}
                 className="text-muted hover:text-charcoal shrink-0"
-                aria-label="Dismiss"
+                aria-label={t("booking.dismiss")}
               >
                 <X className="h-4 w-4" />
               </button>

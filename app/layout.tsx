@@ -5,7 +5,7 @@ import { Navbar } from "@/components/shared/navbar";
 import { Footer } from "@/components/shared/footer";
 import { BookingModal } from "@/components/shared/booking-modal";
 import { BookingToast } from "@/components/shared/booking-toast";
-import { CookieConsent } from "@/components/shared/cookie-consent";
+import Script from "next/script";
 import "./globals.css";
 
 const cinzel = Cinzel({
@@ -60,15 +60,74 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${cinzel.variable} ${marcellus.variable} ${inter.variable}`}>
+    <html
+      lang="en"
+      data-scroll-behavior="smooth"
+      className={`${cinzel.variable} ${marcellus.variable} ${inter.variable}`}
+    >
       <body className="min-h-screen flex flex-col">
+        <div id="google_translate_element" style={{ display: "none" }}></div>
+        <Script
+          src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"
+          strategy="afterInteractive"
+        />
+        <Script id="google-translate-init" strategy="afterInteractive">
+          {`
+            function googleTranslateElementInit() {
+              new google.translate.TranslateElement({
+                pageLanguage: 'en',
+                autoDisplay: false
+              }, 'google_translate_element');
+            }
+
+            // Aggressively remove the Google Translate banner
+            if (typeof window !== 'undefined') {
+              const hideGoogleTranslate = () => {
+                // Hide any iframe that looks like the banner
+                const iframes = document.querySelectorAll('iframe');
+                iframes.forEach(iframe => {
+                  if (
+                    iframe.className.includes('goog-te-banner-frame') || 
+                    (iframe.src && iframe.src.includes('translate.googleapis.com')) ||
+                    iframe.id === ':1.container'
+                  ) {
+                    iframe.style.cssText = 'display: none !important; visibility: hidden !important; opacity: 0 !important; height: 0 !important; width: 0 !important;';
+                  }
+                });
+
+                // Hide the main wrapper if present (only specific ones)
+                const wrappers = document.querySelectorAll('.skiptranslate > iframe.goog-te-banner-frame');
+                wrappers.forEach(w => {
+                  const parent = w.parentElement;
+                  if (parent && parent.tagName === 'DIV') {
+                    parent.style.cssText = 'display: none !important;';
+                  }
+                });
+
+                // Reset body positioning
+                const body = document.body;
+                if (body && body.style.top !== '0px') {
+                  body.style.top = '0px';
+                  body.style.position = 'static';
+                }
+                const html = document.documentElement;
+                if (html && html.style.top !== '0px') {
+                  html.style.top = '0px';
+                  html.style.position = 'static';
+                }
+              };
+              
+              // Run periodically to catch it if it loads late or reappears
+              setInterval(hideGoogleTranslate, 50);
+            }
+          `}
+        </Script>
         <Providers>
           <Navbar />
           <main className="flex-1">{children}</main>
           <Footer />
           <BookingModal />
           <BookingToast />
-          <CookieConsent />
         </Providers>
       </body>
     </html>

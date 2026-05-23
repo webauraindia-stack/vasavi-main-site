@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Crown, Gift, Wallet, Sparkles } from "lucide-react";
 import type { BookingPricingResult } from "@/types";
 import { formatCurrency, cn } from "@/lib/utils";
+import { useAppLanguage } from "@/hooks/use-app-language";
 
 export function PaymentBreakdownPanel({
   pricing,
@@ -12,6 +13,8 @@ export function PaymentBreakdownPanel({
   pricing: BookingPricingResult;
   compact?: boolean;
 }) {
+  const { t } = useAppLanguage();
+
   return (
     <div
       className={cn(
@@ -20,14 +23,17 @@ export function PaymentBreakdownPanel({
       )}
     >
       <p className="font-display font-bold text-charcoal text-xs uppercase tracking-wider border-b border-beige/40 pb-2 mb-1">
-        Payment breakdown
+        {t("booking.paymentBreakdown")}
       </p>
 
-      <Row label={`Room (${pricing.nights} night${pricing.nights > 1 ? "s" : ""})`} value={pricing.subtotal} />
+      <Row
+        label={t("booking.roomNights", { nights: pricing.nights })}
+        value={pricing.subtotal}
+      />
 
       {pricing.tierDiscount > 0 && (
         <Row
-          label="Tier blessing"
+          label={t("booking.tierDiscount")}
           value={-pricing.tierDiscount}
           tone="text-champagne"
           icon={<Crown className="h-3.5 w-3.5" />}
@@ -49,7 +55,7 @@ export function PaymentBreakdownPanel({
 
       {pricing.walletApplied > 0 && (
         <Row
-          label="Compensation wallet"
+          label={t("booking.walletApplied")}
           value={-pricing.walletApplied}
           tone="text-emerald-700"
           icon={<Wallet className="h-3.5 w-3.5" />}
@@ -60,46 +66,23 @@ export function PaymentBreakdownPanel({
         <Row label="Promo" value={-pricing.promoDiscount} tone="text-emerald-700" />
       )}
 
-      <Row label="GST (12%)" value={pricing.taxes} />
-
       {pricing.sevaDonation > 0 && (
         <Row
-          label="Seva donation"
+          label={t("booking.sevaDonation")}
           value={pricing.sevaDonation}
           tone="text-champagne"
           icon={<Sparkles className="h-3.5 w-3.5" />}
         />
       )}
 
-      <div className="border-t border-beige/50 pt-2.5 mt-1 flex justify-between items-center">
-        <span className="font-display font-bold text-charcoal">Total payable</span>
-        <motion.span
-          key={pricing.total}
-          initial={{ scale: 1.05 }}
-          animate={{ scale: 1 }}
-          className={cn(
-            "font-mono font-black text-base",
-            pricing.isFullyCovered ? "text-emerald-700" : "text-champagne-dark"
-          )}
-        >
-          {pricing.isFullyCovered && pricing.sevaDonation === 0
-            ? "₹0 — Blessed stay"
-            : formatCurrency(pricing.total)}
-        </motion.span>
-      </div>
+      {pricing.taxes > 0 && <Row label={t("booking.gst")} value={pricing.taxes} />}
 
-      {(pricing.remainingFreeStays > 0 || pricing.remainingCompensation > 0) && (
-        <div className="mt-2 pt-2 border-t border-dashed border-beige/40 text-[11px] text-muted space-y-0.5">
-          {pricing.remainingFreeStays > 0 && (
-            <p>After booking: {pricing.remainingFreeStays} free stay coupon(s) remain</p>
-          )}
-          {pricing.remainingCompensation > 0 && (
-            <p>
-              Compensation wallet balance: {formatCurrency(pricing.remainingCompensation)}
-            </p>
-          )}
-        </div>
-      )}
+      <div className="border-t border-beige/40 pt-2 flex justify-between items-center font-bold">
+        <span className="text-charcoal">{t("booking.totalPayable")}</span>
+        <span className="font-mono text-champagne-dark text-base">
+          {formatCurrency(pricing.total)}
+        </span>
+      </div>
     </div>
   );
 }
@@ -107,7 +90,7 @@ export function PaymentBreakdownPanel({
 function Row({
   label,
   value,
-  tone,
+  tone = "text-charcoal",
   icon,
   detail,
 }: {
@@ -119,16 +102,16 @@ function Row({
 }) {
   return (
     <div className="flex justify-between items-start gap-2">
-      <span className={cn("flex items-center gap-1.5 text-muted font-medium", tone)}>
+      <span className={cn("flex items-center gap-1.5 font-medium", tone)}>
         {icon}
         <span>
           {label}
           {detail && (
-            <span className="block text-[10px] font-mono opacity-70">{detail}</span>
+            <span className="block text-[10px] text-muted font-normal">{detail}</span>
           )}
         </span>
       </span>
-      <span className={cn("font-mono font-bold shrink-0", tone ?? "text-charcoal")}>
+      <span className={cn("font-mono font-bold shrink-0", tone)}>
         {value < 0 ? "−" : ""}
         {formatCurrency(Math.abs(value))}
       </span>

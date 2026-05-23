@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { Room, RoomCategory } from "@/types";
 import { Crown } from "lucide-react";
+import { useAppLanguage } from "@/hooks/use-app-language";
 
 async function fetchRooms(params: URLSearchParams): Promise<Room[]> {
   const res = await fetch(`/api/rooms/search?${params.toString()}`);
@@ -26,6 +27,7 @@ async function fetchRooms(params: URLSearchParams): Promise<Room[]> {
 }
 
 function SearchPageContent() {
+  const { t } = useAppLanguage();
   const searchParams = useSearchParams();
   const { openBooking } = useBookingStore();
   const { checkIn: storeCheckIn, checkOut: storeCheckOut, guests: storeGuests } =
@@ -93,12 +95,12 @@ function SearchPageContent() {
 
   return (
     <div className="pt-20 pb-16 bg-white">
-      <div className="mx-auto max-w-7xl px-4 lg:px-8">
-        <h1 className="font-display text-2xl md:text-4xl text-charcoal mb-2 font-bold">Search Rooms</h1>
+      <div className="page-container">
+        <h1 className="font-display text-2xl md:text-4xl text-charcoal mb-2 font-bold">{t("search.title")}</h1>
         {(checkIn || checkOut) && (
           <p className="text-charcoal/80 text-base font-semibold mb-6">
-            {checkIn && `Check-in: ${checkIn}`}
-            {checkOut && ` · Check-out: ${checkOut}`}
+            {checkIn && `${t("search.checkIn")}: ${checkIn}`}
+            {checkOut && ` · ${t("search.checkOut")}: ${checkOut}`}
           </p>
         )}
 
@@ -128,7 +130,7 @@ function SearchPageContent() {
         >
           {isLoading && <SearchSkeleton />}
           {error && (
-            <p className="text-red-600 text-center py-8">Failed to load results.</p>
+            <p className="text-red-600 text-center py-8">{t("search.failed")}</p>
           )}
           {rooms && rooms.length > 0 && (
             <div
@@ -169,7 +171,7 @@ function SearchPageContent() {
                           {room.isDonorExclusive && (
                             <span className="mt-1 inline-flex items-center gap-1 rounded bg-champagne-dark px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-white sm:text-xs">
                               <Crown className="h-3 w-3" />
-                              Donor
+                              {t("search.donor")}
                             </span>
                           )}
                         </h3>
@@ -185,7 +187,7 @@ function SearchPageContent() {
                             maximumFractionDigits: 0,
                           }).format(room.pricePerNight)}
                           <span className="text-xs font-semibold text-charcoal/70 sm:text-sm">
-                            /night
+                            {t("common.perNight")}
                           </span>
                         </p>
                         <Button
@@ -194,7 +196,7 @@ function SearchPageContent() {
                           onClick={() => handleBookRoom(room)}
                           className="h-10 w-full text-sm lg:h-11 lg:min-w-[9.5rem] lg:px-6"
                         >
-                          {room.isFullyBooked ? "Sold Out" : "Book Now"}
+                          {room.isFullyBooked ? t("common.soldOut") : t("common.bookNow")}
                         </Button>
                       </div>
                     </div>
@@ -205,10 +207,10 @@ function SearchPageContent() {
           )}
           {rooms && rooms.length === 0 && (
             <div className="text-center py-16 card-surface">
-              <p className="text-charcoal font-display text-lg mb-2">No rooms found</p>
-              <p className="text-muted text-sm mb-4">Try adjusting your filters</p>
+              <p className="text-charcoal font-display text-lg mb-2">{t("search.noRooms")}</p>
+              <p className="text-muted text-sm mb-4">{t("search.tryAdjust")}</p>
               <Button variant="outline" onClick={handleClearFilters}>
-                Clear filters
+                {t("common.clearFilters")}
               </Button>
             </div>
           )}

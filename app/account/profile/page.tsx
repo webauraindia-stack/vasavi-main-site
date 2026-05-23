@@ -7,8 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { formatPhoneDisplay } from "@/lib/auth/phone";
+import { useAppLanguage } from "@/hooks/use-app-language";
 
 export default function ProfilePage() {
+  const { t } = useAppLanguage();
   const { data: session } = useSession();
   const user = session?.user as {
     isDonor?: boolean;
@@ -24,7 +26,7 @@ export default function ProfilePage() {
 
   return (
     <div>
-      <h2 className="font-display text-xl text-charcoal mb-6">My Profile</h2>
+      <h2 className="font-display text-xl text-charcoal mb-6">{t("account.profileTitle")}</h2>
 
       <div className="card-surface rounded-xl p-6 border border-charcoal/10 space-y-6 max-w-lg">
         <div className="flex items-center gap-4">
@@ -46,7 +48,7 @@ export default function ProfilePage() {
             {user?.isDonor && user.tier && (
               <Badge variant="donor" className="mt-2 capitalize">
                 <Crown className="h-3 w-3 mr-1" />
-                {user.tier} Donor
+                {t("account.donorTier", { tier: user.tier })}
               </Badge>
             )}
             {user?.categoryLabel && !user.isDonor && (
@@ -59,7 +61,7 @@ export default function ProfilePage() {
 
         <div className="space-y-4">
           <div>
-            <Label htmlFor="name">Full Name</Label>
+            <Label htmlFor="name">{t("account.fullName")}</Label>
             <Input
               id="name"
               defaultValue={session?.user?.name ?? ""}
@@ -67,7 +69,7 @@ export default function ProfilePage() {
             />
           </div>
           <div>
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">{t("account.email")}</Label>
             <Input
               id="email"
               type="email"
@@ -77,7 +79,7 @@ export default function ProfilePage() {
             />
           </div>
           <div>
-            <Label htmlFor="phone">Mobile</Label>
+            <Label htmlFor="phone">{t("account.mobile")}</Label>
             <Input
               id="phone"
               value={displayPhone}
@@ -86,7 +88,7 @@ export default function ProfilePage() {
             />
           </div>
           <div>
-            <Label htmlFor="city">City</Label>
+            <Label htmlFor="city">{t("account.city")}</Label>
             <Input
               id="city"
               defaultValue={user?.city ?? ""}
@@ -95,7 +97,7 @@ export default function ProfilePage() {
           </div>
           {user?.isDonor && user.donorId && (
             <div>
-              <Label>Donor ID</Label>
+              <Label>{t("account.donorId")}</Label>
               <Input value={user.donorId} disabled className="mt-1 opacity-60" />
             </div>
           )}
@@ -107,7 +109,7 @@ export default function ProfilePage() {
           )}
         </div>
 
-        <Button>Save Changes</Button>
+        <Button>{t("account.saveChanges")}</Button>
       </div>
     </div>
   );
