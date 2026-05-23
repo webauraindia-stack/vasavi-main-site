@@ -226,14 +226,9 @@ export function Navbar() {
                         </button>
                       </>
                     ) : (
-                      <>
-                        <DropdownLink href="/login" onClick={() => setUserMenuOpen(false)}>
-                          Sign in
-                        </DropdownLink>
-                        <DropdownLink href="/donors" onClick={() => setUserMenuOpen(false)}>
-                          Donor Program
-                        </DropdownLink>
-                      </>
+                      <DropdownLink href="/login" onClick={() => setUserMenuOpen(false)}>
+                        Sign in
+                      </DropdownLink>
                     )}
                   </motion.div>
                 )}

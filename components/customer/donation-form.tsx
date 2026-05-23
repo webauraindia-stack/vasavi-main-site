@@ -60,8 +60,8 @@ export function DonationForm() {
           Your contribution supports Vasavi community schemes and HotelHub donor benefits.
           You will receive a receipt and Donor ID by email within 24 hours.
         </p>
-        <Link href="/donor-portal/login">
-          <Button>Log in to Donor Portal</Button>
+        <Link href="/login?callbackUrl=/donor-portal">
+          <Button>Sign in to Donor Portal</Button>
         </Link>
       </div>
     );
@@ -171,8 +171,8 @@ export function DonationForm() {
 
       <p className="text-center text-sm text-muted">
         Already a donor?{" "}
-        <Link href="/donor-portal/login" className="text-champagne hover:underline">
-          Log in to your portal
+        <Link href="/login?callbackUrl=/donor-portal" className="text-champagne hover:underline">
+          Sign in to your portal
         </Link>
       </p>
     </form>

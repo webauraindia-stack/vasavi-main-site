@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Crown,
@@ -25,17 +26,23 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useDonorStore } from "@/stores/donor-store";
+import { lookupMemberByPhone } from "@/lib/auth/users-by-phone";
 import { getNextTierProgress, getTierInfo, TIER_THRESHOLDS } from "@/lib/donor-engine";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import type { Coupon } from "@/types";
 
 // Custom float-animation for high-fidelity interactive confetti
+function pseudoRandom(seed: number) {
+  const x = Math.sin(seed * 12.9898 + 78.233) * 43758.5453;
+  return x - Math.floor(x);
+}
+
 const ConfettiParticle = ({ index }: { index: number }) => {
   const colors = ["#d4af37", "#f3e5ab", "#22c55e", "#3b82f6", "#ec4899", "#f59e0b"];
   const randColor = colors[index % colors.length];
-  const randX = Math.random() * 100 - 50; // Random X spread
-  const randDelay = Math.random() * 0.8;
-  const randDuration = 1.5 + Math.random() * 1.5;
+  const randX = pseudoRandom(index + 1) * 100 - 50;
+  const randDelay = pseudoRandom(index + 2) * 0.8;
+  const randDuration = 1.5 + pseudoRandom(index + 3) * 1.5;
 
   return (
     <motion.div
@@ -64,20 +71,57 @@ const ConfettiParticle = ({ index }: { index: number }) => {
 
 export default function DonorPortalPage() {
   const router = useRouter();
-  const { donor, isAuthenticated, logout, celebration, clearCelebration } = useDonorStore();
+  const { data: session, status } = useSession();
+  const { donor, isAuthenticated, logout, celebration, clearCelebration, loadMemberProfile } =
+    useDonorStore();
   const [activeTab, setActiveTab] = useState<"wallet" | "benefits" | "history">("wallet");
+  const [profileChecked, setProfileChecked] = useState(false);
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      router.replace("/donor-portal/login");
-    }
-  }, [isAuthenticated, router]);
+    if (status === "loading") return;
 
-  if (!donor) {
+    if (!session) {
+      router.replace("/login?callbackUrl=/donor-portal");
+      return;
+    }
+
+    const phone = (session.user as { phone?: string }).phone;
+    if (phone && !isAuthenticated) {
+      const profile = lookupMemberByPhone(phone);
+      if (profile) {
+        loadMemberProfile(profile);
+      }
+    }
+
+    setProfileChecked(true);
+  }, [session, status, isAuthenticated, loadMemberProfile, router]);
+
+  if (status === "loading" || !profileChecked) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="text-center text-slate-500 font-display font-medium animate-pulse">
           Connecting to Sanctuary Vault...
+        </div>
+      </div>
+    );
+  }
+
+  if (!donor) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
+        <div className="max-w-md text-center space-y-4">
+          <h1 className="font-display text-2xl text-charcoal">Member profile not found</h1>
+          <p className="text-sm text-muted">
+            Sign in with a registered community mobile number to access the donor portal.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Link href="/login?callbackUrl=/donor-portal">
+              <Button>Try another number</Button>
+            </Link>
+            <Link href="/account/bookings">
+              <Button variant="outline">My bookings</Button>
+            </Link>
+          </div>
         </div>
       </div>
     );

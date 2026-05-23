@@ -23,6 +23,7 @@ import {
   UserPlus,
   Check,
   X,
+  type LucideProps,
 } from "lucide-react";
 import { HOTELS, getRoomsForHotel } from "@/lib/data/hotels";
 import { Button } from "@/components/ui/button";
@@ -930,6 +931,6 @@ function ProgressBarLabel({
   );
 }
 
-function CheckCircle(props: any) {
+function CheckCircle(props: LucideProps) {
   return <ShieldCheck {...props} />;
 }

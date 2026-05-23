@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -848,7 +849,7 @@ export function BookingModal() {
                       className="flex-1 h-12 rounded-xl font-bold border-beige"
                       asChild
                     >
-                      <a href="/account/bookings">My bookings</a>
+                      <Link href="/account/bookings">My bookings</Link>
                     </Button>
                   </div>
                 </div>
