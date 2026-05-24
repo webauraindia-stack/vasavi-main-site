@@ -65,7 +65,11 @@ export async function apiFetch<T>(
   if (!res.ok) {
     if (payload && typeof payload === "object" && isApiError(payload as ApiResponse<T>)) {
       const err = payload as ApiResponse<T> & { success: false };
-      throw new ApiClientError(err.error.code, err.error.message, res.status);
+      throw new ApiClientError(
+        err.error.code,
+        parseApiErrorMessage(payload, res.statusText || "Request failed."),
+        res.status
+      );
     }
     const record = payload as Record<string, unknown>;
     const code =

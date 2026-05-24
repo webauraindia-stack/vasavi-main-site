@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
   Calendar,
@@ -13,11 +13,13 @@ import {
   Phone,
   Receipt,
   User,
+  XCircle,
 } from "lucide-react";
 import { StayExtensionDialog } from "@/components/booking/stay-extension-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { getBooking } from "@/lib/api/bookings";
+import { Input } from "@/components/ui/input";
+import { getBooking, cancelBooking } from "@/lib/api/bookings";
 import { mapBookingDetail, type CustomerBookingDetail } from "@/lib/api/mappers";
 import { canExtendCustomerBooking } from "@/lib/bookings/customer";
 import { useAuthenticatedSession } from "@/lib/hooks/use-authenticated-session";
@@ -28,8 +30,15 @@ export default function BookingDetailPage() {
   const id = params.id as string;
   const { session, status, isAuthenticated, accessToken, withAccessToken } =
     useAuthenticatedSession();
+  const queryClient = useQueryClient();
+
   const [checkOutOverride, setCheckOutOverride] = useState<string | null>(null);
   const [extendOpen, setExtendOpen] = useState(false);
+  
+  const [cancelOpen, setCancelOpen] = useState(false);
+  const [cancelReason, setCancelReason] = useState("");
+  const [cancelling, setCancelling] = useState(false);
+  const [cancelError, setCancelError] = useState("");
 
   const {
     data: booking,
@@ -52,6 +61,26 @@ export default function BookingDetailPage() {
     }
     return booking;
   }, [booking, checkOutOverride]);
+
+  const handleCancel = async () => {
+    setCancelError("");
+    if (cancelReason.trim().length < 10) {
+      setCancelError("Please provide a reason of at least 10 characters.");
+      return;
+    }
+    setCancelling(true);
+    try {
+      await withAccessToken(async (token) => {
+        await cancelBooking(token, id, cancelReason);
+        await queryClient.invalidateQueries({ queryKey: ["booking-detail", id] });
+        setCancelOpen(false);
+      });
+    } catch (err) {
+      setCancelError(err instanceof Error ? err.message : "Failed to cancel booking");
+    } finally {
+      setCancelling(false);
+    }
+  };
 
   if (status === "loading" || isLoading) {
     return (
@@ -95,6 +124,7 @@ export default function BookingDetailPage() {
   }
 
   const extendable = canExtendCustomerBooking(displayBooking);
+  const cancellable = displayBooking.status !== "cancelled" && displayBooking.status !== "checked_out" && displayBooking.status !== "checked_in";
 
   return (
     <div>
@@ -182,21 +212,63 @@ export default function BookingDetailPage() {
           </p>
         )}
 
-        {extendable && displayBooking.reference && (
-          <div className="border-t border-charcoal/10 pt-5">
-            <h3 className="font-display text-lg text-charcoal mb-2">Extend your stay</h3>
-            <p className="text-sm text-muted mb-4">
-              Need more time? Select a new checkout date — we&apos;ll verify room availability
-              and show any additional charges before you pay.
-            </p>
-            <Button onClick={() => setExtendOpen(true)} className="gap-2">
-              <CalendarPlus className="h-4 w-4" />
-              Extend stay
-            </Button>
+        {(extendable || cancellable) && (
+          <div className="border-t border-charcoal/10 pt-5 space-y-6">
+            {extendable && displayBooking.reference && (
+              <div>
+                <h3 className="font-display text-lg text-charcoal mb-2">Extend your stay</h3>
+                <p className="text-sm text-muted mb-4">
+                  Need more time? Select a new checkout date — we&apos;ll verify room availability
+                  and show any additional charges before you pay.
+                </p>
+                <Button onClick={() => setExtendOpen(true)} className="gap-2">
+                  <CalendarPlus className="h-4 w-4" />
+                  Extend stay
+                </Button>
+              </div>
+            )}
+            
+            {cancellable && displayBooking.reference && (
+              <div>
+                <h3 className="font-display text-lg text-charcoal mb-2">Cancel booking</h3>
+                {cancelOpen ? (
+                  <div className="bg-rose-50 border border-rose-200 rounded-xl p-4 space-y-3 max-w-lg">
+                    <p className="text-sm text-rose-900 font-medium">Please provide a reason for cancellation:</p>
+                    <Input
+                      value={cancelReason}
+                      onChange={(e) => {
+                        setCancelReason(e.target.value);
+                        setCancelError("");
+                      }}
+                      placeholder="e.g. Change in travel plans"
+                    />
+                    {cancelError && <p className="text-xs text-rose-600">{cancelError}</p>}
+                    <div className="flex gap-2">
+                      <Button variant="outline" onClick={() => setCancelOpen(false)} disabled={cancelling}>Back</Button>
+                      <Button className="bg-rose-600 hover:bg-rose-700 text-white" onClick={handleCancel} disabled={cancelling}>
+                        {cancelling ? "Cancelling..." : "Confirm Cancellation"}
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <p className="text-sm text-muted mb-4">
+                      {displayBooking.paymentStatus === "paid"
+                        ? "Cancelling a paid booking will initiate a refund request to the administration. Refund processing may take up to 5-7 business days."
+                        : "Cancel your unpaid reservation."}
+                    </p>
+                    <Button onClick={() => setCancelOpen(true)} variant="outline" className="gap-2 text-rose-600 border-rose-200 hover:bg-rose-50">
+                      <XCircle className="h-4 w-4" />
+                      Cancel booking
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
 
-        {!extendable && (
+        {!extendable && displayBooking.status !== "cancelled" && (
           <p className="text-sm text-muted border-t border-charcoal/10 pt-4">
             This booking is not eligible for online extension. Contact the front desk for
             assistance.

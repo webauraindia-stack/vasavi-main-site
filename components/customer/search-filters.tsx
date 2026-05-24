@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useMounted } from "@/lib/hooks/use-mounted";
 import { ChevronDown, SlidersHorizontal, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -31,7 +32,30 @@ interface SearchFiltersProps {
 
 type OpenPanel = "room" | "price" | null;
 
-export function SearchFilters({
+export function SearchFilters(props: SearchFiltersProps) {
+  const mounted = useMounted();
+  if (!mounted) {
+    return <SearchFiltersSkeleton resultCount={props.resultCount} />;
+  }
+  return <SearchFiltersContent {...props} />;
+}
+
+function SearchFiltersSkeleton({ resultCount }: { resultCount?: number }) {
+  return (
+    <div className="space-y-3" aria-hidden>
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="h-10 w-28 rounded-full bg-charcoal/5 animate-pulse" />
+        <div className="h-10 w-24 rounded-full bg-charcoal/5 animate-pulse" />
+        <div className="h-10 w-28 rounded-full bg-charcoal/5 animate-pulse" />
+      </div>
+      {typeof resultCount === "number" && (
+        <div className="h-4 w-40 rounded bg-charcoal/5 animate-pulse" />
+      )}
+    </div>
+  );
+}
+
+function SearchFiltersContent({
   filters,
   onRoomTypesChange,
   onPriceRangeChange,

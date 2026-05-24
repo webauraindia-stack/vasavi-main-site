@@ -10,6 +10,18 @@ export function parseApiErrorMessage(data: unknown, fallback: string): string {
 
   if (record.success === false && record.error && typeof record.error === "object") {
     const err = record.error as ApiError["error"];
+    const fields = err.fields;
+    if (fields && typeof fields === "object") {
+      const parts: string[] = [];
+      for (const messages of Object.values(fields)) {
+        if (Array.isArray(messages)) {
+          for (const m of messages) {
+            if (m) parts.push(String(m));
+          }
+        }
+      }
+      if (parts.length > 0) return parts.join(" ");
+    }
     return err.message || fallback;
   }
 

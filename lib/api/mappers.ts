@@ -73,12 +73,18 @@ export type BackendBooking = {
   payment_reference?: string;
   payment_paid_at?: string | null;
   notes?: string;
+  expires_at?: string | null;
   created_at?: string;
   branch?: BackendBranch;
   room?: {
+    id: string;
     room_number: string;
     room_type?: BackendRoomType;
+    capacity?: number;
+    base_price_per_night?: number;
+    is_donor_exclusive?: boolean;
   };
+  coupons_applied?: BackendCoupon[];
   user?: {
     name?: string;
     phone?: string;
@@ -99,6 +105,41 @@ function mapRoomCategory(name: string): RoomCategory {
   if (n.includes("penthouse")) return "Penthouse";
   if (n.includes("deluxe")) return "Deluxe";
   return "Standard";
+}
+
+/** Build a Room from booking detail (resume pending checkout). */
+export function mapRoomFromBooking(b: BackendBooking): Room | null {
+  const room = b.room;
+  const branch = b.branch;
+  if (!room?.id || !branch) return null;
+
+  const slug = slugify(branch.name);
+  const priceRupees = Math.round((room.base_price_per_night ?? b.final_amount_paise ?? 0) / 100);
+  const typeName = room.room_type?.name ?? "Room";
+  const category = mapRoomCategory(typeName);
+  const mapped = {
+    id: room.id,
+    hotelId: branch.id,
+    hotelSlug: slug,
+    hotelName: branch.name,
+    name: `${typeName} · ${room.room_number}`,
+    category,
+    description: `${typeName} at ${branch.name}, ${branch.city}`,
+    pricePerNight: priceRupees || 1,
+    bedType: "Standard",
+    sizeSqFt: 200,
+    maxOccupancy: room.capacity ?? 2,
+    floor: 1,
+    amenities: [] as string[],
+    images: [] as string[],
+    isDonorExclusive: room.is_donor_exclusive ?? false,
+    isFullyBooked: false,
+    availableDates: [] as string[],
+  };
+  return {
+    ...mapped,
+    images: roomImagesFromApi(mapped),
+  };
 }
 
 export function mapRoomFromBackend(room: BackendRoomAvailability): Room {

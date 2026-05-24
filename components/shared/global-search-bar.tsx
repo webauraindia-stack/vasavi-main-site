@@ -14,6 +14,9 @@ import {
 } from "@/components/ui/select";
 import { DateRangePickerField } from "@/components/shared/date-range-picker-field";
 import { useHotels } from "@/lib/hooks/use-hotels";
+import { useMounted } from "@/lib/hooks/use-mounted";
+import { useMediaQuery } from "@/lib/hooks/use-media-query";
+import { GlobalSearchBarSkeleton } from "@/components/shared/global-search-bar-skeleton";
 import { normalizeStayDates } from "@/lib/date-range-selection";
 import { parseGuestParams, parseSearchDate } from "@/lib/parse-search-params";
 import { useSearchStore } from "@/stores/search-store";
@@ -46,6 +49,15 @@ function getHotelLabels(id: string | null, hotels: { id: string; name: string; c
 }
 
 export function GlobalSearchBar({ className, variant = "hero" }: GlobalSearchBarProps) {
+  const mounted = useMounted();
+  if (!mounted) {
+    return <GlobalSearchBarSkeleton className={className} variant={variant} />;
+  }
+
+  return <GlobalSearchBarContent className={className} variant={variant} />;
+}
+
+function GlobalSearchBarContent({ className, variant = "hero" }: GlobalSearchBarProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data: hotels = [] } = useHotels();
@@ -53,19 +65,11 @@ export function GlobalSearchBar({ className, variant = "hero" }: GlobalSearchBar
     useSearchStore();
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [dateHint, setDateHint] = useState<string | null>(null);
-  const [isDesktop, setIsDesktop] = useState(false);
+  const isDesktop = useMediaQuery("(min-width: 1024px)");
   const [range, setRange] = useState<DateRange | undefined>(() => ({
     from: checkIn ?? undefined,
     to: checkOut ?? undefined,
   }));
-
-  useEffect(() => {
-    const mq = window.matchMedia("(min-width: 1024px)");
-    const update = () => setIsDesktop(mq.matches);
-    update();
-    mq.addEventListener("change", update);
-    return () => mq.removeEventListener("change", update);
-  }, []);
 
   // Keep store in sync, but don't overwrite an in-progress range selection
   useEffect(() => {

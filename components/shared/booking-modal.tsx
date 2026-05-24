@@ -40,6 +40,7 @@ import {
 import { validateCoupon, suggestBestCoupons } from "@/lib/donor-engine";
 import { formatPhoneDisplay } from "@/lib/auth/phone";
 import { formatLocalDateString } from "@/lib/date-format";
+import { useQueryClient } from "@tanstack/react-query";
 import { getRoomImageUrl } from "@/lib/images/room-image";
 import { isUuid } from "@/lib/hotels/catalog";
 import { BookingStepper } from "@/components/booking/booking-stepper";
@@ -69,6 +70,7 @@ export function BookingModal() {
     whatsappConfirm,
     paymentMethod,
     bookingReference,
+    pendingBookingId,
     closeBooking,
     nextStep,
     prevStep,
@@ -81,8 +83,12 @@ export function BookingModal() {
     setWhatsappConfirm,
     setPaymentMethod,
     completeBooking,
+    setPendingBooking,
+    clearPendingBooking,
     reset,
   } = useBookingStore();
+
+  const queryClient = useQueryClient();
 
   const { donor, isAuthenticated } = useDonorStore();
 
@@ -91,6 +97,8 @@ export function BookingModal() {
   const [autoSuggested, setAutoSuggested] = useState(false);
   const [payError, setPayError] = useState("");
   const [payLoading, setPayLoading] = useState(false);
+  const [continueLoading, setContinueLoading] = useState(false);
+  const [continueError, setContinueError] = useState("");
 
   useBodyScrollLock(isOpen);
 
@@ -161,6 +169,8 @@ export function BookingModal() {
       setAutoSuggested(false);
       setPayError("");
       setPayLoading(false);
+      setContinueError("");
+      setContinueLoading(false);
     }
   }, [isOpen]);
 
@@ -214,18 +224,83 @@ export function BookingModal() {
     setSuggestionMessage("");
   };
 
+  const handleContinueFromStay = async () => {
+    setContinueError("");
+    if (!checkIn || !checkOut) {
+      setContinueError("Select check-in and check-out dates.");
+      return;
+    }
+    if (!hasValidSession) {
+      setContinueError("Please sign in to continue your booking.");
+      return;
+    }
+    if (!isUuid(selectedRoom.id)) {
+      setContinueError("Invalid room. Please search again and select an available room.");
+      return;
+    }
+
+    const checkInStr = formatLocalDateString(checkIn);
+    const checkOutStr = formatLocalDateString(checkOut);
+
+    setContinueLoading(true);
+    try {
+      await withAccessToken(async (accessToken) => {
+        const { createBooking, getBooking, cancelBooking } = await import("@/lib/api/bookings");
+
+        if (pendingBookingId) {
+          const existing = await getBooking(accessToken, pendingBookingId);
+          const sameRoom = existing.room?.id === selectedRoom.id;
+          const sameDates =
+            existing.check_in_date === checkInStr &&
+            existing.check_out_date === checkOutStr;
+          if (existing.status === "pending" && sameRoom && sameDates) {
+            nextStep();
+            return;
+          }
+          await cancelBooking(
+            accessToken,
+            pendingBookingId,
+            "Replaced by a new reservation"
+          );
+          clearPendingBooking();
+        }
+
+        const booking = await createBooking(accessToken, {
+          room_id: selectedRoom.id,
+          check_in_date: checkInStr,
+          check_out_date: checkOutStr,
+          guest_count: guestCount.adults + guestCount.children,
+        });
+
+        setPendingBooking(booking.id, booking.booking_reference);
+        await queryClient.invalidateQueries({ queryKey: ["pending-bookings"] });
+        nextStep();
+      });
+    } catch (err) {
+      if (isSessionExpiredError(err)) {
+        setContinueError(err.message);
+        return;
+      }
+      const message =
+        err instanceof Error ? err.message : "Could not save your reservation. Try again.";
+      setContinueError(message);
+    } finally {
+      setContinueLoading(false);
+    }
+  };
+
   const handlePayment = async () => {
     setPayError("");
     if (!hasValidSession) {
       setPayError("Please sign in to complete your booking.");
       return;
     }
-    if (!selectedRoom || !checkIn || !checkOut) {
-      setPayError("Select dates and a room first.");
+    if (!pendingBookingId) {
+      setPayError("Your reservation hold was lost. Go back to Stay and tap Continue again.");
       return;
     }
-    if (!isUuid(selectedRoom.id)) {
-      setPayError("Invalid room. Please search again and select an available room.");
+    if (!isUuid(pendingBookingId)) {
+      setPayError("Invalid booking session. Please start again from step 1.");
       return;
     }
 
@@ -234,16 +309,13 @@ export function BookingModal() {
     setPayLoading(true);
     try {
       await withAccessToken(async (accessToken) => {
-        const { createBooking, confirmCashPayment } = await import("@/lib/api/bookings");
-        const booking = await createBooking(accessToken, {
-          room_id: selectedRoom.id,
-          check_in_date: formatLocalDateString(checkIn),
-          check_out_date: formatLocalDateString(checkOut),
-          guest_count: guestCount.adults + guestCount.children,
+        const { confirmGuestBooking } = await import("@/lib/api/bookings");
+        const confirmed = await confirmGuestBooking(accessToken, pendingBookingId, {
           coupon_ids: couponIds.length ? couponIds : undefined,
         });
-
-        const confirmed = await confirmCashPayment(accessToken, booking.id);
+        clearPendingBooking();
+        await queryClient.invalidateQueries({ queryKey: ["pending-bookings"] });
+        await queryClient.invalidateQueries({ queryKey: ["my-bookings"] });
         completeBooking(confirmed.booking_reference);
       });
     } catch (err) {
@@ -411,11 +483,22 @@ export function BookingModal() {
                       <Link href="/login" className="font-bold underline">
                         Sign in
                       </Link>{" "}
-                      before payment so we can attach this stay to your account.
+                      to hold your dates and continue checkout.
                     </p>
                   )}
 
-                  <NavButtons onBack={handleClose} backLabel="Cancel" onNext={nextStep} nextDisabled={!checkIn || !checkOut} />
+                  {continueError && (
+                    <p className="text-sm text-red-600">{continueError}</p>
+                  )}
+                  <NavButtons
+                    onBack={handleClose}
+                    backLabel="Cancel"
+                    onNext={() => void handleContinueFromStay()}
+                    nextDisabled={
+                      !checkIn || !checkOut || continueLoading || !hasValidSession
+                    }
+                    nextLabel={continueLoading ? "Saving…" : "Continue"}
+                  />
                 </div>
               )}
 

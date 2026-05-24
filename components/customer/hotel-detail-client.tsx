@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useMounted } from "@/lib/hooks/use-mounted";
+import { useMediaQuery } from "@/lib/hooks/use-media-query";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight, Crown, Users } from "lucide-react";
 import { DayPicker } from "react-day-picker";
@@ -78,6 +80,9 @@ export function RoomList({
   const { openBooking, setDates } = useBookingStore();
   const [checkIn, setCheckIn] = useState<Date | undefined>();
   const [checkOut, setCheckOut] = useState<Date | undefined>();
+  const mounted = useMounted();
+  const isNarrow = useMediaQuery("(max-width: 767px)");
+  const calendarMonths = mounted && !isNarrow ? 2 : 1;
 
   const standardRooms = rooms.filter((r) => !r.isDonorExclusive);
   const donorRooms = rooms.filter((r) => r.isDonorExclusive);
@@ -99,7 +104,7 @@ export function RoomList({
             setCheckOut(range?.to);
           }}
           disabled={{ before: new Date() }}
-          numberOfMonths={typeof window !== "undefined" && window.innerWidth < 768 ? 1 : 2}
+          numberOfMonths={calendarMonths}
           className="mx-auto"
         />
       </div>
