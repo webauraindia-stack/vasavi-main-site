@@ -69,10 +69,20 @@ const SUPERADMIN_BASE =
 async function parseJson<T>(res: Response): Promise<T> {
   const json = await res.json();
   if (!res.ok) {
-    throw new Error((json as { error?: string }).error ?? "Request failed");
+    const message = (json as { error?: string }).error ?? "Request failed";
+    if (res.status === 401) {
+      throw new Error(message || "Your session has expired. Please sign in again.");
+    }
+    throw new Error(message);
   }
   return json as T;
 }
+
+/** Same-origin routes refresh the access token server-side via the httpOnly refresh cookie. */
+const extensionFetchInit: RequestInit = {
+  credentials: "include",
+  cache: "no-store",
+};
 
 export async function checkExtensionAvailability(
   bookingReference: string,
@@ -80,7 +90,7 @@ export async function checkExtensionAvailability(
 ): Promise<AvailabilityCheckResult> {
   const qs = new URLSearchParams({ bookingReference, requestedCheckOut });
   const res = await fetch(`/api/stay-extensions/availability?${qs.toString()}`, {
-    cache: "no-store",
+    ...extensionFetchInit,
   });
   const json = await parseJson<{ data: AvailabilityCheckResult }>(res);
   return json.data;
@@ -94,6 +104,7 @@ export async function createStayExtension(payload: {
   actorEmail?: string;
 }): Promise<StayExtensionRequest> {
   const res = await fetch("/api/stay-extensions", {
+    ...extensionFetchInit,
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
@@ -108,6 +119,7 @@ export async function completeStayExtensionPayment(payload: {
   actorEmail?: string;
 }): Promise<StayExtensionRequest> {
   const res = await fetch("/api/stay-extensions", {
+    ...extensionFetchInit,
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({

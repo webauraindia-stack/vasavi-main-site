@@ -16,6 +16,7 @@ export function ApiSessionSync() {
     void withAccessToken((token) => hydrateFromApi(token)).catch(() => {
       /* sign-out handled by useAuthenticatedSession on refresh failure */
     });
+    // Re-fetch when the session access token is rotated.
   }, [
     isAuthenticated,
     accessToken,

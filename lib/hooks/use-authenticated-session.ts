@@ -9,7 +9,11 @@ import {
   isUnauthorizedError,
   SessionExpiredError,
 } from "@/lib/auth/session-expired";
-import { accessTokenExpiresAt } from "@/lib/auth/token-lifetime";
+import { isJwtExpired } from "@/lib/auth/jwt";
+import {
+  accessTokenExpiresAt,
+  shouldRefreshAccessToken,
+} from "@/lib/auth/token-lifetime";
 
 type SessionWithToken = {
   accessToken?: string;
@@ -56,6 +60,11 @@ export function useAuthenticatedSession() {
         throw new ApiClientError("AUTH_REQUIRED", "Please sign in to continue.", 401);
       }
 
+      const expiresAt = sessionWithToken?.accessTokenExpires;
+      if (isJwtExpired(token) || shouldRefreshAccessToken(expiresAt)) {
+        token = await refreshSession();
+      }
+
       try {
         return await fn(token);
       } catch (error) {
@@ -74,7 +83,12 @@ export function useAuthenticatedSession() {
         }
       }
     },
-    [sessionWithToken?.accessToken, refreshSession, signOutExpired]
+    [
+      sessionWithToken?.accessToken,
+      sessionWithToken?.accessTokenExpires,
+      refreshSession,
+      signOutExpired,
+    ]
   );
 
   const isAuthenticated =

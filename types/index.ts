@@ -219,6 +219,8 @@ export interface Donor {
   clubName?: string;
   city?: string;
   tier: DonorTier;
+  /** Backend membership tier label, e.g. Golden, Diamond */
+  membershipTierName?: string;
   totalDonation: number;
   discountPercent: number;
   monthlyBookingQuota: number;

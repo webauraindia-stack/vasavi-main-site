@@ -9,6 +9,8 @@ import { fetchCouponWallet } from "@/lib/api/coupons";
 import { mapCouponFromBackend, mapDonorFromBackend } from "@/lib/api/mappers";
 import type { BackendDonorProfile } from "@/lib/api/mappers";
 
+let hydrateInFlight: Promise<void> | null = null;
+
 interface DonorState {
   isAuthenticated: boolean;
   donor: Donor | null;
@@ -114,47 +116,60 @@ export const useDonorStore = create<DonorState>()(
       clearCelebration: () => set({ celebration: null }),
 
       hydrateFromApi: async (accessToken: string) => {
-        set({ isLoading: true });
-        try {
-          const wallet = await fetchCouponWallet(accessToken);
-          const coupons = wallet.available.map(mapCouponFromBackend);
-          const meRes = await fetch("/api/backend/donors/me/", {
-            headers: { Authorization: `Bearer ${accessToken}` },
-            credentials: "include",
-          });
-          if (!meRes.ok) {
-            set({ isAuthenticated: false, donor: null, isLoading: false });
-            return;
-          }
-          const body = (await meRes.json()) as {
-            success: boolean;
-            data?: BackendDonorProfile;
-          };
-          if (body.success && body.data) {
-            const donor = mapDonorFromBackend(body.data, coupons);
-            const tier = donor.tier;
-            set({
-              isAuthenticated: true,
-              donor: {
-                ...donor,
-                discountPercent: getDiscountPercent(tier),
-                monthlyBookingQuota: getMonthlyQuota(tier),
-              },
-              isLoading: false,
+        if (hydrateInFlight) {
+          await hydrateInFlight;
+          return;
+        }
+
+        hydrateInFlight = (async () => {
+          set({ isLoading: true });
+          try {
+            const wallet = await fetchCouponWallet(accessToken);
+            const coupons = wallet.available.map(mapCouponFromBackend);
+            const meRes = await fetch("/api/backend/donors/me/", {
+              headers: { Authorization: `Bearer ${accessToken}` },
+              credentials: "include",
             });
-          } else {
+            if (!meRes.ok) {
+              set({ isAuthenticated: false, donor: null, isLoading: false });
+              return;
+            }
+            const body = (await meRes.json()) as {
+              success: boolean;
+              data?: BackendDonorProfile;
+            };
+            if (body.success && body.data) {
+              const donor = mapDonorFromBackend(body.data, coupons);
+              const tier = donor.tier;
+              set({
+                isAuthenticated: true,
+                donor: {
+                  ...donor,
+                  discountPercent: getDiscountPercent(tier),
+                  monthlyBookingQuota: getMonthlyQuota(tier),
+                },
+                isLoading: false,
+              });
+            } else {
+              set({ isAuthenticated: false, donor: null, isLoading: false });
+            }
+          } catch {
             set({ isAuthenticated: false, donor: null, isLoading: false });
           }
-        } catch {
-          set({ isAuthenticated: false, donor: null, isLoading: false });
+        })();
+
+        try {
+          await hydrateInFlight;
+        } finally {
+          hydrateInFlight = null;
         }
       },
     }),
     {
       name: "vasavi-donor-storage",
+      /** Do not persist profile/coupons — always refetch from API on load. */
       partialize: (state) => ({
-        isAuthenticated: state.isAuthenticated,
-        donor: state.donor,
+        celebration: state.celebration,
       }),
     }
   )

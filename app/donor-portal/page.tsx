@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
+import { useAuthenticatedSession } from "@/lib/hooks/use-authenticated-session";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Crown,
@@ -71,7 +72,8 @@ const ConfettiParticle = ({ index }: { index: number }) => {
 export default function DonorPortalPage() {
   const router = useRouter();
   const { data: session, status } = useSession();
-  const { donor, isAuthenticated, logout, celebration, clearCelebration, hydrateFromApi } =
+  const { isAuthenticated, withAccessToken } = useAuthenticatedSession();
+  const { donor, isLoading, logout, celebration, clearCelebration, hydrateFromApi } =
     useDonorStore();
   const [activeTab, setActiveTab] = useState<"wallet" | "benefits" | "history">("wallet");
   const [profileChecked, setProfileChecked] = useState(false);
@@ -84,15 +86,16 @@ export default function DonorPortalPage() {
       return;
     }
 
-    const accessToken = session.accessToken;
-    if (accessToken && session.user?.isDonor && !isAuthenticated) {
-      void hydrateFromApi(accessToken);
+    if (session.user?.isDonor && isAuthenticated) {
+      void withAccessToken((token) => hydrateFromApi(token)).catch(() => {
+        /* handled globally */
+      });
     }
 
     setProfileChecked(true);
-  }, [session, status, isAuthenticated, hydrateFromApi, router]);
+  }, [session, status, isAuthenticated, hydrateFromApi, router, withAccessToken]);
 
-  if (status === "loading" || !profileChecked) {
+  if (status === "loading" || !profileChecked || (session?.user?.isDonor && isLoading)) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="text-center text-slate-500 font-display font-medium animate-pulse">

@@ -183,6 +183,7 @@ export function mapDonorFromBackend(
     name: profile.name,
     email: `${profile.phone}@vasavi.local`,
     tier,
+    membershipTierName: profile.tier?.name,
     totalDonation: Math.round((profile.total_donated_paise ?? 0) / 100),
     discountPercent: 0,
     monthlyBookingQuota: 4,
