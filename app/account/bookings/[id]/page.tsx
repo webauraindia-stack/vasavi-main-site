@@ -124,7 +124,10 @@ export default function BookingDetailPage() {
   }
 
   const extendable = canExtendCustomerBooking(displayBooking);
-  const cancellable = displayBooking.status !== "cancelled" && displayBooking.status !== "checked_out" && displayBooking.status !== "checked_in";
+  const cancellable =
+    displayBooking.status !== "cancelled" &&
+    displayBooking.status !== "completed" &&
+    displayBooking.status !== "checked_in";
 
   return (
     <div>
