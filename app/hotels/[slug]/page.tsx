@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { MapPin } from "lucide-react";
 import { getHotelBySlug, getAllHotelSlugs } from "@/lib/hotels/api";
-import { searchRooms, defaultSearchDates } from "@/lib/rooms/search";
+import { defaultSearchDates } from "@/lib/rooms/search";
+import { fetchBranchRoomCatalog } from "@/lib/rooms/catalog";
 import { formatCurrency } from "@/lib/utils";
 import { StarRating } from "@/components/shared/star-rating";
 import { Badge } from "@/components/ui/badge";
@@ -51,15 +52,13 @@ export default async function HotelDetailPage({
   if (!hotel) notFound();
 
   const dates = defaultSearchDates();
-  let rooms: Awaited<ReturnType<typeof searchRooms>>["rooms"] = [];
+  let rooms: Awaited<ReturnType<typeof fetchBranchRoomCatalog>> = [];
   try {
-    const result = await searchRooms({
-      branch_id: hotel.id,
+    rooms = await fetchBranchRoomCatalog(hotel.id, {
       check_in: dates.check_in,
       check_out: dates.check_out,
       guests: 2,
     });
-    rooms = result.rooms;
   } catch {
     rooms = [];
   }
@@ -116,9 +115,9 @@ export default async function HotelDetailPage({
             <h2 className="font-display text-2xl font-bold text-charcoal mb-4">Rooms</h2>
             {rooms.length === 0 ? (
               <p className="text-sm text-muted">
-                No rooms available for the default dates.{" "}
+                No rooms are listed for this property yet.{" "}
                 <Link href={`/search?hotel=${hotel.id}`} className="underline text-champagne-dark">
-                  Search other dates
+                  Try search with different dates
                 </Link>
                 .
               </p>

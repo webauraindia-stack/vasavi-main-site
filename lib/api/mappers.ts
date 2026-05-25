@@ -142,6 +142,48 @@ export function mapRoomFromBooking(b: BackendBooking): Room | null {
   };
 }
 
+export type BackendRoomCatalog = {
+  id: string;
+  branch: BackendBranch;
+  room_number: string;
+  room_type: BackendRoomType;
+  capacity: number;
+  base_price_per_night: number;
+  base_price_display?: string;
+  is_donor_exclusive: boolean;
+  is_active: boolean;
+};
+
+export function mapRoomFromCatalog(room: BackendRoomCatalog): Room {
+  const branch = room.branch;
+  const slug = slugify(branch.name);
+  const priceRupees = Math.round(room.base_price_per_night / 100);
+  const category = mapRoomCategory(room.room_type.name);
+  const mapped = {
+    id: room.id,
+    hotelId: branch.id,
+    hotelSlug: slug,
+    hotelName: branch.name,
+    name: `${room.room_type.name} · ${room.room_number}`,
+    category,
+    description: `${room.room_type.name} at ${branch.name}, ${branch.city}`,
+    pricePerNight: priceRupees,
+    bedType: "Standard",
+    sizeSqFt: 200,
+    maxOccupancy: room.capacity,
+    floor: 1,
+    amenities: [] as string[],
+    images: [] as string[],
+    isDonorExclusive: room.is_donor_exclusive,
+    isFullyBooked: !room.is_active,
+    availableDates: [] as string[],
+  };
+  return {
+    ...mapped,
+    images: roomImagesFromApi(mapped),
+  };
+}
+
 export function mapRoomFromBackend(room: BackendRoomAvailability): Room {
   const branch = room.branch;
   const slug = slugify(branch.name);

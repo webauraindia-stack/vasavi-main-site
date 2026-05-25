@@ -1,5 +1,25 @@
 import { apiFetch } from "@/lib/api/client";
+import { fetchAllResults } from "@/lib/api/paginate";
 import type { BackendRoomAvailability } from "@/lib/api/mappers";
+
+export type BackendRoomCatalog = {
+  id: string;
+  branch: { id: string; name: string; city: string };
+  room_number: string;
+  room_type: { id: string; name: string };
+  capacity: number;
+  base_price_per_night: number;
+  base_price_display?: string;
+  is_donor_exclusive: boolean;
+  is_active: boolean;
+};
+
+/** All active rooms at a branch (public catalog — no date filter). */
+export async function listBranchRooms(branchId: string): Promise<BackendRoomCatalog[]> {
+  return fetchAllResults<BackendRoomCatalog>(
+    `properties/rooms/?branch_id=${encodeURIComponent(branchId)}`
+  );
+}
 
 export async function searchRooms(params: {
   check_in: string;
