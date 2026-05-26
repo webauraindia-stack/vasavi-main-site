@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { useSearchStore } from "@/stores/search-store";
 import type { CommunityMemberProfile, GuestCount, GuestDetails, Room } from "@/types";
 import type { DonorTier } from "@/types";
 
@@ -95,17 +96,20 @@ export const useBookingStore = create<BookingState>((set, get) => ({
   toastData: null,
 
   openBooking: (room, checkIn, checkOut, guests) => {
-    const nextGuests = guests
-      ? { ...get().guestCount, ...guests }
-      : get().guestCount;
+    const search = useSearchStore.getState();
+    const resolvedCheckIn = checkIn ?? search.checkIn;
+    const resolvedCheckOut = checkOut ?? search.checkOut;
+    const guestSource = guests ?? search.guests;
+    const nextGuests = { ...get().guestCount, ...guestSource };
+
     set({
       isOpen: true,
       step: 1,
       selectedRoom: room,
-      checkIn: checkIn ?? null,
-      checkOut: checkOut ?? null,
+      checkIn: resolvedCheckIn,
+      checkOut: resolvedCheckOut,
       guestCount: nextGuests,
-      roomCount: guests?.rooms ?? get().roomCount,
+      roomCount: guestSource.rooms ?? get().roomCount,
       bookingReference: null,
       selectedCouponIds: [],
       memberProfile: null,

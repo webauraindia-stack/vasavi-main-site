@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { CompletePaymentHandler } from "@/components/account/complete-payment-handler";
 import { useSession } from "next-auth/react";
 import {
   ArrowLeft,
@@ -55,6 +56,9 @@ export default function BookingDetailPage() {
 
   return (
     <div>
+      <Suspense fallback={null}>
+        <CompletePaymentHandler />
+      </Suspense>
       <Link
         href="/account/bookings"
         className="text-sm text-champagne hover:underline inline-flex items-center gap-1 mb-4"

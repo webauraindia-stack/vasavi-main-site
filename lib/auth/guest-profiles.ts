@@ -1,10 +1,12 @@
 import { normalizePhone } from "@/lib/auth/phone";
+import { normalizeAadhaar } from "@/lib/aadhaar";
 
 export type GuestProfile = {
   name: string;
   email: string;
   phone: string;
   city: string;
+  aadhaar: string;
 };
 
 const guestProfiles = new Map<string, GuestProfile>();
@@ -24,6 +26,7 @@ export function saveGuestProfile(profile: GuestProfile): GuestProfile {
     name: profile.name.trim(),
     email: profile.email.trim().toLowerCase(),
     city: profile.city.trim(),
+    aadhaar: normalizeAadhaar(profile.aadhaar),
   };
 
   guestProfiles.set(normalized.phone, normalized);

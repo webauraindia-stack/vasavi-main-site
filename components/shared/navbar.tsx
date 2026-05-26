@@ -6,6 +6,7 @@ import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
+import { usePathname } from "next/navigation";
 import {
   Menu,
   X,
@@ -13,9 +14,10 @@ import {
   ChevronDown,
   Star,
   Globe,
-  Heart,
   CircleUser,
   Bell,
+  Home,
+  Search,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { HOTELS } from "@/lib/data/hotels";
@@ -23,17 +25,45 @@ import { useBodyScrollLock } from "@/lib/use-body-scroll-lock";
 import { cn } from "@/lib/utils";
 import { useAppLanguage } from "@/hooks/use-app-language";
 import type { AppLanguage } from "@/lib/i18n";
-import { NotificationsMenu } from "@/components/shared/notifications-menu";
-
+import { NotificationsBellButton } from "@/components/shared/notifications-bell-button";
+import { PendingPaymentBanner } from "@/components/shared/pending-payment-banner";
+import { usePendingPaymentStore } from "@/stores/pending-payment-store";
 export function Navbar() {
   const { t, languages, changeLanguage } = useAppLanguage();
   const { data: session } = useSession();
+  const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [megaOpen, setMegaOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
   const isDonor = (session?.user as { isDonor?: boolean })?.isDonor;
   const [scrolled, setScrolled] = useState(false);
+  const { payment: pendingPayment, hydrate: hydratePendingPayment } = usePendingPaymentStore();
+  const headerRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    hydratePendingPayment();
+  }, [hydratePendingPayment]);
+
+  useEffect(() => {
+    const header = headerRef.current;
+    if (!header) return;
+
+    const syncHeaderOffset = () => {
+      const height = Math.ceil(header.getBoundingClientRect().height);
+      document.documentElement.style.setProperty("--site-header-offset", `${height}px`);
+    };
+
+    syncHeaderOffset();
+    const observer = new ResizeObserver(syncHeaderOffset);
+    observer.observe(header);
+    window.addEventListener("resize", syncHeaderOffset);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", syncHeaderOffset);
+    };
+  }, [pendingPayment]);
 
   useBodyScrollLock(mobileOpen);
 
@@ -57,139 +87,185 @@ export function Navbar() {
     return () => document.removeEventListener("mousedown", onPointerDown);
   }, [userMenuOpen]);
 
-  const desktopLinks = [
+  const primaryDesktopLinks = [
     { href: "/donors", label: t("nav.donorProgram") },
-    { href: "/schemes", label: t("nav.schemes") },
-    { href: "/founder", label: t("nav.founder") },
     { href: "/about", label: t("nav.about") },
-    { href: "/health-centre", label: t("nav.healthCentre") },
     { href: "/contact", label: t("nav.contact") },
   ];
+
+  const secondaryDesktopLinks = [
+    { href: "/schemes", label: t("nav.schemes") },
+    { href: "/founder", label: t("nav.founder") },
+    { href: "/health-centre", label: t("nav.healthCentre") },
+  ];
+
+  const desktopLinks = [...primaryDesktopLinks, ...secondaryDesktopLinks];
 
   const drawerLinks = [
     ...desktopLinks,
     { href: "/search", label: t("nav.search", "Search") },
   ];
 
+  const navLinkClass =
+    "whitespace-nowrap shrink-0 text-[0.8125rem] xl:text-sm font-semibold text-charcoal hover:text-champagne transition-colors relative after:absolute after:-bottom-1 after:left-0 after:h-0.5 after:w-0 after:bg-champagne-dark after:transition-all hover:after:w-full";
+
   return (
     <>
       <header
+        ref={headerRef}
         className={cn(
           "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
           scrolled ? "navbar-glass-scrolled" : "navbar-glass"
         )}
       >
+        <div className="h-[3px] w-full bg-gradient-to-r from-champagne-dark via-champagne to-champagne-dark shadow-[0_1px_4px_rgba(201,168,76,0.25)]" />
+        <PendingPaymentBanner />
         <nav
-          className="page-container flex h-14 items-center justify-between gap-3 lg:h-16"
+          className="page-container grid min-h-16 grid-cols-[auto_1fr_auto] items-center gap-x-2 py-2.5 sm:gap-x-3 lg:min-h-[4.75rem] lg:gap-x-4 lg:py-3 xl:min-h-[5rem] xl:gap-x-5"
           aria-label="Main navigation"
         >
-          {/* Logo — Trivago-style wordmark */}
+          {/* Logo */}
           <Link
             href="/"
-            className="select-none shrink-0 hover:opacity-90 transition-opacity group"
+            className="select-none shrink-0 hover:opacity-90 transition-opacity group min-w-0"
             aria-label="Vasavi Hotels home"
           >
-            <span className="flex items-center gap-2.5">
-              <span className="relative hidden h-9 w-9 shrink-0 sm:block rounded-full border border-champagne-dark/35 p-1 bg-white shadow-warm">
+            <span className="flex items-center gap-2 sm:gap-2.5">
+              <span className="relative h-9 w-9 sm:h-10 sm:w-10 lg:h-10 lg:w-10 xl:h-11 xl:w-11 shrink-0 rounded-full border border-champagne-dark/35 p-1 bg-white shadow-warm overflow-hidden group-hover:scale-105 group-hover:rotate-6 transition-transform duration-300">
                 <Image
-                  src="/images/vasavi-club-logo.svg"
+                  src="/images/vasavi-logo.png"
                   alt=""
                   fill
-                  className="object-contain p-0.5"
+                  className="object-contain p-0.5 rounded-full"
                 />
               </span>
-              <span className="flex flex-col leading-none">
-                <span className="font-display text-[1.05rem] sm:text-xl font-black tracking-[0.04em] text-charcoal uppercase">
+              <span className="flex min-w-0 flex-col leading-none">
+                <span className="font-display text-base sm:text-lg lg:text-lg xl:text-xl font-black tracking-[0.04em] text-charcoal uppercase truncate">
                   {t("brand.vasavi")}
                 </span>
-                <span className="text-[0.65rem] sm:text-xs font-bold uppercase tracking-[0.22em] text-champagne-dark">
+                <span className="text-[0.625rem] sm:text-[0.7rem] lg:text-[0.625rem] xl:text-xs font-bold uppercase tracking-[0.18em] xl:tracking-[0.2em] text-champagne-dark truncate">
                   {t("brand.spiritualStays")}
                 </span>
               </span>
             </span>
           </Link>
 
-          {/* Desktop inline nav */}
-          <div className="hidden lg:flex flex-1 items-center justify-center gap-6 xl:gap-8">
+          {/* Desktop inline nav — centered, never overlaps utilities */}
+          <div className="hidden lg:flex min-w-0 items-center justify-center gap-2 xl:gap-4 2xl:gap-5 px-1 xl:px-2">
             <div
-              className="relative"
+              className="relative shrink-0"
               onMouseEnter={() => setMegaOpen(true)}
               onMouseLeave={() => setMegaOpen(false)}
             >
               <button
                 type="button"
-                className="flex items-center gap-1 text-base font-semibold text-charcoal hover:text-champagne transition-colors"
+                className="flex items-center gap-1 whitespace-nowrap text-[0.8125rem] xl:text-sm font-semibold text-charcoal hover:text-champagne transition-colors"
                 aria-expanded={megaOpen}
                 aria-haspopup="true"
               >
-                {t("nav.hotels")} <ChevronDown className="h-4 w-4" />
+                {t("nav.hotels")}
+                <ChevronDown
+                  className={cn("h-4 w-4 shrink-0 transition-transform duration-200", megaOpen && "rotate-180")}
+                />
               </button>
               <AnimatePresence>
                 {megaOpen && (
                   <motion.div
-                    initial={{ opacity: 0, y: -8 }}
+                    initial={{ opacity: 0, y: -6 }}
                     animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -8 }}
-                    className="absolute left-1/2 top-full -translate-x-1/2 pt-4 w-screen max-w-5xl"
+                    exit={{ opacity: 0, y: -6 }}
+                    transition={{ duration: 0.18, ease: "easeOut" }}
+                    className="fixed left-1/2 -translate-x-1/2 z-[200] pt-2"
+                    style={{ top: "var(--site-header-offset, 5.25rem)" }}
                   >
-                    <div className="bg-white rounded-[var(--radius-devotional)] p-6 grid grid-cols-3 gap-4 border border-beige/70 shadow-warm-lg">
-                      {HOTELS.map((hotel) => (
-                        <Link
-                          key={hotel.id}
-                          href={`/hotels/${hotel.slug}`}
-                          className="flex gap-3 rounded-lg p-2 hover:bg-surface transition-colors group"
-                          onClick={() => setMegaOpen(false)}
-                        >
-                          <div className="relative h-14 w-20 shrink-0 overflow-hidden rounded-md">
-                            <Image
-                              src={hotel.thumbnail}
-                              alt={hotel.name}
-                              fill
-                              className="object-cover group-hover:scale-105 transition-transform"
-                              sizes="80px"
-                            />
-                          </div>
-                          <div>
-                            <p className="font-display text-sm font-bold text-charcoal">{hotel.name}</p>
-                            <p className="text-sm font-semibold text-muted">{hotel.city}</p>
-                            <div className="flex items-center gap-0.5 mt-0.5">
-                              {Array.from({ length: hotel.starRating }).map((_, i) => (
-                                <Star key={i} className="h-3 w-3 fill-champagne-dark text-champagne-dark" />
-                              ))}
+                    {/* Invisible bridge so mouse moving down doesn't close the menu */}
+                    <div className="absolute -top-2 left-0 right-0 h-2" />
+                    <div className="w-[min(90vw,56rem)] bg-white rounded-2xl border border-beige/70 shadow-warm-lg overflow-hidden">
+                      <div className="p-5 grid grid-cols-3 gap-2 max-h-[70vh] overflow-y-auto">
+                        {HOTELS.map((hotel) => (
+                          <Link
+                            key={hotel.id}
+                            href={`/hotels/${hotel.slug}`}
+                            className="flex gap-3 rounded-xl p-2.5 hover:bg-surface transition-colors group"
+                            onClick={() => setMegaOpen(false)}
+                          >
+                            <div className="relative h-12 w-16 shrink-0 overflow-hidden rounded-lg">
+                              <Image
+                                src={hotel.thumbnail}
+                                alt={hotel.name}
+                                fill
+                                className="object-cover group-hover:scale-105 transition-transform duration-300"
+                                sizes="64px"
+                              />
                             </div>
-                          </div>
+                            <div className="min-w-0">
+                              <p className="font-display text-sm lg:text-base font-bold text-charcoal leading-snug line-clamp-2 group-hover:text-champagne transition-colors">
+                                {hotel.name}
+                              </p>
+                              <p className="text-xs lg:text-sm font-semibold text-muted mt-0.5">{hotel.city}</p>
+                              <div className="flex items-center gap-0.5 mt-0.5">
+                                {Array.from({ length: hotel.starRating }).map((_, i) => (
+                                  <Star key={i} className="h-2.5 w-2.5 fill-champagne-dark text-champagne-dark" />
+                                ))}
+                              </div>
+                            </div>
+                          </Link>
+                        ))}
+                      </div>
+                      <div className="border-t border-beige/60 px-5 py-3 flex items-center justify-between bg-surface/60">
+                        <p className="text-xs lg:text-sm text-muted font-semibold">
+                          {HOTELS.length} {t("nav.hotels").toLowerCase()}
+                        </p>
+                        <Link
+                          href="/search"
+                          onClick={() => setMegaOpen(false)}
+                          className="text-xs lg:text-sm font-bold text-champagne hover:underline"
+                        >
+                          {t("hotels.openFullSearch")} →
                         </Link>
-                      ))}
+                      </div>
                     </div>
                   </motion.div>
                 )}
               </AnimatePresence>
             </div>
-            {desktopLinks.map((link) => (
+            {primaryDesktopLinks.map((link) => (
+              <Link key={link.href} href={link.href} className={navLinkClass}>
+                {link.label}
+              </Link>
+            ))}
+
+            {secondaryDesktopLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className="text-sm font-bold text-charcoal hover:text-champagne transition-colors whitespace-nowrap relative after:absolute after:-bottom-1 after:left-0 after:h-0.5 after:w-0 after:bg-champagne-dark after:transition-all hover:after:w-full"
+                className={cn(navLinkClass, "hidden xl:inline-flex")}
               >
                 {link.label}
               </Link>
             ))}
+
+            <NavMoreMenu
+              links={secondaryDesktopLinks}
+              label={t("nav.more", "More")}
+              className="xl:hidden"
+            />
           </div>
 
-          {/* Right icons — Trivago-style cluster */}
-          <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
+          {/* Utilities — fixed width, separated from nav links */}
+          <div className="flex shrink-0 items-center justify-end gap-0.5 sm:gap-1 lg:gap-1.5 lg:border-l lg:border-charcoal/10 lg:pl-3 xl:gap-2 xl:pl-4">
             <LanguageSelect variant="desktop" languages={languages} onChange={changeLanguage} />
             <LanguageSelect variant="mobile" languages={languages} onChange={changeLanguage} />
 
             <NavIconButton
-              href={session ? "/account/bookings" : "/search"}
-              label={session ? t("common.savedStays") : t("common.searchStays")}
+              href="/search"
+              label={t("common.searchStays")}
               className="hidden md:inline-flex"
             >
-              <Heart className="h-6 w-6 stroke-[1.75]" />
+              <Search className="h-6 w-6 stroke-[1.75] xl:h-7 xl:w-7" />
             </NavIconButton>
 
-            <NotificationsMenu />
+            <NotificationsBellButton className="h-10 w-10 sm:h-11 sm:w-11 xl:h-12 xl:w-12" />
 
             <div className="relative" ref={userMenuRef}>
               <NavIconButton
@@ -199,9 +275,9 @@ export function Navbar() {
                 aria-expanded={userMenuOpen}
               >
                 {session?.user?.name?.[0] ? (
-                  <span className="text-sm font-bold">{session.user.name[0]}</span>
+                  <span className="text-sm xl:text-base font-bold">{session.user.name[0]}</span>
                 ) : (
-                  <CircleUser className="h-6 w-6 stroke-[1.75]" />
+                  <CircleUser className="h-6 w-6 stroke-[1.75] xl:h-7 xl:w-7" />
                 )}
                 {isDonor && (
                   <Crown className="absolute -top-0.5 -right-0.5 h-3.5 w-3.5 text-champagne-dark" aria-hidden />
@@ -214,13 +290,10 @@ export function Navbar() {
                     initial={{ opacity: 0, y: 6, scale: 0.98 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 6, scale: 0.98 }}
-                    className="absolute right-0 top-full mt-2 w-52 rounded-xl border border-charcoal/10 bg-white py-2 shadow-warm-lg z-[60]"
+                    className="absolute right-0 top-full mt-2 w-52 max-w-[calc(100vw-2.5rem)] rounded-xl border border-charcoal/10 bg-white py-2 shadow-warm-lg z-[60]"
                   >
                     {session ? (
                       <>
-                        <DropdownLink href="/account/notifications" onClick={() => setUserMenuOpen(false)}>
-                          {t("nav.notifications")}
-                        </DropdownLink>
                         <DropdownLink href="/account/bookings" onClick={() => setUserMenuOpen(false)}>
                           {t("nav.myBookings")}
                         </DropdownLink>
@@ -293,7 +366,7 @@ export function Navbar() {
 
               <div className="flex-1 overflow-y-auto px-4 py-2">
                 <Link
-                  href="/account/notifications"
+                  href="/notifications"
                   onClick={closeMobile}
                   className="flex min-h-12 items-center gap-2 border-b border-charcoal/8 text-base font-bold text-charcoal hover:text-champagne transition-colors"
                 >
@@ -355,7 +428,114 @@ export function Navbar() {
           </>
         )}
       </AnimatePresence>
+
+      {/* Premium Mobile Bottom Navigation Bar */}
+      <div className="mobile-bottom-nav-container lg:hidden">
+        <div className="flex w-full items-center justify-around px-2">
+          <Link
+            href="/"
+            className={cn(
+              "mobile-bottom-nav-item",
+              pathname === "/" && "mobile-bottom-nav-item--active"
+            )}
+          >
+            <Home className="h-5.5 w-5.5 stroke-[1.8]" />
+            <span className="text-[10px] tracking-wide">{t("nav.home", "Home")}</span>
+          </Link>
+
+          <Link
+            href="/search"
+            className={cn(
+              "mobile-bottom-nav-item",
+              pathname?.startsWith("/search") && "mobile-bottom-nav-item--active"
+            )}
+          >
+            <Search className="h-5.5 w-5.5 stroke-[1.8]" />
+            <span className="text-[10px] tracking-wide">{t("nav.search", "Search")}</span>
+          </Link>
+
+          <Link
+            href="/donors"
+            className={cn(
+              "mobile-bottom-nav-item",
+              pathname === "/donors" && "mobile-bottom-nav-item--active"
+            )}
+          >
+            <Crown className="h-5.5 w-5.5 stroke-[1.8]" />
+            <span className="text-[10px] tracking-wide">{t("nav.donorProgram", "Donors")}</span>
+          </Link>
+
+          <Link
+            href={session ? "/account/profile" : "/login"}
+            className={cn(
+              "mobile-bottom-nav-item",
+              (pathname?.startsWith("/account") || pathname === "/login") && "mobile-bottom-nav-item--active"
+            )}
+          >
+            <CircleUser className="h-5.5 w-5.5 stroke-[1.8]" />
+            <span className="text-[10px] tracking-wide">{session ? t("nav.myProfile", "Profile") : t("nav.login", "Sign In")}</span>
+          </Link>
+        </div>
+      </div>
     </>
+  );
+}
+
+function NavMoreMenu({
+  links,
+  label,
+  className,
+}: {
+  links: { href: string; label: string }[];
+  label: string;
+  className?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onPointerDown = (e: MouseEvent) => {
+      if (!ref.current?.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", onPointerDown);
+    return () => document.removeEventListener("mousedown", onPointerDown);
+  }, [open]);
+
+  return (
+    <div ref={ref} className={cn("relative shrink-0", className)}>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="flex items-center gap-1 whitespace-nowrap text-[0.8125rem] xl:text-sm font-semibold text-charcoal hover:text-champagne transition-colors"
+        aria-expanded={open}
+        aria-haspopup="true"
+      >
+        {label}
+        <ChevronDown className={cn("h-4 w-4 shrink-0 transition-transform", open && "rotate-180")} />
+      </button>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 6 }}
+            className="absolute left-1/2 top-full z-[60] mt-2 min-w-[12rem] -translate-x-1/2 rounded-xl border border-charcoal/10 bg-white py-2 shadow-warm-lg"
+          >
+            {links.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={() => setOpen(false)}
+                className="block px-4 py-2.5 text-sm font-semibold text-charcoal hover:bg-surface hover:text-champagne transition-colors whitespace-nowrap"
+              >
+                {link.label}
+              </Link>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }
 
@@ -374,12 +554,12 @@ function LanguageSelect({
 
   if (variant === "desktop") {
     return (
-      <div className="hidden md:flex items-center gap-1 mr-1 text-charcoal">
+      <div className="hidden md:flex shrink-0 items-center gap-1 text-charcoal">
         <Globe className="h-4 w-4 shrink-0" aria-hidden />
         <select
           value={language}
           onChange={(e) => void onChange(e.target.value as AppLanguage)}
-          className="bg-transparent text-sm font-semibold focus:outline-none appearance-none cursor-pointer pr-1"
+          className="bg-transparent text-xs xl:text-sm font-semibold focus:outline-none appearance-none cursor-pointer pr-1 max-w-[3.25rem]"
           aria-label="Select language"
         >
           {languages.map((lang) => (
@@ -435,7 +615,7 @@ function NavIconButton({
   onClick?: () => void;
 } & Omit<ButtonHTMLAttributes<HTMLButtonElement>, "children">) {
   const classes = cn(
-    "relative inline-flex h-11 w-11 items-center justify-center rounded-lg text-charcoal transition-all",
+    "relative inline-flex h-10 w-10 sm:h-11 sm:w-11 xl:h-12 xl:w-12 items-center justify-center rounded-lg text-charcoal transition-all",
     "hover:bg-charcoal/5 active:scale-95",
     active && "bg-champagne-dark/20 ring-2 ring-champagne-dark/35 shadow-[0_0_12px_rgba(201,168,76,0.35)]",
     className

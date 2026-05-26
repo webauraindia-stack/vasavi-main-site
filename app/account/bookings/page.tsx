@@ -1,7 +1,9 @@
 "use client";
 
+import { Suspense } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
+import { CompletePaymentHandler } from "@/components/account/complete-payment-handler";
 import { CalendarClock, History } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,6 +20,9 @@ export default function BookingsPage() {
 
   return (
     <div className="space-y-8">
+      <Suspense fallback={null}>
+        <CompletePaymentHandler />
+      </Suspense>
       <div>
         <h2 className="font-display text-xl text-charcoal">{t("account.myBookings")}</h2>
         <p className="text-sm text-muted mt-1 font-semibold">

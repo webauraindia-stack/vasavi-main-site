@@ -32,6 +32,7 @@
     "about": "About Us",
     "contact": "Contact",
     "healthCentre": "Health Centre",
+    "more": "More",
     "search": "Search",
     "login": "Sign in",
     "logout": "Sign Out",
@@ -41,9 +42,16 @@
     "notifications": "Notifications",
     "hotelsSection": "Hotels"
   },
+  "payment": {
+    "pendingLabel": "Payment pending",
+    "pendingMessage": "Complete {{amount}} for {{reference}} at {{hotel}} to confirm your stay.",
+    "completePayment": "Complete payment",
+    "dismissPending": "Dismiss payment reminder"
+  },
   "notifications": {
     "title": "Notifications",
     "openMenu": "Open notifications",
+    "openPage": "Open notifications page",
     "markAllRead": "Mark all read",
     "markRead": "Mark as read",
     "viewAll": "View all",
@@ -96,7 +104,8 @@
     "donorRoomsOnly": "Donor rooms only",
     "noMatch": "No hotels match your filters. Try adjusting your criteria.",
     "showGrid": "Show grid",
-    "showMap": "Show map"
+    "showMap": "Show map",
+    "help": "Help"
   },
   "features": {
     "eyebrow": "Why pilgrims choose us",
@@ -204,6 +213,10 @@
     "fullName": "Full name",
     "email": "Email",
     "city": "City",
+    "aadhaar": "Aadhaar number",
+    "aadhaarHint": "Enter 12 digits — shown as XXXX XXXX XXXX",
+    "aadhaarInvalid": "Enter all 12 digits of your Aadhaar number",
+    "verificationExpired": "Your verification expired. Tap “Back to OTP” and verify your number again.",
     "memberId": "Member / Donor ID",
     "continueBtn": "Continue",
     "saveSignIn": "Save & Sign In",
@@ -229,6 +242,7 @@
     "email": "Email",
     "mobile": "Mobile",
     "city": "City",
+    "aadhaar": "Aadhaar number",
     "donorId": "Donor ID",
     "saveChanges": "Save Changes",
     "noBookings": "No bookings yet.",
@@ -311,10 +325,8 @@
     "Prasadam": "Prasadam"
   },
   "roomTypes": {
-    "Standard": "Standard",
-    "Deluxe": "Deluxe",
-    "Suite": "Suite",
-    "Penthouse": "Penthouse"
+    "AC": "AC",
+    "Non-AC": "Non-AC"
   },
   "about": {
     "title": "About Vasavi Hotels",
@@ -382,6 +394,10 @@
     "sendMessage": "Send us a message",
     "name": "Name",
     "email": "Email",
+    "hotel": "Guest house",
+    "hotelPlaceholder": "Select a guest house",
+    "hotelGeneral": "General inquiry (VCI headquarters)",
+    "hotelRequired": "Please select a guest house or general inquiry.",
     "message": "Message",
     "submit": "Send Message",
     "thankYou": "Thank you — we will respond shortly."

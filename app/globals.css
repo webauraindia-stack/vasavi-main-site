@@ -70,47 +70,85 @@
     }
   }
 
+  @media (min-width: 1024px) {
+    html {
+      font-size: 17px;
+    }
+
+    body {
+      font-size: 1.125rem;
+      line-height: 1.65;
+    }
+
+    h1 {
+      @apply text-4xl xl:text-5xl;
+    }
+
+    h2 {
+      @apply text-2xl xl:text-3xl;
+    }
+
+    h3 {
+      @apply text-xl xl:text-2xl;
+    }
+  }
+
+  @media (min-width: 1280px) {
+    html {
+      font-size: 18px;
+    }
+
+    body {
+      font-size: 1.1875rem;
+    }
+  }
+
   :focus-visible {
     @apply outline-2 outline-offset-2 outline-champagne-dark;
   }
 }
 
 @layer utilities {
-  /* Full-width layout with only a slight side margin (replaces narrow max-w-7xl gutters) */
+  /* Full-width layout — fills the viewport with comfortable side breathing room */
   .page-container {
     width: 100%;
-    max-width: none;
+    max-width: 1600px;
     margin-left: auto;
     margin-right: auto;
-    padding-left: max(0.75rem, env(safe-area-inset-left, 0px));
-    padding-right: max(0.75rem, env(safe-area-inset-right, 0px));
+    padding-left: max(1rem, env(safe-area-inset-left, 0px));
+    padding-right: max(1rem, env(safe-area-inset-right, 0px));
   }
 
   @media (min-width: 640px) {
     .page-container {
-      padding-left: max(1rem, env(safe-area-inset-left, 0px));
-      padding-right: max(1rem, env(safe-area-inset-right, 0px));
+      padding-left: max(1.5rem, env(safe-area-inset-left, 0px));
+      padding-right: max(1.5rem, env(safe-area-inset-right, 0px));
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .page-container {
+      padding-left: max(2.5rem, env(safe-area-inset-left, 0px));
+      padding-right: max(2.5rem, env(safe-area-inset-right, 0px));
     }
   }
 
   @media (min-width: 1280px) {
     .page-container {
-      padding-left: max(1.25rem, env(safe-area-inset-left, 0px));
-      padding-right: max(1.25rem, env(safe-area-inset-right, 0px));
+      padding-left: max(3rem, env(safe-area-inset-left, 0px));
+      padding-right: max(3rem, env(safe-area-inset-right, 0px));
+    }
+  }
+
+  @media (min-width: 1536px) {
+    .page-container {
+      padding-left: max(4rem, env(safe-area-inset-left, 0px));
+      padding-right: max(4rem, env(safe-area-inset-right, 0px));
     }
   }
 
   .text-balance {
     text-wrap: balance;
-  }
-
-  .scrollbar-hide {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
-
-  .scrollbar-hide::-webkit-scrollbar {
-    display: none;
   }
 
   .shadow-warm {
@@ -129,12 +167,18 @@
     @apply bg-white rounded-[var(--radius-devotional)] shadow-warm border border-beige/50;
   }
 
+  :root {
+    --navbar-height: 64px;
+    --navbar-banner-height: 0px;
+    --site-header-offset: 67px;
+  }
+
   .navbar-glass {
-    @apply bg-white/88 backdrop-blur-xl border-b border-beige/60 shadow-warm;
+    @apply bg-[#fffdf9]/90 backdrop-blur-xl border-b border-beige/60 shadow-warm;
   }
 
   .navbar-glass-scrolled {
-    @apply bg-white/95 backdrop-blur-2xl border-b border-champagne-dark/25 shadow-warm-md;
+    @apply bg-[#fffdf9]/96 backdrop-blur-2xl border-b border-champagne-dark/25 shadow-warm-md;
   }
 
   .search-card {
@@ -268,15 +312,38 @@
   }
 
   .text-readable {
-    @apply text-base md:text-lg font-semibold text-charcoal leading-relaxed;
+    @apply text-base md:text-lg lg:text-xl font-semibold text-charcoal leading-relaxed;
   }
 
   .text-caption {
-    @apply text-xs sm:text-sm font-semibold text-muted leading-snug;
+    @apply text-sm md:text-base font-semibold text-muted leading-snug;
   }
 
   .text-label {
-    @apply text-xs sm:text-sm font-bold uppercase tracking-[0.14em] text-muted;
+    @apply text-xs sm:text-sm lg:text-base font-bold uppercase tracking-[0.14em] text-muted;
+  }
+
+  .text-body-lg {
+    @apply text-base md:text-lg lg:text-xl font-medium text-charcoal/90 leading-relaxed;
+  }
+
+  /* Prose-style body text for content pages */
+  .prose-content {
+    font-size: 1.0625rem;
+    line-height: 1.8;
+    color: rgba(31, 10, 10, 0.82);
+  }
+
+  @media (min-width: 768px) {
+    .prose-content {
+      font-size: 1.125rem;
+    }
+  }
+
+  @media (min-width: 1280px) {
+    .prose-content {
+      font-size: 1.1875rem;
+    }
   }
 
   .bg-champagne {
@@ -298,6 +365,14 @@
     background:
       radial-gradient(circle at 20% 0%, rgba(201, 168, 76, 0.12), transparent 40%),
       linear-gradient(180deg, #2a0b0b 0%, #1a0505 100%);
+  }
+}
+
+@utility scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
   }
 }
 
@@ -381,3 +456,45 @@ html {
   background-color: transparent !important;
   box-shadow: none !important;
 }
+
+/* =========================================
+   Mobile UI Optimization & Bottom Navigation
+   ========================================= */
+
+.mobile-bottom-nav-container {
+  @apply fixed bottom-0 left-0 right-0 z-50 border-t border-beige/70 bg-white/92 pb-[max(0.5rem,env(safe-area-inset-bottom,0.5rem))] pt-2 shadow-warm-lg backdrop-blur-xl transition-all duration-300;
+}
+
+.mobile-bottom-nav-item {
+  @apply flex flex-col items-center justify-center gap-1 text-[0.625rem] font-bold text-muted transition-all duration-200 active:scale-95 px-3 py-1 rounded-xl;
+}
+
+.mobile-bottom-nav-item--active {
+  @apply text-champagne bg-champagne/5 scale-105;
+}
+
+/* Horizontal Swiper Carousel Snap */
+.swiper-container {
+  @apply flex overflow-x-auto snap-x snap-mandatory scrollbar-hide gap-4 pb-4 px-1;
+}
+
+.swiper-item {
+  @apply shrink-0 snap-center;
+}
+
+@keyframes arrowPulseBlink {
+  0%, 100% {
+    opacity: 0.25;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
+.animate-arrow-pulse-blink {
+  animation: arrowPulseBlink 1.4s infinite ease-in-out;
+  transform-origin: center;
+}
+

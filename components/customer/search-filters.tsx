@@ -9,7 +9,7 @@ import { formatCurrency, cn } from "@/lib/utils";
 import type { RoomCategory } from "@/types";
 import { useAppLanguage } from "@/hooks/use-app-language";
 
-const ROOM_TYPES: RoomCategory[] = ["Standard", "Deluxe", "Suite", "Penthouse"];
+const ROOM_TYPES: RoomCategory[] = ["AC", "Non-AC"];
 
 export const SEARCH_PRICE_MIN = 800;
 export const SEARCH_PRICE_MAX = 10000;

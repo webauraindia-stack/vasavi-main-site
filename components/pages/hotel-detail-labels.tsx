@@ -46,20 +46,20 @@ export function HotelDetailInfo({
     <div className="space-y-6">
       <div>
         <div className="flex flex-wrap items-center gap-2 mb-1.5">
-          <h1 className="font-display text-2xl sm:text-3xl text-charcoal leading-tight font-semibold">
+          <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl xl:text-[2.75rem] text-charcoal leading-tight font-semibold">
             {localized.name}
           </h1>
           {hasDonorRooms && (
-            <span className="rounded-full bg-champagne/10 px-2 py-0.5 text-[10px] font-bold tracking-wider uppercase text-champagne border border-champagne/20">
+            <span className="rounded-full bg-champagne/10 px-2.5 py-1 text-[10px] lg:text-xs font-bold tracking-wider uppercase text-champagne border border-champagne/20">
               {t("hotel.donorRoomsBadge")}
             </span>
           )}
         </div>
-        <p className="flex items-center gap-1 text-xs text-muted font-medium">
-          <MapPin className="h-3.5 w-3.5 shrink-0 text-champagne/70" aria-hidden />
+        <p className="flex items-center gap-1.5 text-sm lg:text-lg text-muted font-medium">
+          <MapPin className="h-4 w-4 lg:h-5 lg:w-5 shrink-0 text-champagne/70" aria-hidden />
           {cityLabel}, {country}
         </p>
-        <div className="mt-3.5 flex flex-wrap items-center gap-4 text-xs">
+        <div className="mt-3.5 flex flex-wrap items-center gap-4 text-sm lg:text-base">
           <StarRating rating={overallRating} size="sm" showValue />
           <span className="text-muted/80">
             {t("hotel.starRooms", { stars: starRating, count: roomCount })}
@@ -67,18 +67,20 @@ export function HotelDetailInfo({
         </div>
       </div>
 
-      <p className="text-charcoal/80 leading-relaxed text-sm sm:text-base font-normal">{localized.description}</p>
+      <p className="text-charcoal/80 leading-relaxed text-sm sm:text-base lg:text-lg font-normal max-w-3xl">
+        {localized.description}
+      </p>
 
       {amenities.length > 0 && (
         <div className="space-y-2">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-muted">
+          <h2 className="text-xs lg:text-sm font-bold uppercase tracking-wider text-muted">
             {t("hotel.amenities")}
           </h2>
-          <ul className="flex flex-wrap gap-1.5">
+          <ul className="flex flex-wrap gap-2">
             {amenities.map((a) => (
               <li
                 key={a}
-                className="rounded-full bg-beige/20 px-3 py-1 text-xs text-charcoal/80"
+                className="rounded-full bg-beige/20 px-3.5 py-1.5 text-xs lg:text-sm text-charcoal/80"
               >
                 {t(`amenities.${a}`, { defaultValue: a })}
               </li>
@@ -89,10 +91,10 @@ export function HotelDetailInfo({
 
       {nearbyAttractions && nearbyAttractions.length > 0 && (
         <div className="space-y-2">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-muted">
+          <h2 className="text-xs lg:text-sm font-bold uppercase tracking-wider text-muted">
             {t("hotel.nearby")}
           </h2>
-          <ul className="grid gap-2 sm:grid-cols-2 text-xs text-charcoal/85">
+          <ul className="grid gap-2 sm:grid-cols-2 text-sm lg:text-base text-charcoal/85">
             {nearbyAttractions.map((item, i) => (
               <NearbyItem key={i} slug={slug} index={i} fallback={item} />
             ))}

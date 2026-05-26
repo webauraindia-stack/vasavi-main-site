@@ -124,7 +124,7 @@ export default function RootLayout({
         </Script>
         <Providers>
           <Navbar />
-          <main className="flex-1">{children}</main>
+          <main className="flex-1 pb-20 lg:pb-0">{children}</main>
           <Footer />
           <BookingModal />
           <BookingToast />

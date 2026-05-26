@@ -32,6 +32,7 @@
     "about": "हमारे बारे में",
     "contact": "संपर्क",
     "healthCentre": "स्वास्थ्य केंद्र",
+    "more": "और",
     "search": "खोजें",
     "login": "साइन इन",
     "logout": "साइन आउट",
@@ -41,9 +42,16 @@
     "notifications": "सूचनाएँ",
     "hotelsSection": "होटल"
   },
+  "payment": {
+    "pendingLabel": "भुगतान लंबित",
+    "pendingMessage": "{{hotel}} पर {{reference}} के लिए {{amount}} का भुगतान पूरा करें।",
+    "completePayment": "भुगतान पूरा करें",
+    "dismissPending": "अनुस्मारक बंद करें"
+  },
   "notifications": {
     "title": "सूचनाएँ",
     "openMenu": "सूचनाएँ खोलें",
+    "openPage": "सूचनाएँ पृष्ठ खोलें",
     "markAllRead": "सभी पढ़ा हुआ",
     "markRead": "पढ़ा हुआ चिह्नित करें",
     "viewAll": "सभी देखें",
@@ -96,7 +104,8 @@
     "donorRoomsOnly": "केवल दानकर्ता कमरे",
     "noMatch": "कोई होटल मेल नहीं खाता। मानदंड बदलें।",
     "showGrid": "ग्रिड दिखाएँ",
-    "showMap": "मानचित्र दिखाएँ"
+    "showMap": "मानचित्र दिखाएँ",
+    "help": "सहायता"
   },
   "features": {
     "eyebrow": "यात्री हमें क्यों चुनते हैं",
@@ -204,6 +213,11 @@
     "fullName": "पूरा नाम",
     "email": "ईमेल",
     "city": "शहर",
+    "aadhaar": "आधार नंबर",
+    "aadhaarHint": "12 अंकों का UID — XXXX XXXX XXXX प्रारूप में",
+    "aadhaarInvalid": "मान्य 12 अंकों का आधार नंबर दर्ज करें",
+    "aadhaarChecksumInvalid": "यह आधार नंबर मान्य नहीं है। कृपया सभी 12 अंक फिर से जांचें।",
+    "verificationExpired": "आपका सत्यापन समाप्त हो गया। \"OTP पर वापस\" दबाकर फिर से सत्यापित करें।",
     "memberId": "सदस्य / दानकर्ता ID",
     "continueBtn": "जारी रखें",
     "saveSignIn": "सेव और साइन इन",
@@ -311,10 +325,8 @@
     "Prasadam": "ప్రసాదం"
   },
   "roomTypes": {
-    "Standard": "స్టాండర్డ్",
-    "Deluxe": "డీలక్స్",
-    "Suite": "సూట్",
-    "Penthouse": "పెంట్‌హౌస్"
+    "AC": "AC",
+    "Non-AC": "Non-AC"
   },
   "about": {
     "title": "वासवी होटल्स के बारे में",
@@ -382,6 +394,10 @@
     "sendMessage": "संदेश भेजें",
     "name": "नाम",
     "email": "ईमेल",
+    "hotel": "अतिथि गृह",
+    "hotelPlaceholder": "अतिथि गृह चुनें",
+    "hotelGeneral": "सामान्य पूछताछ (VCI मुख्यालय)",
+    "hotelRequired": "कृपया अतिथि गृह या सामान्य पूछताछ चुनें।",
     "message": "संदेश",
     "submit": "भेजें",
     "thankYou": "धन्यवाद — हम जल्द जवाब देंगे।"

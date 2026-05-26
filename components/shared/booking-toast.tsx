@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle, MessageCircle, X } from "lucide-react";
 import { useBookingStore } from "@/stores/booking-store";
+import { usePendingPaymentStore } from "@/stores/pending-payment-store";
 import { formatDate } from "@/lib/utils";
 import { useAppLanguage } from "@/hooks/use-app-language";
 import { useLocalizedHotel, useLocalizedRoom } from "@/hooks/use-localized-content";
@@ -13,6 +14,7 @@ const DURATION_MS = 7000;
 export function BookingToast() {
   const { t } = useAppLanguage();
   const { showToast, toastData, dismissToast } = useBookingStore();
+  const pendingPayment = usePendingPaymentStore((s) => s.payment);
   const [progress, setProgress] = useState(100);
 
   const roomLocalized = useLocalizedRoom({
@@ -47,12 +49,12 @@ export function BookingToast() {
 
   return (
     <AnimatePresence>
-      {showToast && toastData && (
+      {showToast && toastData && !pendingPayment && (
         <motion.div
           initial={{ opacity: 0, y: -16 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -16 }}
-          className="fixed z-[60] top-4 left-4 right-4 md:top-auto md:left-auto md:bottom-6 md:right-6 md:w-full md:max-w-sm"
+          className="fixed z-[45] left-4 right-4 md:left-auto md:right-6 md:w-full md:max-w-sm top-[calc(var(--site-header-offset,5.25rem)+0.5rem)] md:top-[calc(var(--site-header-offset,5.25rem)+0.75rem)]"
         >
           <div className="bg-white rounded-xl border border-champagne-dark/30 overflow-hidden shadow-warm-md">
             <div className="p-4 flex gap-3">

@@ -32,6 +32,7 @@
     "about": "ನಮ್ಮ ಬಗ್ಗೆ",
     "contact": "ಸಂಪರ್ಕ",
     "healthCentre": "ಆರೋಗ್ಯ ಕೇಂದ್ರ",
+    "more": "ಇನ್ನಷ್ಟು",
     "search": "ಹುಡುಕಿ",
     "login": "ಸೈನ್ ಇನ್",
     "logout": "ಸೈನ್ ಔಟ್",
@@ -41,9 +42,16 @@
     "notifications": "ಅಧಿಸೂಚನೆಗಳು",
     "hotelsSection": "ಹೋಟೆಲ್‌ಗಳು"
   },
+  "payment": {
+    "pendingLabel": "ಪಾವತಿ ಬಾಕಿ",
+    "pendingMessage": "{{hotel}} — {{reference}} ಗೆ {{amount}} ಪಾವತಿಸಿ.",
+    "completePayment": "ಪಾವತಿ ಪೂರ್ಣಗೊಳಿಸಿ",
+    "dismissPending": "ಜ್ಞಾಪನೆ ಮುಚ್ಚಿ"
+  },
   "notifications": {
     "title": "ಅಧಿಸೂಚನೆಗಳು",
     "openMenu": "ಅಧಿಸೂಚನೆಗಳನ್ನು ತೆರೆಯಿ",
+    "openPage": "ಅಧಿಸೂಚನೆಗಳ ಪುಟ ತೆರೆಯಿರಿ",
     "markAllRead": "ಎಲ್ಲಾ ಓದಿದೆ",
     "markRead": "ಓದಿದೆ ಎಂದು ಗುರುತಿಸಿ",
     "viewAll": "ಎಲ್ಲಾ ನೋಡಿ",
@@ -96,7 +104,8 @@
     "donorRoomsOnly": "ದಾನಿ ಕೊಠಡಿಗಳು ಮಾತ್ರ",
     "noMatch": "ಫಿಲ್ಟರ್‌ಗೆ ಹೋಟೆಲ್‌ಗಳಿಲ್ಲ.",
     "showGrid": "ಗ್ರಿಡ್",
-    "showMap": "ನಕ್ಷೆ"
+    "showMap": "ನಕ್ಷೆ",
+    "help": "ಸಹಾಯ"
   },
   "features": {
     "eyebrow": "ಯಾತ್ರಿಕರು ಏಕೆ ಆಯ್ಕೆ ಮಾಡುತ್ತಾರೆ",
@@ -204,6 +213,11 @@
     "fullName": "పూర్తి పేరు",
     "email": "ఇమెయిల్",
     "city": "నగరం",
+    "aadhaar": "ಆಧಾರ್ ಸಂಖ್ಯೆ",
+    "aadhaarHint": "12 ಅಂಕಿಯ UID — XXXX XXXX XXXX ರೂಪ",
+    "aadhaarInvalid": "ಮಾನ್ಯ 12 ಅಂಕಿಯ ಆಧಾರ್ ಸಂಖ್ಯೆಯನ್ನು ನಮೂದಿಸಿ",
+    "aadhaarChecksumInvalid": "ಈ ಆಧಾರ್ ಸಂಖ್ಯೆ ಮಾನ್ಯವಲ್ಲ. 12 ಅಂಕಿಗಳನ್ನು ಮತ್ತೆ ಪರಿಶೀಲಿಸಿ.",
+    "verificationExpired": "ನಿಮ್ಮ ಪರಿಶೀಲನೆ ಅವಧಿ ಮುಗಿದಿದೆ. \"OTPಕ್ಕೆ ಹಿಂತಿರುಗಿ\" ಒತ್ತಿ ಮತ್ತೆ ಪರಿಶೀಲಿಸಿ.",
     "memberId": "సభ్య / దాత ID",
     "continueBtn": "కొనసాగించు",
     "saveSignIn": "సేవ్ & సైన్ ఇన్",
@@ -311,10 +325,8 @@
     "Prasadam": "ప్రసాదం"
   },
   "roomTypes": {
-    "Standard": "స్టాండర్డ్",
-    "Deluxe": "డీలక్స్",
-    "Suite": "సూట్",
-    "Penthouse": "పెంట్‌హౌస్"
+    "AC": "AC",
+    "Non-AC": "Non-AC"
   },
   "about": {
     "title": "ವಾಸವಿ ಹೋಟೆಲ್ಸ್ ಬಗ್ಗೆ",
@@ -380,9 +392,13 @@
     "searchBook": "ఆన్‌లైన్‌లో గదులు బుక్",
     "donorKcgf": "దాత కార్యక్రమం & KCGF",
     "sendMessage": "సందేశం పంపండి",
-    "name": "పేరు",
-    "email": "ఇమెయిల్",
-    "message": "సందేశం",
+    "name": "ಹೆಸರು",
+    "email": "ಇಮೇಲ್",
+    "hotel": "ಅತಿಥಿ ಗೃಹ",
+    "hotelPlaceholder": "ಅತಿಥಿ ಗೃಹ ಆಯ್ಕೆಮಾಡಿ",
+    "hotelGeneral": "ಸಾಮಾನ್ಯ ವಿಚಾರಣೆ (VCI ಮುಖ್ಯ ಕಚೇರಿ)",
+    "hotelRequired": "ದಯವಿಟ್ಟು ಅತಿಥಿ ಗೃಹ ಅಥವಾ ಸಾಮಾನ್ಯ ವಿಚಾರಣೆ ಆಯ್ಕೆಮಾಡಿ.",
+    "message": "ಸಂದೇಶ",
     "submit": "పంపండి",
     "thankYou": "ధన్యవాదాలు — త్వరలో స్పందిస్తాము."
   },

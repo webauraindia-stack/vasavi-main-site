@@ -7,10 +7,9 @@ import {
 } from "@/lib/data/hotels";
 import {
   HotelDetailInfo,
-  HotelDetailBookCard,
-  HotelDetailMobileBar,
 } from "@/components/pages/hotel-detail-labels";
 import { HotelGallery, RoomList, HotelReview } from "@/components/customer/hotel-detail-client";
+import { HotelDetailUrlSync } from "@/components/customer/hotel-detail-url-sync";
 
 export const revalidate = 3600;
 
@@ -46,32 +45,30 @@ export default async function HotelDetailPage({
 
   return (
     <div className="bg-surface min-h-screen pb-20">
-      <div className="mx-auto max-w-4xl px-4 pt-6 md:pt-10 space-y-8">
-        <HotelGallery images={hotel.images} name={hotel.name} />
+      <HotelDetailUrlSync />
+      <HotelGallery
+        images={hotel.images}
+        name={hotel.name}
+        variant="hero"
+        className="mt-[var(--site-header-offset,5.25rem)]"
+      />
 
-        <div className="grid gap-6 md:grid-cols-[1fr_260px] items-start border-b border-beige/30 pb-8">
-          <div className="space-y-6">
-            <HotelDetailInfo
-              slug={hotel.slug}
-              name={hotel.name}
-              description={hotel.description}
-              city={hotel.city}
-              country={hotel.country}
-              region={hotel.region}
-              starRating={hotel.starRating}
-              roomCount={hotel.roomCount}
-              overallRating={hotel.overallRating}
-              hasDonorRooms={hotel.hasDonorRooms}
-              amenities={hotel.amenities}
-              nearbyAttractions={hotel.nearbyAttractions}
-            />
-          </div>
-          <div className="w-full">
-            <HotelDetailBookCard
-              startingPrice={hotel.startingPrice}
-              hotelId={hotel.id}
-            />
-          </div>
+      <div className="page-container max-w-6xl pt-8 md:pt-12 lg:pt-14 space-y-10 lg:space-y-12">
+        <div className="border-b border-beige/30 pb-8 lg:pb-10">
+          <HotelDetailInfo
+            slug={hotel.slug}
+            name={hotel.name}
+            description={hotel.description}
+            city={hotel.city}
+            country={hotel.country}
+            region={hotel.region}
+            starRating={hotel.starRating}
+            roomCount={hotel.roomCount}
+            overallRating={hotel.overallRating}
+            hasDonorRooms={hotel.hasDonorRooms}
+            amenities={hotel.amenities}
+            nearbyAttractions={hotel.nearbyAttractions}
+          />
         </div>
 
         <section id="rooms" className="pt-2">
@@ -85,7 +82,6 @@ export default async function HotelDetailPage({
         )}
       </div>
 
-      <HotelDetailMobileBar startingPrice={hotel.startingPrice} hotelId={hotel.id} />
     </div>
   );
 }

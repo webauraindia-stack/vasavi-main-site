@@ -54,25 +54,25 @@ export function TrustStats() {
   return (
     <section className="relative z-10 -mt-8">
       <div className="page-container">
-        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+        <div className="rounded-[var(--radius-devotional)] border border-beige/50 bg-[#fffdf9]/75 backdrop-blur-[8px] p-6 sm:p-8 shadow-warm grid grid-cols-2 gap-6 lg:grid-cols-4 lg:gap-8 divide-x divide-beige/25">
           {stats.map((stat, i) => {
             const Icon = ICONS[i];
             return (
               <motion.div
                 key={stat.label}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 15 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.08 }}
-                className="rounded-[var(--radius-devotional)] border border-beige/70 bg-white p-4 sm:p-5 shadow-warm-md"
+                className="flex flex-col items-center text-center px-2 first:border-l-0 border-l border-beige/25"
               >
-                <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-champagne/10 text-champagne">
-                  <Icon className="h-5 w-5" />
+                <div className="mb-2.5 inline-flex h-9 w-9 items-center justify-center rounded-full bg-champagne-dark/15 text-champagne-dark">
+                  <Icon className="h-4.5 w-4.5" />
                 </div>
-                <p className="font-display text-2xl sm:text-3xl lg:text-4xl text-champagne font-bold leading-none">
+                <p className="font-display text-2xl sm:text-3xl lg:text-4xl text-champagne font-black leading-none">
                   <CountUp end={stat.value} suffix={stat.suffix} />
                 </p>
-                <p className="mt-2 text-xs sm:text-sm font-bold uppercase tracking-wide text-muted leading-snug">
+                <p className="mt-2 text-[0.6875rem] sm:text-xs font-bold uppercase tracking-widest text-muted/95 leading-snug max-w-[160px]">
                   {stat.label}
                 </p>
               </motion.div>

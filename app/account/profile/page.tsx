@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { formatPhoneDisplay } from "@/lib/auth/phone";
+import { formatAadhaarDisplay } from "@/lib/aadhaar";
 import { useAppLanguage } from "@/hooks/use-app-language";
 
 export default function ProfilePage() {
@@ -18,11 +19,13 @@ export default function ProfilePage() {
     donorId?: string;
     phone?: string;
     city?: string;
+    aadhaar?: string;
     categoryLabel?: string;
     isKnownMember?: boolean;
   };
 
   const displayPhone = user?.phone ? formatPhoneDisplay(user.phone) : "";
+  const displayAadhaar = user?.aadhaar ? formatAadhaarDisplay(user.aadhaar) : "";
 
   return (
     <div>
@@ -95,6 +98,17 @@ export default function ProfilePage() {
               className="mt-1"
             />
           </div>
+          {displayAadhaar && (
+            <div>
+              <Label htmlFor="aadhaar">{t("account.aadhaar")}</Label>
+              <Input
+                id="aadhaar"
+                value={displayAadhaar}
+                disabled
+                className="mt-1 font-mono tracking-[0.2em] tabular-nums opacity-60"
+              />
+            </div>
+          )}
           {user?.isDonor && user.donorId && (
             <div>
               <Label>{t("account.donorId")}</Label>

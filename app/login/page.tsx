@@ -9,7 +9,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { formatPhoneDisplay } from "@/lib/auth/phone";
+import { isValidAadhaar, formatAadhaarDisplay } from "@/lib/aadhaar";
 import type { CustomerProfileForm } from "@/lib/auth/customer-profile";
+import { AadhaarInput } from "@/components/ui/aadhaar-input";
 import { useAppLanguage } from "@/hooks/use-app-language";
 
 type Step = "phone" | "otp" | "profile";
@@ -19,6 +21,7 @@ const EMPTY_PROFILE: CustomerProfileForm = {
   email: "",
   phone: "",
   city: "",
+  aadhaar: "",
   memberId: "",
   categoryLabel: "",
   isKnownMember: false,
@@ -132,9 +135,38 @@ function LoginPageContent() {
     }
   };
 
+  const updateProfile = (field: keyof CustomerProfileForm, value: string) => {
+    setProfile((current) => ({ ...current, [field]: value }));
+  };
+
+  const showAadhaarError =
+    !profile.isKnownMember &&
+    profile.aadhaar.length > 0 &&
+    !isValidAadhaar(profile.aadhaar);
+
+  const aadhaarErrorMessage = showAadhaarError
+    ? t("login.aadhaarInvalid", "Enter all 12 digits of your Aadhaar number")
+    : "";
+
   const handleProfileSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    if (!profile.isKnownMember && !isValidAadhaar(profile.aadhaar)) {
+      setError(t("login.aadhaarInvalid", "Enter all 12 digits of your Aadhaar number"));
+      return;
+    }
+
+    if (!verificationToken) {
+      setError(
+        t(
+          "login.verificationExpired",
+          'Your verification expired. Tap "Back to OTP" and verify your number again.'
+        )
+      );
+      return;
+    }
+
     setLoading(true);
 
     const result = await signIn("whatsapp-otp", {
@@ -143,22 +175,24 @@ function LoginPageContent() {
       name: profile.name,
       email: profile.email,
       city: profile.city,
+      aadhaar: profile.aadhaar,
       redirect: false,
     });
 
     setLoading(false);
 
     if (result?.error) {
-      setError(t("login.signInFail"));
+      setError(
+        t(
+          "login.verificationExpired",
+          'Your verification expired. Tap "Back to OTP" and verify your number again.'
+        )
+      );
       return;
     }
 
     router.push(callbackUrl);
     router.refresh();
-  };
-
-  const updateProfile = (field: keyof CustomerProfileForm, value: string) => {
-    setProfile((current) => ({ ...current, [field]: value }));
   };
 
   return (
@@ -344,6 +378,42 @@ function LoginPageContent() {
               />
             </div>
 
+            {!profile.isKnownMember && (
+              <div>
+                <Label htmlFor="profile-aadhaar">
+                  {t("login.aadhaar", "Aadhaar number")}
+                </Label>
+                <AadhaarInput
+                  id="profile-aadhaar"
+                  value={profile.aadhaar}
+                  onValueChange={(digits) => updateProfile("aadhaar", digits)}
+                  required
+                  invalid={showAadhaarError}
+                  className="mt-1"
+                  aria-describedby="profile-aadhaar-hint"
+                  aria-invalid={showAadhaarError}
+                />
+                <p id="profile-aadhaar-hint" className="mt-1.5 text-xs text-muted">
+                  {t("login.aadhaarHint", "12-digit UID — shown as XXXX XXXX XXXX")}
+                </p>
+                {aadhaarErrorMessage && (
+                  <p className="mt-1.5 text-sm text-red-600">{aadhaarErrorMessage}</p>
+                )}
+              </div>
+            )}
+
+            {profile.isKnownMember && profile.aadhaar && (
+              <div>
+                <Label htmlFor="profile-aadhaar-readonly">{t("login.aadhaar")}</Label>
+                <Input
+                  id="profile-aadhaar-readonly"
+                  value={formatAadhaarDisplay(profile.aadhaar)}
+                  disabled
+                  className="mt-1 font-mono tracking-[0.2em] tabular-nums opacity-70"
+                />
+              </div>
+            )}
+
             {profile.isKnownMember && profile.memberId && (
               <div>
                 <Label htmlFor="profile-member-id">{t("login.memberId")}</Label>
@@ -365,7 +435,9 @@ function LoginPageContent() {
                 loading ||
                 !profile.name.trim() ||
                 !profile.email.trim() ||
-                (!profile.isKnownMember && !profile.email.includes("@"))
+                (!profile.isKnownMember && !profile.email.includes("@")) ||
+                (!profile.isKnownMember && !isValidAadhaar(profile.aadhaar)) ||
+                !verificationToken
               }
             >
               {loading

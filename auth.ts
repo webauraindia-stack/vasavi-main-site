@@ -2,6 +2,7 @@ import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { saveGuestProfile } from "@/lib/auth/guest-profiles";
 import { normalizePhone } from "@/lib/auth/phone";
+import { isValidAadhaarDigits, normalizeAadhaar } from "@/lib/aadhaar";
 import { resolveAuthUser } from "@/lib/auth/users-by-phone";
 import { consumeVerificationToken } from "@/lib/auth/verification-token";
 
@@ -16,6 +17,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         name: { label: "Name", type: "text" },
         email: { label: "Email", type: "text" },
         city: { label: "City", type: "text" },
+        aadhaar: { label: "Aadhaar", type: "text" },
       },
       async authorize(credentials) {
         const phone = normalizePhone(String(credentials?.phone ?? ""));
@@ -23,18 +25,18 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         const name = String(credentials?.name ?? "").trim();
         const email = String(credentials?.email ?? "").trim().toLowerCase();
         const city = String(credentials?.city ?? "").trim();
+        const aadhaar = normalizeAadhaar(String(credentials?.aadhaar ?? ""));
 
         if (!phone || !verificationToken) {
-          return null;
-        }
-
-        if (!consumeVerificationToken(verificationToken, phone)) {
           return null;
         }
 
         const knownUser = resolveAuthUser(phone);
 
         if (knownUser.memberProfile) {
+          if (!consumeVerificationToken(verificationToken, phone)) {
+            return null;
+          }
           const profile = knownUser.memberProfile;
           return {
             id: knownUser.id,
@@ -51,7 +53,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           };
         }
 
-        if (!name || !email || !email.includes("@")) {
+        if (!name || !email || !email.includes("@") || !isValidAadhaarDigits(aadhaar)) {
+          return null;
+        }
+
+        if (!consumeVerificationToken(verificationToken, phone)) {
           return null;
         }
 
@@ -60,6 +66,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           email,
           phone,
           city,
+          aadhaar,
         });
 
         return {
@@ -68,6 +75,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           email: guestProfile.email,
           phone: guestProfile.phone,
           city: guestProfile.city,
+          aadhaar: guestProfile.aadhaar,
           isDonor: false,
           isKnownMember: false,
           profileComplete: true,
@@ -83,6 +91,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.tier = (user as { tier?: string }).tier;
         token.phone = (user as { phone?: string }).phone;
         token.city = (user as { city?: string }).city;
+        token.aadhaar = (user as { aadhaar?: string }).aadhaar;
         token.categoryLabel = (user as { categoryLabel?: string }).categoryLabel;
         token.isKnownMember = (user as { isKnownMember?: boolean }).isKnownMember ?? false;
         token.profileComplete = (user as { profileComplete?: boolean }).profileComplete ?? true;
@@ -96,6 +105,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         (session.user as { tier?: string }).tier = token.tier as string;
         (session.user as { phone?: string }).phone = token.phone as string;
         (session.user as { city?: string }).city = token.city as string;
+        (session.user as { aadhaar?: string }).aadhaar = token.aadhaar as string;
         (session.user as { categoryLabel?: string }).categoryLabel =
           token.categoryLabel as string;
         (session.user as { isKnownMember?: boolean }).isKnownMember =

@@ -7,7 +7,19 @@ type VerificationRecord = {
 };
 
 const TOKEN_TTL_MS = 10 * 60 * 1000;
-const verificationTokens = new Map<string, VerificationRecord>();
+
+type VerificationStore = Map<string, VerificationRecord>;
+
+const globalForAuth = globalThis as typeof globalThis & {
+  __vasaviVerificationTokens?: VerificationStore;
+};
+
+const verificationTokens: VerificationStore =
+  globalForAuth.__vasaviVerificationTokens ?? new Map();
+
+if (!globalForAuth.__vasaviVerificationTokens) {
+  globalForAuth.__vasaviVerificationTokens = verificationTokens;
+}
 
 export function issueVerificationToken(phone: string): string {
   const normalized = normalizePhone(phone);

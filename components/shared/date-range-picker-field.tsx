@@ -42,7 +42,7 @@ export function DateRangePickerField({
       return `${format(range.from, "MMM d")} – ${t("search.checkoutPending")}`;
     }
     return t("search.dateRangePlaceholder");
-  }, [range?.from, range?.to, t]);
+  }, [range, t]);
 
   const handleSelect = useCallback(
     (selected: DateRange | undefined) => {

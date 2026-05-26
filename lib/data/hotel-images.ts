@@ -27,6 +27,8 @@ export const U = {
   hotelRoom: "photo-1590490360182-c33d57733427",
   roomBalcony: "photo-1596394516093-501ba68a0ba6",
   andhraHotel: "photo-1584132967334-10e028bd69f7",
+  // Hero: bright South-Indian temple courtyard / gopuram at golden hour
+  heroTemple: "photo-1587474260584-136574528ed5",
 } as const;
 
 export function unsplash(photoId: string): string {

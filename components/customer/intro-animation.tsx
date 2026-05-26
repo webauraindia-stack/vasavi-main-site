@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MapPin } from "lucide-react";
+import Image from "next/image";
 
 export function IntroAnimation({ onComplete }: { onComplete: () => void }) {
   const [show, setShow] = useState(false);
@@ -147,23 +148,16 @@ export function IntroAnimation({ onComplete }: { onComplete: () => void }) {
                     </motion.div>
                   )}
 
-                  {/* Vasavi Mata Inspired Lotus Emblem SVG */}
-                  <svg width="140" height="140" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="relative z-10 drop-shadow-[0_0_20px_rgba(201,168,76,0.6)]">
-                    <path d="M50 5 C65 25, 85 45, 95 65 C95 85, 75 95, 50 95 C25 95, 5 85, 5 65 C15 45, 35 25, 50 5 Z" fill="url(#maroon-grad)" stroke="#c9a84c" strokeWidth="1.5"/>
-                    <path d="M50 15 C58 30, 75 45, 80 60 C80 75, 65 85, 50 85 C35 85, 20 75, 20 60 C25 45, 42 30, 50 15 Z" fill="url(#gold-grad)"/>
-                    <circle cx="50" cy="65" r="10" fill="#fffdf9" />
-                    <circle cx="50" cy="65" r="5" fill="#c9a84c" />
-                    <defs>
-                      <linearGradient id="maroon-grad" x1="50" y1="5" x2="50" y2="95" gradientUnits="userSpaceOnUse">
-                        <stop stopColor="#8b1c1c" />
-                        <stop offset="1" stopColor="#4a0e0e" />
-                      </linearGradient>
-                      <linearGradient id="gold-grad" x1="50" y1="15" x2="50" y2="85" gradientUnits="userSpaceOnUse">
-                        <stop stopColor="#e8c872" />
-                        <stop offset="1" stopColor="#c9a84c" />
-                      </linearGradient>
-                    </defs>
-                  </svg>
+                  {/* Vasavi Clubs International Logo */}
+                  <div className="relative z-10 h-36 w-36 drop-shadow-[0_0_24px_rgba(201,168,76,0.55)]">
+                    <Image
+                      src="/images/vasavi-logo.png"
+                      alt="Vasavi Clubs International"
+                      fill
+                      className="object-contain"
+                      priority
+                    />
+                  </div>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -179,23 +173,32 @@ export function IntroAnimation({ onComplete }: { onComplete: () => void }) {
                   transition={{ duration: 0.9, ease: "easeOut" }}
                   className="absolute text-center flex flex-col items-center justify-center"
                 >
-                  <h1 className="font-display text-5xl md:text-7xl font-black tracking-tight" style={{ 
+                  <div className="relative h-28 w-28 md:h-36 md:w-36 drop-shadow-[0_0_24px_rgba(201,168,76,0.5)] mb-3">
+                    <Image
+                      src="/images/vasavi-logo.png"
+                      alt="Vasavi Clubs International"
+                      fill
+                      className="object-contain"
+                      priority
+                    />
+                  </div>
+                  <h1 className="font-display text-4xl md:text-6xl font-black tracking-tight" style={{ 
                     backgroundImage: 'linear-gradient(to right, #4a0e0e, #8b1c1c)', 
                     WebkitBackgroundClip: 'text',
                     WebkitTextFillColor: 'transparent',
                   }}>
                     VASAVI
                   </h1>
-                  <p className="mt-1 font-display text-sm md:text-lg font-bold tracking-[0.25em] text-[#c9a84c] uppercase">
-                    Spiritual Stays
+                  <p className="mt-1 font-display text-sm md:text-base font-bold tracking-[0.25em] text-[#c9a84c] uppercase">
+                    Clubs International
                   </p>
                   <motion.p
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.4, duration: 0.8 }}
-                    className="mt-6 font-body text-base md:text-lg font-medium italic text-[#5c4545] tracking-wide"
+                    className="mt-4 font-body text-sm md:text-base font-medium italic text-[#5c4545] tracking-wide"
                   >
-                    Where Hospitality Meets Tradition
+                    Live to Serve
                   </motion.p>
                 </motion.div>
               )}

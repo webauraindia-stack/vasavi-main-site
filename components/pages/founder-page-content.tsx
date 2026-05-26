@@ -48,19 +48,19 @@ export function FounderPageContent() {
             </div>
 
             <div className="text-center lg:text-left">
-              <p className="text-sm font-bold uppercase tracking-wide text-champagne mb-3">
+              <p className="text-sm font-bold uppercase tracking-wide text-champagne mb-4">
                 {t("founder.heritageEyebrow")}
               </p>
-              <h1 className="font-display text-3xl sm:text-4xl md:text-5xl text-charcoal leading-tight mb-2">
+              <h1 className="font-display text-4xl sm:text-5xl md:text-6xl text-charcoal leading-tight mb-3">
                 {t("founder.honorific")}
               </h1>
-              <p className="font-display text-lg sm:text-xl text-champagne-dark mb-4">
+              <p className="font-display text-xl sm:text-2xl text-champagne-dark mb-5">
                 {t("founder.title")}
               </p>
-              <p className="text-base font-semibold text-charcoal/80 mb-6">
+              <p className="text-base md:text-lg font-semibold text-charcoal/80 mb-6">
                 {t("founder.dates", { born: FOUNDER.born, died: FOUNDER.died })}
               </p>
-              <p className="text-base sm:text-lg font-semibold text-charcoal leading-relaxed max-w-2xl mx-auto lg:mx-0 mb-8 whitespace-pre-line">
+              <p className="text-lg md:text-xl font-semibold text-charcoal leading-relaxed max-w-2xl mx-auto lg:mx-0 mb-8 whitespace-pre-line">
                 {t("founder.bio")}
               </p>
               <div className="flex flex-wrap justify-center lg:justify-start gap-3">
@@ -77,8 +77,8 @@ export function FounderPageContent() {
       </section>
 
       {/* Milestones */}
-      <section className="py-14 md:py-16 border-b border-charcoal/5">
-        <div className="page-container max-w-4xl">
+      <section className="py-14 md:py-20 border-b border-charcoal/5">
+        <div className="page-container max-w-5xl">
           <SectionHeading icon={Landmark} title={t("founder.lifeOfService")} />
           <div className="mt-8 relative">
             <div className="absolute left-4 md:left-1/2 top-0 bottom-0 w-px bg-champagne/25 md:-translate-x-px" />
@@ -97,9 +97,9 @@ export function FounderPageContent() {
                     }`}
                   >
                     <span className="absolute left-2.5 md:left-1/2 md:-translate-x-1/2 flex h-3 w-3 rounded-full bg-champagne ring-4 ring-white" />
-                    <p className="font-display text-lg text-champagne">{item.year}</p>
-                    <p className="font-semibold text-charcoal mt-0.5">{item.title}</p>
-                    <p className="text-sm sm:text-base font-semibold text-charcoal/80 mt-1">{item.detail}</p>
+                    <p className="font-display text-xl text-champagne">{item.year}</p>
+                    <p className="text-lg font-bold text-charcoal mt-0.5">{item.title}</p>
+                    <p className="text-base md:text-lg font-semibold text-charcoal/80 mt-1">{item.detail}</p>
                   </div>
                 </li>
               ))}
@@ -109,10 +109,10 @@ export function FounderPageContent() {
       </section>
 
       {/* Bio-data */}
-      <section className="py-14 md:py-16 bg-surface/60">
-        <div className="page-container max-w-4xl">
+      <section className="py-14 md:py-20 bg-surface/60">
+        <div className="page-container max-w-5xl">
           <SectionHeading icon={Users} title={t("founder.bioData")} />
-          <p className="text-sm text-muted mt-2 mb-8 text-center md:text-left">
+          <p className="text-base md:text-lg text-muted mt-2 mb-8 text-center md:text-left">
             {t("founder.asRecordedBy")}{" "}
             <a
               href={FOUNDER.imageSource}
@@ -127,12 +127,12 @@ export function FounderPageContent() {
             {FOUNDER.personalDetails.map((row) => (
               <div
                 key={row.label}
-                className="rounded-xl border border-charcoal/10 bg-white p-4 shadow-warm"
+                className="rounded-xl border border-charcoal/10 bg-white p-5 shadow-warm"
               >
                 <dt className="text-xs font-bold uppercase tracking-wide text-charcoal/70">
                   {row.label}
                 </dt>
-                <dd className="mt-1 text-base font-semibold text-charcoal leading-snug">{row.value}</dd>
+                <dd className="mt-1.5 text-base md:text-lg font-semibold text-charcoal leading-snug">{row.value}</dd>
               </div>
             ))}
           </dl>
@@ -185,12 +185,12 @@ export function FounderPageContent() {
       </section>
 
       {/* Legacy CTA */}
-      <section className="py-16 md:py-20">
-        <div className="page-container max-w-3xl text-center">
-          <h2 className="font-display text-2xl md:text-3xl text-charcoal mb-4">
+      <section className="py-16 md:py-24">
+        <div className="page-container max-w-4xl text-center">
+          <h2 className="font-display text-3xl md:text-4xl lg:text-5xl text-charcoal mb-5">
             {t("founder.legacyTitle")}
           </h2>
-          <p className="text-muted leading-relaxed mb-8">{t("founder.legacy")}</p>
+          <p className="text-base md:text-lg lg:text-xl text-muted leading-relaxed mb-10">{t("founder.legacy")}</p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link href="/search">
               <Button size="lg">{t("founder.bookGuestHouse")}</Button>
@@ -216,19 +216,19 @@ function SectionHeading({
 }) {
   return (
     <div className="flex items-center justify-center md:justify-start gap-3">
-      <span className="flex h-10 w-10 items-center justify-center rounded-full bg-champagne/10 text-champagne">
-        <Icon className="h-5 w-5" />
+      <span className="flex h-12 w-12 items-center justify-center rounded-full bg-champagne/10 text-champagne">
+        <Icon className="h-6 w-6" />
       </span>
-      <h2 className="font-display text-2xl md:text-3xl text-charcoal">{title}</h2>
+      <h2 className="font-display text-3xl md:text-4xl text-charcoal">{title}</h2>
     </div>
   );
 }
 
 function HighlightStat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl border border-champagne/20 bg-champagne/5 p-4 text-center">
-      <p className="text-xs sm:text-sm font-bold uppercase tracking-wide text-charcoal/70">{label}</p>
-      <p className="font-display text-xl text-champagne mt-1">{value}</p>
+    <div className="rounded-xl border border-champagne/20 bg-champagne/5 p-5 text-center">
+      <p className="text-sm font-bold uppercase tracking-wide text-charcoal/70">{label}</p>
+      <p className="font-display text-2xl md:text-3xl text-champagne mt-2">{value}</p>
     </div>
   );
 }
@@ -247,31 +247,31 @@ function ContentCard({
   const isDark = variant === "dark";
   return (
     <div>
-      <div className="flex items-center gap-3 mb-4">
+      <div className="flex items-center gap-3 mb-5">
         <span
           className={cn(
-            "flex h-9 w-9 items-center justify-center rounded-full",
+            "flex h-11 w-11 items-center justify-center rounded-full",
             isDark ? "bg-white/10 text-champagne-dark" : "bg-champagne/10 text-champagne"
           )}
         >
-          <Icon className="h-4 w-4" />
+          <Icon className="h-5 w-5" />
         </span>
-        <h3 className={cn("font-display text-xl", isDark ? "text-white" : "text-charcoal")}>
+        <h3 className={cn("font-display text-2xl md:text-3xl", isDark ? "text-white" : "text-charcoal")}>
           {title}
         </h3>
       </div>
-      <ul className="space-y-3">
+      <ul className="space-y-3.5">
         {items.map((item) => (
           <li
             key={item}
             className={cn(
-              "flex gap-3 text-sm sm:text-base font-semibold leading-relaxed",
+              "flex gap-3 text-base md:text-lg font-semibold leading-relaxed",
               isDark ? "text-white/90" : "text-charcoal"
             )}
           >
             <span
               className={cn(
-                "mt-2 h-1.5 w-1.5 shrink-0 rounded-full",
+                "mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full",
                 isDark ? "bg-champagne-dark" : "bg-champagne"
               )}
             />

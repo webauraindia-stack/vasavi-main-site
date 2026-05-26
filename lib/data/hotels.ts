@@ -319,7 +319,7 @@ export function getRoomsForHotel(hotelId: string): Room[] {
   const baseRooms: Omit<Room, "id" | "hotelId" | "hotelSlug" | "hotelName">[] = [
     {
       name: "Standard Non-AC",
-      category: "Standard",
+      category: "Non-AC",
       description: "Simple, clean room with twin beds and a fan. Ideal for single pilgrims or budget travelers.",
       pricePerNight: hotel.startingPrice,
       bedType: "Twin",
@@ -333,7 +333,7 @@ export function getRoomsForHotel(hotelId: string): Room[] {
     },
     {
       name: "Standard AC",
-      category: "Deluxe",
+      category: "AC",
       description: "Comfortable air-conditioned room with simple wooden furniture.",
       pricePerNight: Math.round(hotel.startingPrice * 1.5),
       bedType: "Queen",
@@ -347,7 +347,7 @@ export function getRoomsForHotel(hotelId: string): Room[] {
     },
     {
       name: "Family Room",
-      category: "Suite",
+      category: "AC",
       description: "Spacious room with multiple beds, perfect for families traveling together for Darshan.",
       pricePerNight: Math.round(hotel.startingPrice * 2),
       bedType: "2 Queen",
@@ -361,7 +361,7 @@ export function getRoomsForHotel(hotelId: string): Room[] {
     },
     {
       name: "Donor AC Room",
-      category: "Suite",
+      category: "AC",
       description: "Reserved AC accommodation for our community donors.",
       pricePerNight: Math.round(hotel.startingPrice * 1.2),
       bedType: "Queen",
@@ -379,7 +379,7 @@ export function getRoomsForHotel(hotelId: string): Room[] {
   if (hotel.starRating >= 4) {
     baseRooms.push({
       name: "Penthouse Suite",
-      category: "Penthouse",
+      category: "AC",
       description: "Premium top-floor suite with panoramic views and dedicated seva desk.",
       pricePerNight: Math.round(hotel.startingPrice * 3.5),
       bedType: "King",

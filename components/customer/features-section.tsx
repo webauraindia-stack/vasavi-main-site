@@ -64,7 +64,7 @@ export function FeaturesSection() {
           </h2>
         </div>
 
-        <ul className="grid gap-4 md:grid-cols-3 md:gap-5">
+        <ul className="grid grid-cols-3 gap-2 px-1 max-w-full md:gap-5 md:px-0">
           {FEATURES.map((feature, index) => (
             <motion.li
               key={feature.id}
@@ -72,15 +72,15 @@ export function FeaturesSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-40px" }}
               transition={{ duration: 0.45, delay: index * 0.08 }}
-              className={`rounded-[var(--radius-devotional)] border border-beige/70 bg-gradient-to-br ${feature.accent} p-6 sm:p-7 shadow-warm hover:shadow-warm-md transition-shadow`}
+              className={`rounded-[var(--radius-devotional)] border border-beige/70 bg-gradient-to-br ${feature.accent} p-3 sm:p-7 shadow-warm hover:shadow-warm-md transition-shadow`}
             >
-              <div className="mb-5" aria-hidden>
+              <div className="mb-2.5 sm:mb-5 scale-[0.55] origin-top-left sm:scale-100 h-12 sm:h-[88px] sm:w-auto flex items-center" aria-hidden>
                 <feature.Icon />
               </div>
-              <h3 className="text-xl font-black text-charcoal leading-tight">
+              <h3 className="text-[0.6875rem] sm:text-lg md:text-xl font-black text-charcoal leading-tight">
                 {t(feature.titleKey)}
               </h3>
-              <p className="mt-3 text-sm sm:text-base font-semibold text-muted leading-relaxed">
+              <p className="mt-1.5 sm:mt-3 text-[0.5625rem] sm:text-xs md:text-sm font-semibold text-muted leading-normal sm:leading-relaxed">
                 {t(feature.descKey)}
               </p>
             </motion.li>

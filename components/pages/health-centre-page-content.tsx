@@ -54,60 +54,60 @@ export function HealthCentrePageContent() {
   return (
     <div className="pt-20 pb-16 bg-surface min-h-screen">
       <div className="page-container">
-        <header className="max-w-3xl mb-10 md:mb-12">
-          <span className="inline-flex items-center gap-2 rounded-full border border-champagne/30 bg-champagne/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-champagne mb-4">
-            <HeartPulse className="h-3.5 w-3.5" aria-hidden />
+        <header className="mb-10 md:mb-14">
+          <span className="inline-flex items-center gap-2 rounded-full border border-champagne/30 bg-champagne/10 px-4 py-1.5 text-sm font-bold uppercase tracking-wider text-champagne mb-5">
+            <HeartPulse className="h-4 w-4" aria-hidden />
             {t("healthCentre.eyebrow")}
           </span>
-          <h1 className="font-display text-3xl md:text-4xl text-charcoal font-black text-balance">
+          <h1 className="font-display text-4xl md:text-5xl lg:text-6xl text-charcoal font-black text-balance">
             {t("healthCentre.title")}
           </h1>
-          <p className="mt-4 text-base md:text-lg text-muted font-semibold leading-relaxed">
+          <p className="mt-5 text-lg md:text-xl lg:text-2xl text-muted font-semibold leading-relaxed max-w-3xl">
             {t("healthCentre.subtitle")}
           </p>
         </header>
 
         <div className="grid gap-6 lg:grid-cols-2 lg:gap-8 mb-14 md:mb-16">
           {/* Information card */}
-          <div className="rounded-2xl border border-beige bg-white p-6 sm:p-8 shadow-warm">
-            <div className="flex items-center gap-3 mb-5">
-              <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-champagne/15 text-champagne">
-                <Stethoscope className="h-5 w-5" aria-hidden />
+          <div className="rounded-2xl border border-beige bg-white p-7 sm:p-10 shadow-warm">
+            <div className="flex items-center gap-4 mb-6">
+              <span className="flex h-13 w-13 items-center justify-center rounded-xl bg-champagne/15 text-champagne">
+                <Stethoscope className="h-6 w-6" aria-hidden />
               </span>
-              <h2 className="font-display text-xl text-charcoal">{t("healthCentre.infoTitle")}</h2>
+              <h2 className="font-display text-2xl md:text-3xl text-charcoal">{t("healthCentre.infoTitle")}</h2>
             </div>
-            <p className="text-charcoal/85 leading-relaxed font-medium">{t("healthCentre.infoP1")}</p>
-            <p className="mt-4 text-charcoal/85 leading-relaxed font-medium">{t("healthCentre.infoP2")}</p>
-            <ul className="mt-5 space-y-2">
+            <p className="text-base md:text-lg text-charcoal/85 leading-relaxed font-medium">{t("healthCentre.infoP1")}</p>
+            <p className="mt-4 text-base md:text-lg text-charcoal/85 leading-relaxed font-medium">{t("healthCentre.infoP2")}</p>
+            <ul className="mt-6 space-y-3">
               {infoBullets.map((line) => (
-                <li key={line} className="flex gap-2 text-sm text-charcoal/80 font-semibold">
+                <li key={line} className="flex gap-2.5 text-base md:text-lg text-charcoal/80 font-semibold">
                   <span className="text-champagne shrink-0">•</span>
                   <span>{line}</span>
                 </li>
               ))}
             </ul>
-            <div className="mt-6 pt-6 border-t border-beige space-y-3 text-sm">
-              <p className="flex items-center gap-2 text-muted font-semibold">
-                <Clock className="h-4 w-4 text-champagne shrink-0" aria-hidden />
+            <div className="mt-7 pt-7 border-t border-beige space-y-4 text-base">
+              <p className="flex items-center gap-2.5 text-muted font-semibold">
+                <Clock className="h-5 w-5 text-champagne shrink-0" aria-hidden />
                 {t("healthCentre.hours")}
               </p>
-              <p className="flex items-center gap-2 text-muted font-semibold">
-                <Phone className="h-4 w-4 text-champagne shrink-0" aria-hidden />
+              <p className="flex items-center gap-2.5 text-muted font-semibold">
+                <Phone className="h-5 w-5 text-champagne shrink-0" aria-hidden />
                 <a href="tel:+914023345678" className="text-champagne hover:underline">
                   {t("healthCentre.phoneNumber")}
                 </a>
               </p>
-              <p className="flex items-start gap-2 text-muted font-semibold">
-                <MapPin className="h-4 w-4 text-champagne shrink-0 mt-0.5" aria-hidden />
+              <p className="flex items-start gap-2.5 text-muted font-semibold">
+                <MapPin className="h-5 w-5 text-champagne shrink-0 mt-0.5" aria-hidden />
                 {t("healthCentre.location")}
               </p>
             </div>
           </div>
 
           {/* Query submission card */}
-          <div className="rounded-2xl border border-champagne/25 bg-white p-6 sm:p-8 shadow-warm-md">
-            <h2 className="font-display text-xl text-charcoal mb-1">{t("healthCentre.queryTitle")}</h2>
-            <p className="text-sm text-muted font-semibold mb-6">{t("healthCentre.querySubtitle")}</p>
+          <div className="rounded-2xl border border-champagne/25 bg-white p-7 sm:p-10 shadow-warm-md">
+            <h2 className="font-display text-2xl md:text-3xl text-charcoal mb-2">{t("healthCentre.queryTitle")}</h2>
+            <p className="text-base text-muted font-semibold mb-7">{t("healthCentre.querySubtitle")}</p>
 
             {submitted ? (
               <div className="rounded-xl bg-champagne/10 border border-champagne/20 px-4 py-8 text-center">
@@ -192,17 +192,17 @@ export function HealthCentrePageContent() {
           </div>
         </div>
 
-        {/* Related hotels & contextual copy */}
-        <section className="rounded-2xl border border-beige bg-white/90 p-6 sm:p-8 shadow-warm">
-          <h2 className="font-display text-2xl text-charcoal mb-3">{t("healthCentre.relatedTitle")}</h2>
-          <p className="text-muted font-semibold leading-relaxed max-w-3xl mb-6">
+          {/* Related hotels & contextual copy */}
+        <section className="rounded-2xl border border-beige bg-white/90 p-7 sm:p-10 shadow-warm">
+          <h2 className="font-display text-3xl md:text-4xl text-charcoal mb-4">{t("healthCentre.relatedTitle")}</h2>
+          <p className="text-base md:text-lg text-muted font-semibold leading-relaxed max-w-3xl mb-6">
             {t("healthCentre.relatedIntro")}
           </p>
-          <ul className="space-y-3 mb-8 max-w-3xl">
+          <ul className="space-y-4 mb-10 max-w-4xl">
             {relatedSentences.map((sentence) => (
               <li
                 key={sentence}
-                className="flex gap-2 text-sm sm:text-base text-charcoal/85 font-medium leading-relaxed"
+                className="flex gap-3 text-base md:text-lg text-charcoal/85 font-medium leading-relaxed"
               >
                 <span className="text-champagne font-bold shrink-0">—</span>
                 {sentence}
@@ -256,19 +256,19 @@ function RelatedHotelCard({
           sizes="(max-width: 640px) 100vw, 25vw"
         />
       </div>
-      <div className="flex flex-1 flex-col p-3 sm:p-4">
-        <p className="text-[0.65rem] font-bold uppercase tracking-wide text-champagne">{cityLabel}</p>
-        <h3 className="font-display text-sm font-bold text-charcoal line-clamp-2 leading-snug mt-0.5 group-hover:text-champagne">
+      <div className="flex flex-1 flex-col p-4 sm:p-5">
+        <p className="text-xs font-bold uppercase tracking-wide text-champagne">{cityLabel}</p>
+        <h3 className="font-display text-base md:text-lg font-bold text-charcoal line-clamp-2 leading-snug mt-1 group-hover:text-champagne">
           {localized.name}
         </h3>
-        <p className="mt-1 text-xs text-muted line-clamp-2 flex-1">{localized.description}</p>
-        <p className="mt-2 text-sm font-black text-charcoal">
+        <p className="mt-1.5 text-sm md:text-base text-muted line-clamp-2 flex-1">{localized.description}</p>
+        <p className="mt-3 text-base font-black text-charcoal">
           {formatCurrency(hotel.startingPrice)}
-          <span className="text-xs font-semibold text-muted ml-1">{t("common.perNight")}</span>
+          <span className="text-sm font-semibold text-muted ml-1">{t("common.perNight")}</span>
         </p>
-        <span className="mt-2 inline-flex items-center text-xs font-bold text-champagne">
+        <span className="mt-2 inline-flex items-center text-sm font-bold text-champagne">
           {t("healthCentre.viewHotel")}
-          <ArrowUpRight className="h-3.5 w-3.5 ml-0.5" aria-hidden />
+          <ArrowUpRight className="h-4 w-4 ml-0.5" aria-hidden />
         </span>
       </div>
     </Link>

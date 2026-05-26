@@ -1,9 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { QRCodeSVG } from "qrcode.react";
@@ -28,9 +28,12 @@ import { DayPicker, type DateRange } from "react-day-picker";
 import { normalizeRangeSelection, todayStart } from "@/lib/date-range-selection";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { AadhaarInput } from "@/components/ui/aadhaar-input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useBookingStore } from "@/stores/booking-store";
+import { useSearchStore } from "@/stores/search-store";
+import { usePendingPaymentStore } from "@/stores/pending-payment-store";
 import { useDonorStore } from "@/stores/donor-store";
 import { useBodyScrollLock } from "@/lib/use-body-scroll-lock";
 import { formatCurrency, formatDate, calculateNights, cn } from "@/lib/utils";
@@ -41,6 +44,12 @@ import {
 } from "@/lib/booking-benefits";
 import { validateCoupon, suggestBestCoupons } from "@/lib/donor-engine";
 import { MOCK_MEMBER_PROFILES } from "@/lib/data/community-members";
+import {
+  guestDetailsFromSession,
+  guestDetailsToFormValues,
+  isGuestDetailsComplete,
+  mergeGuestDetails,
+} from "@/lib/booking-guest-from-session";
 import { BookingStepper } from "@/components/booking/booking-stepper";
 import { BenefitWalletSummaryPanel } from "@/components/booking/benefit-wallet-summary";
 import { BenefitCouponCard } from "@/components/booking/benefit-coupon-card";
@@ -49,6 +58,7 @@ import { MemberProfileCard } from "@/components/booking/member-profile-card";
 import "react-day-picker/style.css";
 import { useAppLanguage } from "@/hooks/use-app-language";
 import { useLocalizedHotel, useLocalizedRoom } from "@/hooks/use-localized-content";
+import { normalizeAadhaar } from "@/lib/aadhaar";
 
 function createGuestSchema(t: (key: string) => string) {
   return z.object({
@@ -57,6 +67,10 @@ function createGuestSchema(t: (key: string) => string) {
     email: z.string().email(t("booking.emailRequired")),
     phone: z.string().min(10, t("booking.phoneRequired")),
     countryCode: z.string().default("+91"),
+    aadhaar: z
+      .string()
+      .transform(normalizeAadhaar)
+      .pipe(z.string().length(12, t("booking.aadhaarRequired"))),
     arrivalTime: z.string().min(1, t("booking.arrivalRequired")),
     specialRequests: z.string().optional(),
   });
@@ -89,9 +103,12 @@ export function BookingModal() {
     paymentMethod,
     bookingReference,
     closeBooking,
+    setStep,
     nextStep,
     prevStep,
     setDates,
+    setGuestCount,
+    setRoomCount,
     setGuestDetails,
     setMemberProfile,
     setDonorSession,
@@ -106,8 +123,12 @@ export function BookingModal() {
   } = useBookingStore();
 
   const { donor, isAuthenticated, verifyMemberId, redeemCoupons } = useDonorStore();
+  const setPendingPayment = usePendingPaymentStore((s) => s.setPending);
+  const clearPendingPayment = usePendingPaymentStore((s) => s.clearPending);
 
   const [pickerRange, setPickerRange] = useState<DateRange | undefined>();
+  const [editDates, setEditDates] = useState(false);
+  const initialFlowApplied = useRef(false);
   const [memberIdInput, setMemberIdInput] = useState("");
   const [verifyError, setVerifyError] = useState("");
   const [verifying, setVerifying] = useState(false);
@@ -176,12 +197,34 @@ export function BookingModal() {
   useEffect(() => {
     if (!isOpen) {
       setPickerRange(undefined);
+      setEditDates(false);
+      initialFlowApplied.current = false;
       setMemberIdInput("");
       setVerifyError("");
       setSuggestionMessage("");
       setAutoSuggested(false);
     }
   }, [isOpen]);
+
+  const hasStayDates = Boolean(checkIn && checkOut);
+
+  useEffect(() => {
+    if (isOpen && checkIn && checkOut) {
+      setPickerRange({ from: checkIn, to: checkOut });
+    }
+  }, [isOpen, checkIn, checkOut]);
+
+  useEffect(() => {
+    if (!isOpen || memberProfile) return;
+    const donorId = (session?.user as { donorId?: string })?.donorId;
+    if (!donorId) return;
+    const profile = MOCK_MEMBER_PROFILES.find((p) => p.memberId === donorId);
+    if (profile) {
+      verifyMemberId(profile.memberId);
+      setMemberProfile(profile);
+      setMemberIdInput(profile.memberId);
+    }
+  }, [isOpen, session, memberProfile, verifyMemberId, setMemberProfile]);
 
   useEffect(() => {
     const tier = (session?.user as { tier?: string })?.tier;
@@ -233,6 +276,12 @@ export function BookingModal() {
     description: "",
   });
 
+  const guestProfileComplete = useMemo(() => {
+    const fromSession = guestDetailsFromSession(session);
+    const merged = mergeGuestDetails(guestDetails, fromSession);
+    return isGuestDetailsComplete(merged);
+  }, [guestDetails, session]);
+
   const form = useForm<GuestForm>({
     resolver: zodResolver(guestSchema),
     defaultValues: {
@@ -241,12 +290,88 @@ export function BookingModal() {
       email: guestDetails.email ?? session?.user?.email ?? "",
       phone: guestDetails.phone ?? "",
       countryCode: guestDetails.countryCode ?? "+91",
+      aadhaar: guestDetails.aadhaar ?? "",
       arrivalTime: guestDetails.arrivalTime ?? "15:00",
       specialRequests: guestDetails.specialRequests ?? "",
     },
   });
 
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const search = useSearchStore.getState();
+    const fromSession = guestDetailsFromSession(session);
+    const merged = mergeGuestDetails(
+      useBookingStore.getState().guestDetails,
+      fromSession
+    );
+    form.reset(guestDetailsToFormValues(merged));
+
+    const profileReady = isGuestDetailsComplete(merged);
+    if (profileReady) {
+      setGuestDetails(merged);
+    }
+
+    if (initialFlowApplied.current) return;
+
+    if (search.checkIn && search.checkOut) {
+      setDates(search.checkIn, search.checkOut);
+    }
+    if (search.guests) {
+      setGuestCount(search.guests);
+      setRoomCount(search.guests.rooms);
+    }
+
+    const inDate = checkIn ?? search.checkIn;
+    const outDate = checkOut ?? search.checkOut;
+    if (Boolean(inDate && outDate) && profileReady) {
+      setStep(3);
+    }
+
+    initialFlowApplied.current = true;
+  }, [
+    isOpen,
+    session,
+    checkIn,
+    checkOut,
+    setDates,
+    setGuestCount,
+    setRoomCount,
+    setGuestDetails,
+    setStep,
+    form,
+  ]);
+
+  useEffect(() => {
+    if (step === 2 && guestProfileComplete) {
+      setStep(3);
+    }
+  }, [step, guestProfileComplete, setStep]);
+
   if (!selectedRoom || !pricing) return null;
+
+  const persistGuestFromSession = () => {
+    const fromSession = guestDetailsFromSession(session);
+    const merged = mergeGuestDetails(guestDetails, fromSession);
+    if (isGuestDetailsComplete(merged)) {
+      setGuestDetails(merged);
+      form.reset(guestDetailsToFormValues(merged));
+    }
+  };
+
+  const goNextFromStay = () => {
+    if (guestProfileComplete) {
+      persistGuestFromSession();
+      setStep(3);
+    } else {
+      nextStep();
+    }
+  };
+
+  const goBackFromMember = () => {
+    if (guestProfileComplete) setStep(1);
+    else prevStep();
+  };
 
   const handleGuestSubmit = form.handleSubmit((data) => {
     setGuestDetails(data);
@@ -306,6 +431,16 @@ export function BookingModal() {
     const ref = `VH-${Date.now().toString(36).toUpperCase()}`;
     if (pricing.couponsConsumed.length > 0) {
       redeemCoupons(pricing.couponsConsumed);
+    }
+    if (pricing.total > 0 && selectedRoom) {
+      setPendingPayment({
+        reference: ref,
+        amount: pricing.total,
+        hotelName: localizedHotel.name || selectedRoom.hotelName,
+        hotelSlug: selectedRoom.hotelSlug,
+      });
+    } else {
+      clearPendingPayment();
     }
     completeBooking(ref);
   };
@@ -404,21 +539,44 @@ export function BookingModal() {
                       }
                       mono
                     />
-                    {(!checkIn || !checkOut) && (
-                      <DayPicker
-                        mode="range"
-                        selected={
-                          pickerRange ?? {
-                            from: checkIn ?? undefined,
-                            to: checkOut ?? undefined,
-                          }
-                        }
-                        onSelect={handleBookingDateSelect}
-                        disabled={{ before: todayStart() }}
-                        className="mx-auto rdp-root border border-beige/50 rounded-xl bg-white p-3"
-                      />
+                    {hasStayDates && !editDates && (
+                      <p className="text-xs font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200/70 rounded-lg px-3 py-2">
+                        {t("booking.usingSearchDates", {
+                          defaultValue: "Using the dates from your search — no need to pick again.",
+                        })}
+                      </p>
                     )}
-                    {checkIn && checkOut && (
+                    {(!hasStayDates || editDates) && (
+                      <>
+                        {hasStayDates && editDates && (
+                          <button
+                            type="button"
+                            onClick={() => setEditDates(false)}
+                            className="text-xs font-bold text-champagne hover:underline"
+                          >
+                            {t("booking.keepSearchDates", {
+                              defaultValue: "Keep selected dates",
+                            })}
+                          </button>
+                        )}
+                        <DayPicker
+                          mode="range"
+                          selected={
+                            pickerRange ?? {
+                              from: checkIn ?? undefined,
+                              to: checkOut ?? undefined,
+                            }
+                          }
+                          onSelect={(selected) => {
+                            handleBookingDateSelect(selected);
+                            if (selected?.from && selected?.to) setEditDates(false);
+                          }}
+                          disabled={{ before: todayStart() }}
+                          className="mx-auto rdp-root border border-beige/50 rounded-xl bg-white p-3"
+                        />
+                      </>
+                    )}
+                    {hasStayDates && (
                       <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
@@ -437,6 +595,15 @@ export function BookingModal() {
                           {guestCount.children > 0 &&
                             `, ${guestCount.children} ${t("booking.children")}`}
                         </p>
+                        {!editDates && (
+                          <button
+                            type="button"
+                            onClick={() => setEditDates(true)}
+                            className="mt-2 text-xs font-bold text-champagne hover:underline"
+                          >
+                            {t("booking.changeDates", { defaultValue: "Change dates" })}
+                          </button>
+                        )}
                       </motion.div>
                     )}
                     <div className="border-t border-beige/40 pt-2 flex justify-between font-bold">
@@ -447,7 +614,23 @@ export function BookingModal() {
                     </div>
                   </div>
 
-                  <NavButtons onBack={handleClose} backLabel={t("booking.cancel")} onNext={nextStep} nextDisabled={!checkIn || !checkOut} />
+                  {guestProfileComplete && session?.user && (
+                    <div className="flex items-center gap-2 rounded-xl border border-emerald-200/70 bg-emerald-50/60 px-3 py-2.5 text-sm text-emerald-900">
+                      <User className="h-4 w-4 shrink-0 text-emerald-700" />
+                      <p className="font-semibold leading-snug">
+                        {t("booking.usingSavedProfile", {
+                          defaultValue: "Using your saved profile — no need to re-enter guest details.",
+                        })}
+                      </p>
+                    </div>
+                  )}
+
+                  <NavButtons
+                    onBack={handleClose}
+                    backLabel={t("booking.cancel")}
+                    onNext={goNextFromStay}
+                    nextDisabled={!checkIn || !checkOut}
+                  />
                 </div>
               )}
 
@@ -478,6 +661,24 @@ export function BookingModal() {
                       </Field>
                     </div>
                   </div>
+                  <Field label={t("booking.aadhaar")} error={form.formState.errors.aadhaar?.message}>
+                    <Controller
+                      name="aadhaar"
+                      control={form.control}
+                      render={({ field }) => (
+                        <AadhaarInput
+                          value={field.value}
+                          onValueChange={field.onChange}
+                          onBlur={field.onBlur}
+                          className="h-11 bg-surface/50"
+                          aria-describedby="booking-aadhaar-hint"
+                        />
+                      )}
+                    />
+                    <p id="booking-aadhaar-hint" className="mt-1.5 text-xs text-muted">
+                      {t("booking.aadhaarHint")}
+                    </p>
+                  </Field>
                   <Field label={t("booking.arrivalTime")}>
                     <Input type="time" {...form.register("arrivalTime")} className="h-11 bg-surface/50" />
                   </Field>
@@ -547,7 +748,7 @@ export function BookingModal() {
                   )}
 
                   <NavButtons
-                    onBack={prevStep}
+                    onBack={goBackFromMember}
                     onNext={nextStep}
                     nextLabel={memberVerified ? t("booking.viewBlessings") : t("booking.continueAsGuest")}
                   />
@@ -797,6 +998,11 @@ export function BookingModal() {
                     <p className="text-sm text-muted mt-2 max-w-md mx-auto leading-relaxed">
                       {t("booking.confirmBody", { hotelName: localizedHotel.name })}
                     </p>
+                    {pricing.total > 0 && (
+                      <p className="mt-3 rounded-xl border border-amber-300/60 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-950 max-w-md mx-auto">
+                        {t("booking.paymentPendingBody")}
+                      </p>
+                    )}
                   </div>
 
                   {memberProfile && (

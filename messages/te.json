@@ -32,6 +32,7 @@
     "about": "మా గురించి",
     "contact": "సంప్రదించండి",
     "healthCentre": "ఆరోగ్య కేంద్రం",
+    "more": "మరిన్ని",
     "search": "వెతకండి",
     "login": "సైన్ ఇన్",
     "logout": "సైన్ అవుట్",
@@ -41,9 +42,16 @@
     "notifications": "నోటిఫికేషన్లు",
     "hotelsSection": "హోటల్స్"
   },
+  "payment": {
+    "pendingLabel": "చెల్లింపు పెండింగ్",
+    "pendingMessage": "{{hotel}} — {{reference}} కోసం {{amount}} చెల్లించండి.",
+    "completePayment": "చెల్లింపు పూర్తి చేయండి",
+    "dismissPending": "రిమైండర్ మూసివేయండి"
+  },
   "notifications": {
     "title": "నోటిఫికేషన్లు",
     "openMenu": "నోటిఫికేషన్లు తెరవండి",
+    "openPage": "నోటిఫికేషన్ల పేజీ తెరవండి",
     "markAllRead": "అన్నీ చదివినవి",
     "markRead": "చదివినదిగా గుర్తు",
     "viewAll": "అన్నీ చూడండి",
@@ -96,7 +104,8 @@
     "donorRoomsOnly": "దాత గదులు మాత్రమే",
     "noMatch": "మీ ఫిల్టర్‌లకు హోటల్స్ లేవు. ప్రమాణాలు మార్చండి.",
     "showGrid": "గ్రిడ్ చూపించు",
-    "showMap": "మ్యాప్ చూపించు"
+    "showMap": "మ్యాప్ చూపించు",
+    "help": "సహాయం"
   },
   "features": {
     "eyebrow": "యాత్రికులు మమ్మల్ని ఎందుకు ఎంచుకుంటారు",
@@ -204,6 +213,11 @@
     "fullName": "పూర్తి పేరు",
     "email": "ఇమెయిల్",
     "city": "నగరం",
+    "aadhaar": "ఆధార్ నంబర్",
+    "aadhaarHint": "12 అంకెల UID — XXXX XXXX XXXX రూపంలో",
+    "aadhaarInvalid": "చెల్లుబాటు అయ్యే 12 అంకెల ఆధార్ నంబర్ నమోదు చేయండి",
+    "aadhaarChecksumInvalid": "ఈ ఆధార్ నంబర్ చెల్లదు. 12 అంకెలను మళ్లీ తనిఖీ చేయండి.",
+    "verificationExpired": "మీ ధృవీకరణ గడువు ముగిసింది. \"OTPకి తిరిగి\" నొక్కి మళ్లీ ధృవీకరించండి.",
     "memberId": "సభ్య / దాత ID",
     "continueBtn": "కొనసాగించు",
     "saveSignIn": "సేవ్ & సైన్ ఇన్",
@@ -311,10 +325,8 @@
     "Prasadam": "ప్రసాదం"
   },
   "roomTypes": {
-    "Standard": "స్టాండర్డ్",
-    "Deluxe": "డీలక్స్",
-    "Suite": "సూట్",
-    "Penthouse": "పెంట్‌హౌస్"
+    "AC": "AC",
+    "Non-AC": "Non-AC"
   },
   "about": {
     "title": "వాసవి హోటల్స్ గురించి",
@@ -382,6 +394,10 @@
     "sendMessage": "సందేశం పంపండి",
     "name": "పేరు",
     "email": "ఇమెయిల్",
+    "hotel": "అతిథి గృహం",
+    "hotelPlaceholder": "అతిథి గృహం ఎంచుకోండి",
+    "hotelGeneral": "సాధారణ విచారణ (VCI ప్రధాన కార్యాలయం)",
+    "hotelRequired": "దయచేసి అతిథి గృహం లేదా సాధారణ విచారణ ఎంచుకోండి.",
     "message": "సందేశం",
     "submit": "పంపండి",
     "thankYou": "ధన్యవాదాలు — త్వరలో స్పందిస్తాము."

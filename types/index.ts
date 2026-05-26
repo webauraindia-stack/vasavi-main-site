@@ -132,7 +132,7 @@ export type AmenityTag =
   | "Sacred Corridors"
   | "Meditation Room";
 
-export type RoomCategory = "Standard" | "Deluxe" | "Suite" | "Penthouse";
+export type RoomCategory = "AC" | "Non-AC";
 
 export type BookingStatus =
   | "confirmed"
@@ -298,6 +298,7 @@ export interface GuestDetails {
   phone: string;
   countryCode: string;
   arrivalTime: string;
+  aadhaar: string;
   specialRequests?: string;
 }
 

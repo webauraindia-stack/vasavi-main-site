@@ -7,6 +7,7 @@ export type CustomerProfileForm = {
   email: string;
   phone: string;
   city: string;
+  aadhaar: string;
   memberId: string;
   categoryLabel: string;
   isKnownMember: boolean;
@@ -23,6 +24,7 @@ export function getCustomerProfilePreview(phone: string): CustomerProfileForm {
       email: member.email,
       phone: formatPhoneDisplay(normalized),
       city: member.city,
+      aadhaar: "",
       memberId: member.memberId,
       categoryLabel: member.categoryLabel,
       isKnownMember: true,
@@ -37,6 +39,7 @@ export function getCustomerProfilePreview(phone: string): CustomerProfileForm {
       email: savedGuest.email,
       phone: formatPhoneDisplay(normalized),
       city: savedGuest.city,
+      aadhaar: savedGuest.aadhaar,
       memberId: "",
       categoryLabel: "Returning guest",
       isKnownMember: false,
@@ -49,6 +52,7 @@ export function getCustomerProfilePreview(phone: string): CustomerProfileForm {
     email: "",
     phone: formatPhoneDisplay(normalized),
     city: "",
+    aadhaar: "",
     memberId: "",
     categoryLabel: "",
     isKnownMember: false,

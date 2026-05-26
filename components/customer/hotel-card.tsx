@@ -42,7 +42,7 @@ export function HotelCard({ hotel, className, featured = false }: HotelCardProps
         className
       )}
     >
-      <Link href={`/hotels/${hotel.slug}`} className="stay-card__media">
+      <Link href={`/hotels/${hotel.slug}`} className="stay-card__media aspect-[16/10] sm:aspect-[4/3]">
         <Image
           src={imgSrc}
           alt={`${localized.name} — ${cityLabel}`}
@@ -51,7 +51,7 @@ export function HotelCard({ hotel, className, featured = false }: HotelCardProps
           sizes={
             featured
               ? "(max-width: 1024px) 100vw, 50vw"
-              : "(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+              : "(max-width: 640px) 100vw, (max-width: 1024px) 33vw, 25vw"
           }
           onError={() => setImgSrc(FALLBACK_THUMB)}
         />
@@ -59,19 +59,19 @@ export function HotelCard({ hotel, className, featured = false }: HotelCardProps
         <div className="stay-card__shine" aria-hidden />
         <div className="stay-card__corner" aria-hidden />
 
-        <div className="absolute inset-x-0 top-0 flex items-start justify-between gap-2 p-2.5 sm:p-3">
-          <span className="inline-flex max-w-[58%] items-center gap-1 rounded-full border border-white/30 bg-white/95 px-2 py-1 text-[0.625rem] font-bold text-charcoal shadow-sm backdrop-blur-sm sm:max-w-[65%] sm:px-2.5 sm:text-xs">
-            <MapPin className="h-3 w-3 shrink-0 text-champagne" aria-hidden />
+        <div className="absolute inset-x-0 top-0 flex items-start justify-between gap-2 p-3 sm:p-3">
+          <span className="inline-flex max-w-[65%] items-center gap-1 rounded-full border border-white/30 bg-white/95 px-2.5 py-1 text-xs font-bold text-charcoal shadow-sm backdrop-blur-sm sm:max-w-[65%] sm:px-2.5 sm:text-xs">
+            <MapPin className="h-3.5 w-3.5 shrink-0 text-champagne" aria-hidden />
             <span className="truncate">{cityLabel}</span>
           </span>
 
           {hotel.hasDonorRooms && (
             <span
-              className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-gradient-to-r from-champagne-dark to-champagne px-2 py-1 text-[0.6rem] font-bold uppercase tracking-wide text-white shadow-md sm:gap-1 sm:px-2.5 sm:text-[0.65rem]"
+              className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-gradient-to-r from-champagne-dark to-champagne px-2.5 py-1 text-[0.65rem] font-bold uppercase tracking-wide text-white shadow-md sm:gap-1 sm:px-2.5 sm:text-[0.65rem]"
               title={t("hotelCard.donorPrivilege")}
             >
               <Crown className="h-3 w-3 shrink-0" aria-hidden />
-              <span className="max-w-[4.25rem] truncate sm:max-w-none">
+              <span className="max-w-[5.25rem] truncate sm:max-w-none">
                 {t("hotelCard.donorPrivilege")}
               </span>
             </span>
@@ -90,15 +90,15 @@ export function HotelCard({ hotel, className, featured = false }: HotelCardProps
 
       <div
         className={cn(
-          "flex flex-1 flex-col",
-          featured ? "gap-3 p-4 sm:p-5" : "gap-2.5 p-3 sm:gap-3 sm:p-4"
+          "flex flex-1 flex-col gap-2.5 p-3 sm:gap-3 sm:p-4",
+          featured && "p-5 sm:p-5"
         )}
       >
         <div className="min-w-0 space-y-1">
           <h3
             className={cn(
               "font-display font-bold text-charcoal leading-snug line-clamp-2 group-hover:text-champagne transition-colors",
-              featured ? "text-lg sm:text-2xl" : "text-[0.8125rem] sm:text-base"
+              featured ? "text-lg sm:text-2xl" : "text-sm sm:text-base"
             )}
           >
             {localized.name}
@@ -117,7 +117,7 @@ export function HotelCard({ hotel, className, featured = false }: HotelCardProps
           <ul className="flex flex-wrap gap-1" aria-label={t("hotels.amenities")}>
             {highlightAmenities.map((amenity) => (
               <li key={amenity}>
-                <span className="inline-block max-w-full truncate rounded-md border border-beige/90 bg-surface/80 px-1.5 py-0.5 text-[0.6rem] font-bold text-charcoal/75 sm:px-2 sm:text-[0.625rem]">
+                <span className="inline-block max-w-full truncate rounded-md border border-beige/90 bg-surface/80 px-1.5 py-0.5 text-[0.55rem] sm:text-[0.625rem] font-bold text-charcoal/75 sm:px-2 sm:text-[0.625rem]">
                   {t(`amenities.${amenity}`, { defaultValue: amenity })}
                 </span>
               </li>
@@ -127,7 +127,7 @@ export function HotelCard({ hotel, className, featured = false }: HotelCardProps
 
         <div
           className={cn(
-            "flex items-center justify-between gap-2 rounded-xl bg-surface/60 px-2.5 py-2 sm:px-3",
+            "flex items-center justify-between gap-1.5 rounded-xl bg-surface/60 px-2 py-1.5 sm:px-3 sm:py-2",
             featured && "sm:px-4 sm:py-2.5"
           )}
         >
@@ -143,7 +143,7 @@ export function HotelCard({ hotel, className, featured = false }: HotelCardProps
             >
               {formatCurrency(hotel.startingPrice)}
             </span>
-            <span className="mt-0.5 block text-[0.625rem] font-bold text-muted sm:text-xs">
+            <span className="mt-0.5 block text-[0.55rem] font-bold text-muted sm:text-xs">
               {t("common.perNight")}
             </span>
           </div>
@@ -153,7 +153,7 @@ export function HotelCard({ hotel, className, featured = false }: HotelCardProps
           <Button
             size={featured ? "default" : "sm"}
             className={cn(
-              "w-full rounded-xl font-bold shadow-warm transition-all",
+              "w-full rounded-xl font-bold shadow-warm transition-all text-[0.6875rem] sm:text-sm",
               "bg-champagne text-white border-0 hover:bg-champagne/90 hover:shadow-warm-md",
               "group/btn",
               featured ? "h-11 sm:h-12" : "h-9 sm:h-10"

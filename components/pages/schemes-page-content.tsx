@@ -13,29 +13,29 @@ function SchemeArticle({ scheme }: { scheme: (typeof COMMUNITY_SCHEMES)[number] 
   return (
     <article
       id={scheme.id}
-      className="scroll-mt-24 border-b border-charcoal/10 pb-12 last:border-0"
+      className="scroll-mt-24 border-b border-charcoal/10 pb-14 last:border-0"
     >
-      <p className="text-xs font-semibold uppercase tracking-wider text-champagne mb-2">
+      <p className="text-sm font-bold uppercase tracking-wider text-champagne mb-3">
         {localized.shortName}
       </p>
-      <h2 className="font-display text-2xl text-charcoal mb-4">{localized.name}</h2>
-      <p className="text-sm text-muted leading-relaxed mb-4">{localized.summary}</p>
-      <p className="text-base text-charcoal/80 leading-relaxed whitespace-pre-line mb-6">
+      <h2 className="font-display text-3xl md:text-4xl text-charcoal mb-5">{localized.name}</h2>
+      <p className="text-base md:text-lg text-muted leading-relaxed mb-5">{localized.summary}</p>
+      <p className="text-base md:text-lg text-charcoal/80 leading-relaxed whitespace-pre-line mb-8">
         {localized.description}
       </p>
-      <div className="card-surface p-4 mb-4">
-        <p className="text-xs uppercase tracking-wider text-muted mb-1">
+      <div className="card-surface p-5 md:p-6 mb-6">
+        <p className="text-xs uppercase tracking-wider text-muted mb-2">
           {t("schemesPage.hotelBenefit")}
         </p>
-        <p className="text-sm text-charcoal">{localized.hotelBenefit}</p>
+        <p className="text-base md:text-lg text-charcoal">{localized.hotelBenefit}</p>
       </div>
       <a
         href={scheme.readMoreHref}
         target="_blank"
         rel="noopener noreferrer"
-        className="text-sm text-champagne hover:underline"
+        className="text-base text-champagne hover:underline font-semibold"
       >
-        {t("schemesPage.readMore")}
+        {t("schemesPage.readMore")} →
       </a>
     </article>
   );
@@ -45,23 +45,42 @@ export function SchemesPageContent() {
   const { t } = useAppLanguage();
 
   return (
-    <div className="pt-20 pb-16 bg-white">
-      <div className="bg-surface py-12 md:py-16">
-        <div className="page-container max-w-3xl text-center">
-          <h1 className="font-display text-3xl md:text-4xl text-charcoal mb-4">
+    <div className="pt-20 pb-20 bg-white">
+      {/* Header banner */}
+      <div className="bg-surface py-14 md:py-20 border-b border-beige">
+        <div className="page-container text-center">
+          <h1 className="font-display text-4xl md:text-5xl lg:text-6xl text-charcoal mb-6">
             {t("schemesPage.title")}
           </h1>
-          <p className="text-muted leading-relaxed">{t("schemesPage.intro")}</p>
+          <p className="text-base md:text-lg lg:text-xl text-muted leading-relaxed max-w-3xl mx-auto">
+            {t("schemesPage.intro")}
+          </p>
         </div>
       </div>
 
-      <div className="page-container max-w-3xl py-12 space-y-16">
+      {/* Contact bar */}
+      <div className="bg-champagne/8 border-b border-champagne/15 py-4">
+        <div className="page-container flex flex-wrap items-center justify-between gap-4">
+          <p className="text-base text-muted font-semibold">
+            {t("donors.contactIntro")}{" "}
+            <a href={VCI_CONTACT.phoneHref} className="text-champagne hover:underline font-bold">
+              {VCI_CONTACT.phone}
+            </a>
+          </p>
+          <Link href="/donors">
+            <Button variant="outline" size="sm">{t("schemesPage.backDonors")}</Button>
+          </Link>
+        </div>
+      </div>
+
+      {/* Scheme articles */}
+      <div className="page-container py-14 space-y-14">
         {COMMUNITY_SCHEMES.map((scheme) => (
           <SchemeArticle key={scheme.id} scheme={scheme} />
         ))}
       </div>
 
-      <div className="page-container max-w-3xl pb-12 text-center">
+      <div className="page-container pb-10 text-center">
         <Link href="/donors">
           <Button variant="outline">{t("schemesPage.backDonors")}</Button>
         </Link>
