@@ -132,7 +132,13 @@ export type AmenityTag =
   | "Sacred Corridors"
   | "Meditation Room";
 
-export type RoomCategory = "AC" | "Non-AC";
+export type RoomCategory =
+  | "Standard"
+  | "Deluxe"
+  | "Suite"
+  | "Penthouse"
+  | "AC"
+  | "Non-AC";
 
 export type BookingStatus =
   | "confirmed"
@@ -219,6 +225,8 @@ export interface Donor {
   clubName?: string;
   city?: string;
   tier: DonorTier;
+  /** Backend membership tier label, e.g. Golden, Diamond */
+  membershipTierName?: string;
   totalDonation: number;
   discountPercent: number;
   monthlyBookingQuota: number;

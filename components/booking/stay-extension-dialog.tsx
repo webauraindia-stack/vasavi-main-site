@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
+import { useAuthenticatedSession } from "@/lib/hooks/use-authenticated-session";
 import {
   AlertTriangle,
   BedDouble,
@@ -18,7 +19,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { minExtensionDate } from "@/lib/data/customer-bookings";
+import { minExtensionDate } from "@/lib/bookings/customer";
 import type { DonorBooking } from "@/types";
 import {
   checkExtensionAvailability,
@@ -43,6 +44,7 @@ export function StayExtensionDialog({
   onCompleted?: (newCheckOut: string) => void;
 }) {
   const { data: session } = useSession();
+  const { withAccessToken } = useAuthenticatedSession();
   const [step, setStep] = useState<Step>("date");
   const [requestedCheckOut, setRequestedCheckOut] = useState("");
   const [checking, setChecking] = useState(false);
@@ -74,7 +76,9 @@ export function StayExtensionDialog({
     setChecking(true);
     setError(null);
     try {
-      const result = await checkExtensionAvailability(reference, date);
+      const result = await withAccessToken(() =>
+        checkExtensionAvailability(reference, date)
+      );
       setAvailability(result);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not check availability");
@@ -94,12 +98,14 @@ export function StayExtensionDialog({
     setSubmitting(true);
     setError(null);
     try {
-      const created = await createStayExtension({
-        bookingReference: reference,
-        requestedCheckOut,
-        selectedAlternativeRoomId: selectedAltId,
-        actorEmail: session?.user?.email ?? booking.guestEmail,
-      });
+      const created = await withAccessToken(() =>
+        createStayExtension({
+          bookingReference: reference,
+          requestedCheckOut,
+          selectedAlternativeRoomId: selectedAltId,
+          actorEmail: session?.user?.email ?? booking.guestEmail,
+        })
+      );
       setExtension(created);
 
       if (created.status === "rejected") {
@@ -131,11 +137,13 @@ export function StayExtensionDialog({
     setError(null);
     try {
       const txn = `TXN-GST-${Date.now()}`;
-      const completed = await completeStayExtensionPayment({
-        id: extension.id,
-        paymentTransactionId: txn,
-        actorEmail: session?.user?.email ?? booking.guestEmail,
-      });
+      const completed = await withAccessToken(() =>
+        completeStayExtensionPayment({
+          id: extension.id,
+          paymentTransactionId: txn,
+          actorEmail: session?.user?.email ?? booking.guestEmail,
+        })
+      );
       setExtension(completed);
       setStep("success");
       onCompleted?.(completed.requestedCheckOut);
@@ -307,7 +315,7 @@ export function StayExtensionDialog({
               <strong>{formatDate(extension?.requestedCheckOut ?? requestedCheckOut)}</strong>
             </p>
             <p className="text-xs text-muted">
-              Confirmation sent via email, SMS, and WhatsApp (demo).
+              Confirmation will be sent via email, SMS, and WhatsApp when enabled.
             </p>
             <Button className="w-full" onClick={() => onOpenChange(false)}>
               Done

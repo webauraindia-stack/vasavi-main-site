@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
+import { useAuthenticatedSession } from "@/lib/hooks/use-authenticated-session";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Crown,
@@ -26,7 +27,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useDonorStore } from "@/stores/donor-store";
-import { lookupMemberByPhone } from "@/lib/auth/users-by-phone";
 import { getNextTierProgress, getTierInfo, TIER_THRESHOLDS } from "@/lib/donor-engine";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import type { Coupon } from "@/types";
@@ -72,7 +72,8 @@ const ConfettiParticle = ({ index }: { index: number }) => {
 export default function DonorPortalPage() {
   const router = useRouter();
   const { data: session, status } = useSession();
-  const { donor, isAuthenticated, logout, celebration, clearCelebration, loadMemberProfile } =
+  const { isAuthenticated, withAccessToken } = useAuthenticatedSession();
+  const { donor, isLoading, logout, celebration, clearCelebration, hydrateFromApi } =
     useDonorStore();
   const [activeTab, setActiveTab] = useState<"wallet" | "benefits" | "history">("wallet");
   const [profileChecked, setProfileChecked] = useState(false);
@@ -85,18 +86,16 @@ export default function DonorPortalPage() {
       return;
     }
 
-    const phone = (session.user as { phone?: string }).phone;
-    if (phone && !isAuthenticated) {
-      const profile = lookupMemberByPhone(phone);
-      if (profile) {
-        loadMemberProfile(profile);
-      }
+    if (session.user?.isDonor && isAuthenticated) {
+      void withAccessToken((token) => hydrateFromApi(token)).catch(() => {
+        /* handled globally */
+      });
     }
 
     setProfileChecked(true);
-  }, [session, status, isAuthenticated, loadMemberProfile, router]);
+  }, [session, status, isAuthenticated, hydrateFromApi, router, withAccessToken]);
 
-  if (status === "loading" || !profileChecked) {
+  if (status === "loading" || !profileChecked || (session?.user?.isDonor && isLoading)) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="text-center text-slate-500 font-display font-medium animate-pulse">

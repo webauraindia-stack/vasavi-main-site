@@ -1,95 +1,69 @@
 "use client";
 
-import { Suspense, useEffect, useRef, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useState } from "react";
+import { useMounted } from "@/lib/hooks/use-mounted";
+import { useMediaQuery } from "@/lib/hooks/use-media-query";
 import Image from "next/image";
-import { Crown, Users, ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Crown, Users } from "lucide-react";
+import { DayPicker } from "react-day-picker";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { StarRating } from "@/components/shared/star-rating";
 import { useBookingStore } from "@/stores/booking-store";
-import { useSearchStore } from "@/stores/search-store";
 import { formatCurrency } from "@/lib/utils";
 import { canAccessDonorRoom } from "@/lib/donor-engine";
 import { useSession } from "next-auth/react";
-import type { Hotel, Room, Review } from "@/types";
+import type { Hotel, Room, Review, DateAvailability } from "@/types";
 import type { DonorTier } from "@/types";
+import { getRoomImageUrl } from "@/lib/images/room-image";
 import { cn } from "@/lib/utils";
-import { useAppLanguage } from "@/hooks/use-app-language";
-import { useLocalizedRoom } from "@/hooks/use-localized-content";
-import {
-  buildLoginCallbackUrl,
-  clearPendingBooking,
-  getPendingBooking,
-  setPendingBooking,
-} from "@/lib/pending-booking";
+import "react-day-picker/style.css";
 
-export function HotelGallery({
-  images,
-  name,
-  variant = "card",
-  className,
-}: {
-  images: string[];
-  name: string;
-  variant?: "card" | "hero";
-  className?: string;
-}) {
+export function HotelGallery({ images, name }: { images: string[]; name: string }) {
   const [index, setIndex] = useState(0);
-  const active = images[index] ?? images[0];
-
-  if (!active) return null;
-
-  const nextSlide = () => {
-    setIndex((prev) => (prev + 1) % images.length);
-  };
-
-  const prevSlide = () => {
-    setIndex((prev) => (prev - 1 + images.length) % images.length);
-  };
-
-  const isHero = variant === "hero";
 
   return (
-    <div
-      className={cn(
-        "relative group w-full overflow-hidden bg-surface-deep",
-        isHero
-          ? "aspect-[16/9] sm:aspect-[2/1] lg:aspect-[21/9] lg:max-h-[min(52vh,540px)] shadow-none"
-          : "aspect-[16/9] sm:aspect-[2/1] rounded-xl shadow-sm",
-        className
-      )}
-    >
+    <div className="relative h-[40dvh] md:h-[50vh] rounded-xl overflow-hidden group bg-surface">
       <Image
-        src={active}
-        alt={name}
+        src={images[index]}
+        alt={`${name} — image ${index + 1}`}
         fill
-        className="object-cover transition-transform duration-300"
-        sizes={isHero ? "100vw" : "(max-width: 1024px) 100vw, 70vw"}
+        className="object-cover"
+        sizes="100vw"
         priority
       />
-      {images.length > 1 && (
-        <>
+      <button
+        onClick={() => setIndex((i) => (i - 1 + images.length) % images.length)}
+        className="absolute left-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/90 shadow-warm md:opacity-0 md:group-hover:opacity-100 transition-opacity"
+        aria-label="Previous image"
+      >
+        <ChevronLeft className="h-5 w-5 text-charcoal" />
+      </button>
+      <button
+        onClick={() => setIndex((i) => (i + 1) % images.length)}
+        className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/90 shadow-warm md:opacity-0 md:group-hover:opacity-100 transition-opacity"
+        aria-label="Next image"
+      >
+        <ChevronRight className="h-5 w-5 text-charcoal" />
+      </button>
+
+      <span className="absolute top-3 right-3 rounded-full bg-charcoal/70 px-2.5 py-0.5 text-xs font-medium text-white backdrop-blur-sm">
+        {index + 1} / {images.length}
+      </span>
+
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+        {images.map((_, i) => (
           <button
-            onClick={prevSlide}
-            type="button"
-            className="absolute left-3 top-1/2 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full bg-white/80 hover:bg-white text-charcoal shadow-sm transition-opacity md:opacity-0 md:group-hover:opacity-100 duration-200 cursor-pointer"
-            aria-label="Previous photo"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </button>
-          <button
-            onClick={nextSlide}
-            type="button"
-            className="absolute right-3 top-1/2 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full bg-white/80 hover:bg-white text-charcoal shadow-sm transition-opacity md:opacity-0 md:group-hover:opacity-100 duration-200 cursor-pointer"
-            aria-label="Next photo"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </button>
-          <div className="absolute bottom-3 right-3 rounded-full bg-charcoal/70 px-2.5 py-1 text-[10px] font-bold text-white tracking-wider backdrop-blur-sm">
-            {index + 1} / {images.length}
-          </div>
-        </>
-      )}
+            key={i}
+            onClick={() => setIndex(i)}
+            className={cn(
+              "w-2 h-2 rounded-full transition-colors",
+              i === index ? "bg-champagne-dark w-5" : "bg-white/60"
+            )}
+            aria-label={`Go to image ${i + 1}`}
+          />
+        ))}
+      </div>
     </div>
   );
 }
@@ -101,242 +75,233 @@ export function RoomList({
   rooms: Room[];
   hotel: Hotel;
 }) {
-  return (
-    <Suspense fallback={null}>
-      <RoomListInner rooms={rooms} hotel={hotel} />
-    </Suspense>
-  );
-}
-
-function RoomListInner({
-  rooms,
-  hotel,
-}: {
-  rooms: Room[];
-  hotel: Hotel;
-}) {
-  const { t } = useAppLanguage();
-  const { data: session, status } = useSession();
-  const router = useRouter();
-  const searchParams = useSearchParams();
+  const { data: session } = useSession();
   const tier = (session?.user as { tier?: DonorTier })?.tier ?? null;
-  const { openBooking } = useBookingStore();
-  const searchCheckIn = useSearchStore((s) => s.checkIn);
-  const searchCheckOut = useSearchStore((s) => s.checkOut);
-  const searchGuests = useSearchStore((s) => s.guests);
-  const resumedRef = useRef(false);
-
-  const openBookingWithSearch = (room: Room) => {
-    openBooking(
-      room,
-      searchCheckIn ?? undefined,
-      searchCheckOut ?? undefined,
-      searchGuests
-    );
-  };
-
-  // After sign-in, resume the booking the user started
-  useEffect(() => {
-    if (status === "loading" || !session || resumedRef.current) return;
-
-    const fromUrl = searchParams.get("resumeBooking");
-    const pending = getPendingBooking();
-    const roomId = fromUrl ?? (pending?.hotelSlug === hotel.slug ? pending.roomId : null);
-
-    if (!roomId) return;
-
-    const room = rooms.find((r) => r.id === roomId);
-    clearPendingBooking();
-    resumedRef.current = true;
-
-    if (!room) {
-      if (fromUrl) router.replace(`/hotels/${hotel.slug}#rooms`, { scroll: false });
-      return;
-    }
-
-    const canBook =
-      !room.isFullyBooked &&
-      (!room.isDonorExclusive || canAccessDonorRoom(tier, room.donorTierRequired));
-
-    if (canBook) {
-      openBooking(
-        room,
-        searchCheckIn ?? undefined,
-        searchCheckOut ?? undefined,
-        searchGuests
-      );
-    }
-
-    if (fromUrl) {
-      router.replace(`/hotels/${hotel.slug}#rooms`, { scroll: false });
-    }
-  }, [
-    session,
-    status,
-    searchParams,
-    rooms,
-    hotel.slug,
-    tier,
-    openBooking,
-    searchCheckIn,
-    searchCheckOut,
-    searchGuests,
-    router,
-  ]);
+  const { openBooking, setDates } = useBookingStore();
+  const [checkIn, setCheckIn] = useState<Date | undefined>();
+  const [checkOut, setCheckOut] = useState<Date | undefined>();
+  const mounted = useMounted();
+  const isNarrow = useMediaQuery("(max-width: 767px)");
+  const calendarMonths = mounted && !isNarrow ? 2 : 1;
 
   const standardRooms = rooms.filter((r) => !r.isDonorExclusive);
   const donorRooms = rooms.filter((r) => r.isDonorExclusive);
 
   const handleBook = (room: Room) => {
-    if (!session) {
-      setPendingBooking(room.id, hotel.slug);
-      const callbackUrl = buildLoginCallbackUrl(hotel.slug, room.id);
-      router.push(`/login?callbackUrl=${encodeURIComponent(callbackUrl)}`);
-      return;
-    }
-    openBookingWithSearch(room);
+    if (checkIn && checkOut) setDates(checkIn, checkOut);
+    openBooking(room, checkIn, checkOut);
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-end justify-between gap-3 border-b border-beige/20 pb-3">
-        <h2 className="font-display text-lg sm:text-xl lg:text-3xl text-charcoal font-semibold">
-          {t("hotel.rooms")}
-        </h2>
-        <a
-          href={`/search?hotel=${hotel.id}`}
-          className="text-xs lg:text-sm font-bold uppercase tracking-wider text-champagne hover:underline shrink-0"
-        >
-          {t("hotel.searchAllRooms")}
-        </a>
-      </div>
-
-      <div className="space-y-4">
-        {standardRooms.map((room) => (
-          <RoomCard key={room.id} room={room} tier={tier} onBook={() => handleBook(room)} />
-        ))}
-        {donorRooms.length > 0 && (
-          <>
-            <p className="flex items-center gap-1.5 text-xs lg:text-sm font-bold uppercase tracking-wider text-champagne/80 pt-4">
-              <Crown className="h-4 w-4 text-champagne-dark" aria-hidden />
-              {t("hotel.donorExclusiveRooms")}
-            </p>
-            {donorRooms.map((room) => (
-              <RoomCard key={room.id} room={room} tier={tier} onBook={() => handleBook(room)} />
-            ))}
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function RoomCard({
-  room,
-  tier,
-  onBook,
-}: {
-  room: Room;
-  tier: DonorTier;
-  onBook: () => void;
-}) {
-  const { t } = useAppLanguage();
-  const localized = useLocalizedRoom(room);
-  const canBook =
-    !room.isFullyBooked &&
-    (!room.isDonorExclusive || canAccessDonorRoom(tier, room.donorTierRequired));
-
-  return (
-    <div className="flex gap-4 lg:gap-5 rounded-xl border border-beige/35 bg-white/40 p-4 lg:p-5 transition-all hover:bg-white/60">
-      <div className="relative h-20 w-24 sm:h-24 sm:w-28 lg:h-28 lg:w-36 shrink-0 rounded-lg overflow-hidden bg-surface-deep shadow-sm">
-        <Image
-          src={room.images[0]}
-          alt={localized.name}
-          fill
-          className="object-cover"
-          sizes="112px"
+    <div className="space-y-8">
+      <div className="card-surface p-4">
+        <h3 className="font-display text-lg mb-3 text-charcoal">Select Dates</h3>
+        <DayPicker
+          mode="range"
+          selected={{ from: checkIn, to: checkOut }}
+          onSelect={(range) => {
+            setCheckIn(range?.from);
+            setCheckOut(range?.to);
+          }}
+          disabled={{ before: new Date() }}
+          numberOfMonths={calendarMonths}
+          className="mx-auto"
         />
       </div>
-      <div className="flex min-w-0 flex-1 flex-col justify-between">
-        <div>
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <h3 className="text-sm sm:text-base lg:text-xl font-bold text-charcoal leading-snug line-clamp-1">
-                {localized.name}
-              </h3>
-              <p className="text-[11px] lg:text-sm text-muted/80 font-medium mt-0.5">
-                {localized.category} · {localized.bedType}
-              </p>
-            </div>
-            <div className="shrink-0 text-right">
-              <p className="text-base lg:text-xl font-bold text-champagne leading-none">
-                {formatCurrency(room.pricePerNight)}
-              </p>
-              <span className="text-[9px] lg:text-xs font-semibold uppercase tracking-wider text-muted/70 block mt-0.5">
-                {t("common.perNight")}
-              </span>
-            </div>
-          </div>
-          <p className="mt-2 text-xs lg:text-base text-muted/90 line-clamp-2 leading-relaxed">
-            {localized.description}
-          </p>
-        </div>
 
-        <div className="mt-3 flex items-center justify-between gap-2 pt-2 border-t border-beige/10">
-          <span className="flex items-center gap-1.5 text-xs lg:text-sm text-muted font-medium">
-            <Users className="h-3.5 w-3.5 text-muted/65" aria-hidden />
-            {t("hotel.maxOccupancy", { count: room.maxOccupancy })}
-          </span>
-          <Button
-            size="sm"
-            className="h-8 rounded-lg px-4 text-xs font-bold uppercase tracking-wider"
-            disabled={!canBook}
-            onClick={onBook}
-          >
-            {room.isFullyBooked
-              ? t("common.soldOut")
-              : room.isDonorExclusive && !canAccessDonorRoom(tier, room.donorTierRequired)
-                ? t("hotel.donorAccessRequired")
-                : t("common.bookNow")}
-          </Button>
-        </div>
+      <RoomSection title="Rooms & Suites" rooms={standardRooms} onBook={handleBook} tier={tier} />
+      {donorRooms.length > 0 && (
+        <RoomSection
+          title="Donor-Exclusive Rooms"
+          rooms={donorRooms}
+          onBook={handleBook}
+          tier={tier}
+          donor
+        />
+      )}
+    </div>
+  );
+}
+
+function RoomSection({
+  title,
+  rooms,
+  onBook,
+  tier,
+  donor,
+}: {
+  title: string;
+  rooms: Room[];
+  onBook: (room: Room) => void;
+  tier: DonorTier;
+  donor?: boolean;
+}) {
+  return (
+    <div>
+      <h3 className="font-display text-xl md:text-2xl text-charcoal mb-4 flex items-center gap-2">
+        {donor && <Crown className="h-5 w-5 text-champagne-dark" />}
+        {title}
+      </h3>
+      <div className="space-y-4">
+        {rooms.map((room) => {
+          const canBook =
+            !room.isFullyBooked &&
+            (!room.isDonorExclusive ||
+              canAccessDonorRoom(tier, room.donorTierRequired));
+          return (
+            <div
+              key={room.id}
+              className="flex flex-col md:flex-row gap-4 p-4 rounded-xl border border-charcoal/10 bg-white shadow-warm hover:border-champagne-dark/30 transition-colors"
+            >
+              <div className="relative h-40 md:h-32 md:w-48 shrink-0 rounded-lg overflow-hidden">
+                <Image
+                  src={getRoomImageUrl(room)}
+                  alt={room.name}
+                  fill
+                  className="object-cover"
+                  sizes="200px"
+                />
+              </div>
+              <div className="flex-1">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <h4 className="font-display text-lg text-charcoal">{room.name}</h4>
+                    <p className="text-sm text-muted">{room.category} · {room.bedType}</p>
+                  </div>
+                  <p className="font-semibold text-champagne-dark shrink-0">
+                    {formatCurrency(room.pricePerNight)}
+                    <span className="text-xs text-muted font-normal">/night</span>
+                  </p>
+                </div>
+                <p className="text-sm text-muted mt-2 line-clamp-2">{room.description}</p>
+                <div className="flex flex-wrap items-center gap-3 mt-2 text-xs text-muted">
+                  <span className="flex items-center gap-1">
+                    <Users className="h-3.5 w-3.5" /> Max {room.maxOccupancy}
+                  </span>
+                  <span>{room.sizeSqFt} sq ft</span>
+                  {room.isDonorExclusive && (
+                    <Badge variant="donor">Donor Exclusive</Badge>
+                  )}
+                </div>
+                <Button
+                  className="mt-3 w-full md:w-auto"
+                  disabled={!canBook}
+                  onClick={() => onBook(room)}
+                >
+                  {room.isFullyBooked
+                    ? "Sold Out"
+                    : room.isDonorExclusive && !canAccessDonorRoom(tier, room.donorTierRequired)
+                      ? "Donor Access Required"
+                      : "Book Now"}
+                </Button>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
 }
 
-export function HotelReview({ reviews }: { reviews: Review[] }) {
-  const { t } = useAppLanguage();
-  const review = reviews[0];
+export function AmenitiesGrid({ amenities }: { amenities: string[] }) {
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+      {amenities.map((a) => (
+        <Badge key={a} variant="secondary" className="justify-center py-2">
+          {a}
+        </Badge>
+      ))}
+    </div>
+  );
+}
+
+export function AvailabilityCalendar({
+  availability,
+}: {
+  availability: DateAvailability[];
+}) {
+  const statusColors = {
+    available: "bg-green-500/60",
+    limited: "bg-amber-500/60",
+    booked: "bg-red-500/40",
+  };
+
+  return (
+    <div className="card-surface p-4">
+      <h3 className="font-display text-lg mb-4 text-charcoal">Availability</h3>
+      <div className="flex flex-wrap gap-1">
+        {availability.slice(0, 60).map((d) => (
+          <div
+            key={d.date}
+            title={`${d.date}: ${d.status}`}
+            className={`w-3 h-3 rounded-sm ${statusColors[d.status]}`}
+          />
+        ))}
+      </div>
+      <div className="flex flex-wrap gap-4 mt-4 text-xs text-muted">
+        <span className="flex items-center gap-1">
+          <span className="w-3 h-3 rounded-sm bg-green-500/60" /> Available
+        </span>
+        <span className="flex items-center gap-1">
+          <span className="w-3 h-3 rounded-sm bg-amber-500/60" /> Limited
+        </span>
+        <span className="flex items-center gap-1">
+          <span className="w-3 h-3 rounded-sm bg-red-500/40" /> Booked
+        </span>
+      </div>
+    </div>
+  );
+}
+
+export function ReviewsList({ reviews }: { reviews: Review[] }) {
+  const [index, setIndex] = useState(0);
+  const review = reviews[index];
+
   if (!review) return null;
 
   return (
-    <div className="space-y-4 max-w-2xl">
-      <h2 className="text-xs font-bold uppercase tracking-wider text-muted">
-        {t("hotel.guestReviews")}
-      </h2>
-      <div className="border-l-2 border-champagne/20 pl-4 py-0.5 space-y-3">
-        <blockquote className="text-charcoal/80 text-sm sm:text-base leading-relaxed italic">
+    <div className="card-surface p-6">
+      <h3 className="font-display text-lg mb-4 text-charcoal">Guest Reviews</h3>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <blockquote className="text-charcoal/80 italic md:col-span-2">
           &ldquo;{review.text}&rdquo;
         </blockquote>
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="text-xs font-bold text-charcoal/90">
-            {review.guestName}
-            <span className="text-muted/70 font-normal"> · {review.city}</span>
+        <div>
+          <p className="font-medium text-charcoal">{review.guestName}</p>
+          <p className="text-sm text-muted">
+            {review.city} · {review.roomType}
           </p>
+        </div>
+        <div className="flex md:justify-end">
           <StarRating rating={review.rating} size="sm" />
         </div>
+      </div>
+
+      <div className="flex justify-center gap-2 mt-6">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setIndex((i) => (i - 1 + reviews.length) % reviews.length)}
+          aria-label="Previous review"
+        >
+          <ChevronLeft className="h-4 w-4" />
+        </Button>
+        <span className="text-sm text-muted self-center">
+          {index + 1} / {reviews.length}
+        </span>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setIndex((i) => (i + 1) % reviews.length)}
+          aria-label="Next review"
+        >
+          <ChevronRight className="h-4 w-4" />
+        </Button>
       </div>
     </div>
   );
 }
 
-/** @deprecated Availability heatmap removed for simpler UI */
-export function AvailabilityCalendar() {
-  return null;
-}
-
-/** @deprecated Use HotelReview */
-export const ReviewsList = HotelReview;
-export const AmenitiesGrid = () => null;
-export const ReviewsCarousel = HotelReview;
+/** @deprecated Use ReviewsList */
+export const ReviewsCarousel = ReviewsList;

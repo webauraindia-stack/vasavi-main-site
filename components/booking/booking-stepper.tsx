@@ -4,29 +4,22 @@ import { cn } from "@/lib/utils";
 import type { BookingStep } from "@/stores/booking-store";
 import {
   Calendar,
-  User,
-  ShieldCheck,
   Gift,
   HeartHandshake,
   CreditCard,
   Check,
   type LucideIcon,
 } from "lucide-react";
-import { useAppLanguage } from "@/hooks/use-app-language";
 
-const STEPS: { num: BookingStep; key: string; icon: LucideIcon }[] = [
-  { num: 1, key: "stepStay", icon: Calendar },
-  { num: 2, key: "stepGuest", icon: User },
-  { num: 3, key: "stepMember", icon: ShieldCheck },
-  { num: 4, key: "stepBlessings", icon: Gift },
-  { num: 5, key: "stepSeva", icon: HeartHandshake },
-  { num: 6, key: "stepPay", icon: CreditCard },
-  { num: 7, key: "stepDone", icon: Check },
+const STEPS: { num: BookingStep; label: string; icon: LucideIcon }[] = [
+  { num: 1, label: "Stay", icon: Calendar },
+  { num: 2, label: "Blessings", icon: Gift },
+  { num: 3, label: "Seva", icon: HeartHandshake },
+  { num: 4, label: "Pay", icon: CreditCard },
+  { num: 5, label: "Done", icon: Check },
 ];
 
 export function BookingStepper({ step }: { step: BookingStep }) {
-  const { t } = useAppLanguage();
-
   return (
     <div className="px-4 pb-3 shrink-0 overflow-x-auto scrollbar-hide">
       <div className="flex items-center gap-0.5 min-w-max mx-auto">
@@ -37,7 +30,7 @@ export function BookingStepper({ step }: { step: BookingStep }) {
           return (
             <StepDot
               key={s.num}
-              label={t(`booking.${s.key}`)}
+              label={s.label}
               active={active}
               done={done}
               Icon={Icon}

@@ -1,10 +1,17 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
-import { saveGuestProfile } from "@/lib/auth/guest-profiles";
 import { normalizePhone } from "@/lib/auth/phone";
-import { isValidAadhaarDigits, normalizeAadhaar } from "@/lib/aadhaar";
-import { resolveAuthUser } from "@/lib/auth/users-by-phone";
-import { consumeVerificationToken } from "@/lib/auth/verification-token";
+import { accessTokenExpiresAt } from "@/lib/auth/token-lifetime";
+
+export type SessionUserPayload = {
+  id: string;
+  name: string;
+  phone: string;
+  role: string;
+  isDonor: boolean;
+  donorId?: string;
+  accessToken: string;
+};
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
@@ -13,101 +20,97 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       name: "WhatsApp OTP",
       credentials: {
         phone: { label: "Phone", type: "text" },
-        verificationToken: { label: "Verification Token", type: "text" },
-        name: { label: "Name", type: "text" },
-        email: { label: "Email", type: "text" },
-        city: { label: "City", type: "text" },
-        aadhaar: { label: "Aadhaar", type: "text" },
+        accessToken: { label: "Access Token", type: "text" },
+        userJson: { label: "User", type: "text" },
+        donorProfileJson: { label: "Donor Profile", type: "text" },
       },
       async authorize(credentials) {
         const phone = normalizePhone(String(credentials?.phone ?? ""));
-        const verificationToken = String(credentials?.verificationToken ?? "");
-        const name = String(credentials?.name ?? "").trim();
-        const email = String(credentials?.email ?? "").trim().toLowerCase();
-        const city = String(credentials?.city ?? "").trim();
-        const aadhaar = normalizeAadhaar(String(credentials?.aadhaar ?? ""));
+        const accessToken = String(credentials?.accessToken ?? "").trim();
+        const userJson = String(credentials?.userJson ?? "");
 
-        if (!phone || !verificationToken) {
+        if (!phone || !accessToken || !userJson) {
           return null;
         }
 
-        const knownUser = resolveAuthUser(phone);
+        let user: { id: string; name: string; role: string; phone: string };
+        try {
+          user = JSON.parse(userJson) as typeof user;
+        } catch {
+          return null;
+        }
 
-        if (knownUser.memberProfile) {
-          if (!consumeVerificationToken(verificationToken, phone)) {
-            return null;
+        let donorId: string | undefined;
+        const donorRaw = String(credentials?.donorProfileJson ?? "");
+        if (donorRaw) {
+          try {
+            const donor = JSON.parse(donorRaw) as { donor_id?: string };
+            donorId = donor.donor_id;
+          } catch {
+            donorId = undefined;
           }
-          const profile = knownUser.memberProfile;
-          return {
-            id: knownUser.id,
-            name: profile.name,
-            email: profile.email,
-            phone: knownUser.phone,
-            city: profile.city,
-            isDonor: profile.isDonor,
-            donorId: profile.memberId,
-            tier: profile.tier ?? undefined,
-            categoryLabel: profile.categoryLabel,
-            isKnownMember: true,
-            profileComplete: true,
-          };
         }
-
-        if (!name || !email || !email.includes("@") || !isValidAadhaarDigits(aadhaar)) {
-          return null;
-        }
-
-        if (!consumeVerificationToken(verificationToken, phone)) {
-          return null;
-        }
-
-        const guestProfile = saveGuestProfile({
-          name,
-          email,
-          phone,
-          city,
-          aadhaar,
-        });
 
         return {
-          id: `guest-${phone.replace(/\D/g, "")}`,
-          name: guestProfile.name,
-          email: guestProfile.email,
-          phone: guestProfile.phone,
-          city: guestProfile.city,
-          aadhaar: guestProfile.aadhaar,
-          isDonor: false,
-          isKnownMember: false,
+          id: user.id,
+          name: user.name || phone,
+          email: `${phone}@vasavi.local`,
+          phone,
+          role: user.role,
+          isDonor: user.role === "donor",
+          donorId,
+          accessToken,
           profileComplete: true,
+          isKnownMember: user.role === "donor",
         };
       },
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session: updateSession }) {
       if (user) {
-        token.isDonor = (user as { isDonor?: boolean }).isDonor ?? false;
-        token.donorId = (user as { donorId?: string }).donorId;
-        token.tier = (user as { tier?: string }).tier;
-        token.phone = (user as { phone?: string }).phone;
-        token.city = (user as { city?: string }).city;
-        token.aadhaar = (user as { aadhaar?: string }).aadhaar;
-        token.categoryLabel = (user as { categoryLabel?: string }).categoryLabel;
-        token.isKnownMember = (user as { isKnownMember?: boolean }).isKnownMember ?? false;
-        token.profileComplete = (user as { profileComplete?: boolean }).profileComplete ?? true;
+        const u = user as SessionUserPayload & {
+          accessToken: string;
+          role: string;
+          isDonor: boolean;
+          donorId?: string;
+        };
+        token.accessToken = u.accessToken;
+        token.accessTokenExpires = accessTokenExpiresAt();
+        token.phone = u.phone;
+        token.role = u.role;
+        token.isDonor = u.isDonor;
+        token.donorId = u.donorId;
+        token.isKnownMember = u.isDonor;
+        token.profileComplete = true;
+        token.error = undefined;
       }
+
+      if (trigger === "update" && updateSession) {
+        const next = updateSession as {
+          accessToken?: string;
+          accessTokenExpires?: number;
+        };
+        if (next.accessToken) {
+          token.accessToken = next.accessToken;
+          token.accessTokenExpires =
+            next.accessTokenExpires ?? accessTokenExpiresAt();
+          token.error = undefined;
+        }
+      }
+
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
+        (session as { accessToken?: string }).accessToken = token.accessToken as string;
+        (session as { accessTokenExpires?: number }).accessTokenExpires =
+          token.accessTokenExpires as number | undefined;
+        (session as { error?: string }).error = token.error as string | undefined;
+        (session.user as { phone?: string }).phone = token.phone as string;
         (session.user as { isDonor?: boolean }).isDonor = token.isDonor as boolean;
         (session.user as { donorId?: string }).donorId = token.donorId as string;
-        (session.user as { tier?: string }).tier = token.tier as string;
-        (session.user as { phone?: string }).phone = token.phone as string;
-        (session.user as { city?: string }).city = token.city as string;
-        (session.user as { aadhaar?: string }).aadhaar = token.aadhaar as string;
-        (session.user as { categoryLabel?: string }).categoryLabel =
-          token.categoryLabel as string;
+        (session.user as { role?: string }).role = token.role as string;
         (session.user as { isKnownMember?: boolean }).isKnownMember =
           token.isKnownMember as boolean;
         (session.user as { profileComplete?: boolean }).profileComplete =
