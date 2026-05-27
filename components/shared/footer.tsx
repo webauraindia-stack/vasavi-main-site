@@ -89,12 +89,13 @@ export function Footer() {
               href="/"
               className="select-none flex items-center gap-2 hover:opacity-90 transition-opacity mb-2 justify-start"
             >
-              <div className="relative h-9 w-9 shrink-0">
+              <div className="relative h-12 w-12 shrink-0">
                 <Image
-                  src="/images/vasavi-club-logo.svg"
-                  alt="Vasavi Clubs Logo"
+                  src="/images/vasavi-club-logo.jpg"
+                  alt="Vasavi Clubs International"
                   fill
-                  className="object-contain rounded-full border-2 border-champagne-dark shadow-sm"
+                  className="object-contain"
+                  sizes="48px"
                 />
               </div>
               <span className="font-display text-[1.15rem] tracking-wide flex items-center gap-1 uppercase">
@@ -169,12 +170,13 @@ export function Footer() {
               href="/"
               className="select-none flex items-center gap-2 hover:opacity-90 transition-opacity mb-2 justify-center"
             >
-              <div className="relative h-9 w-9 shrink-0">
+              <div className="relative h-12 w-12 shrink-0">
                 <Image
-                  src="/images/vasavi-club-logo.svg"
-                  alt="Vasavi Clubs Logo"
+                  src="/images/vasavi-club-logo.jpg"
+                  alt="Vasavi Clubs International"
                   fill
-                  className="object-contain rounded-full border-2 border-champagne-dark shadow-sm"
+                  className="object-contain"
+                  sizes="48px"
                 />
               </div>
               <span className="font-display text-[1.15rem] tracking-wide flex items-center gap-1 uppercase">

@@ -82,12 +82,14 @@ export function Navbar() {
             aria-label="Vasavi Hotels home"
           >
             <span className="flex items-center gap-2">
-              <span className="relative hidden h-8 w-8 shrink-0 sm:block">
+              <span className="relative hidden h-10 w-10 shrink-0 sm:block">
                 <Image
-                  src="/images/vasavi-club-logo.svg"
-                  alt=""
+                  src="/images/vasavi-club-logo.jpg"
+                  alt="Vasavi Clubs International"
                   fill
                   className="object-contain"
+                  sizes="40px"
+                  priority
                 />
               </span>
               <span className="font-display text-xl font-black tracking-tight text-charcoal lowercase sm:text-2xl">

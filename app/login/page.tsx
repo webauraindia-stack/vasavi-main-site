@@ -7,7 +7,13 @@ import { MessageCircle, ArrowLeft, ShieldCheck, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { formatPhoneDisplay, toBackendPhone } from "@/lib/auth/phone";
+import {
+  formatPhoneDisplay,
+  toBackendPhone,
+  validatePhoneField,
+  isValidIndianMobile,
+} from "@/lib/auth/phone";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { ApiClientError } from "@/lib/api/client";
 import { parseApiErrorMessage } from "@/lib/api/parse-error";
 import type { ApiResponse } from "@/lib/api/types";
@@ -22,6 +28,7 @@ function LoginPageContent() {
 
   const [step, setStep] = useState<Step>("phone");
   const [phone, setPhone] = useState("");
+  const [phoneError, setPhoneError] = useState("");
   const [otp, setOtp] = useState("");
   const [name, setName] = useState("");
   const [registrationToken, setRegistrationToken] = useState("");
@@ -48,6 +55,12 @@ function LoginPageContent() {
   const sendOtp = async () => {
     setError("");
     setInfo("");
+    const validation = validatePhoneField(phone);
+    if (validation) {
+      setPhoneError(validation);
+      return;
+    }
+    setPhoneError("");
     setLoading(true);
 
     try {
@@ -217,27 +230,26 @@ function LoginPageContent() {
           >
             <div>
               <Label htmlFor="phone">Mobile number</Label>
-              <div className="mt-1 flex rounded-lg border border-charcoal/15 overflow-hidden focus-within:ring-2 focus-within:ring-champagne/30">
-                <span className="inline-flex items-center px-3 text-sm font-semibold text-muted bg-surface border-r border-charcoal/10">
-                  +91
-                </span>
-                <Input
-                  id="phone"
-                  type="tel"
-                  inputMode="numeric"
-                  autoComplete="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
-                  required
-                  className="border-0 focus-visible:ring-0 rounded-none"
-                  placeholder="98765 43210"
-                />
-              </div>
+              <PhoneInput
+                id="phone"
+                className="mt-1"
+                value={phone}
+                onChange={(v) => {
+                  setPhone(v);
+                  if (phoneError) setPhoneError("");
+                }}
+                error={phoneError}
+                required
+              />
             </div>
 
             {error && <p className="text-sm text-red-600">{error}</p>}
 
-            <Button type="submit" className="w-full gap-2" disabled={loading || phone.length < 10}>
+            <Button
+              type="submit"
+              className="w-full gap-2"
+              disabled={loading || !isValidIndianMobile(phone)}
+            >
               <MessageCircle className="h-4 w-4" />
               {loading ? "Sending..." : "Send OTP"}
             </Button>
