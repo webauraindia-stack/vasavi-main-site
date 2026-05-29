@@ -8,6 +8,7 @@ import i18n from "@/lib/i18n";
 import { LanguageSync } from "@/components/shared/language-sync";
 import { ApiSessionSync } from "@/components/api-session-sync";
 import { SessionTokenRefresher } from "@/components/session-token-refresher";
+import { HotelsCatalogProvider } from "@/lib/context/hotels-catalog";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -26,7 +27,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
           <LanguageSync />
           <ApiSessionSync />
           <SessionTokenRefresher />
-          {children}
+          <HotelsCatalogProvider>{children}</HotelsCatalogProvider>
         </I18nextProvider>
       </QueryClientProvider>
     </SessionProvider>

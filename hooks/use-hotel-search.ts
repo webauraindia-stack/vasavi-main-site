@@ -7,6 +7,8 @@ import {
   getAutocompleteSuggestions,
   type HotelSearchResult,
 } from "@/lib/fuzzy-search";
+import { useHotelsCatalog } from "@/lib/context/hotels-catalog";
+import { setSearchCatalog } from "@/lib/fuzzy-search";
 import type { AmenityTag, Hotel } from "@/types";
 
 export interface UseHotelSearchOptions {
@@ -34,6 +36,12 @@ export function useHotelSearch({
   selectedCity = "All Cities",
   selectedAmenity = null,
 }: UseHotelSearchOptions = {}): UseHotelSearchReturn {
+  const { hotels } = useHotelsCatalog();
+
+  useEffect(() => {
+    if (hotels.length > 0) setSearchCatalog(hotels);
+  }, [hotels]);
+
   const [query, setQueryRaw] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);

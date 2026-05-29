@@ -13,7 +13,8 @@ import {
   SelectTrigger,
 } from "@/components/ui/select";
 import { DateRangePickerField } from "@/components/shared/date-range-picker-field";
-import { HOTELS } from "@/lib/data/hotels";
+import { useHotelsCatalog } from "@/lib/context/hotels-catalog";
+import type { Hotel } from "@/types";
 import { normalizeStayDates } from "@/lib/date-range-selection";
 import { parseGuestParams, parseSearchDate } from "@/lib/parse-search-params";
 import { useSearchStore } from "@/stores/search-store";
@@ -31,12 +32,13 @@ const FIELD_H = "h-[3.25rem] min-h-[3.25rem] lg:h-[3.5rem] lg:min-h-[3.5rem]";
 function getHotelLabels(
   id: string | null,
   allLabel: string,
-  labelFor: (hotel: (typeof HOTELS)[number]) => { name: string; city: string }
+  hotels: Hotel[],
+  labelFor: (hotel: Hotel) => { name: string; city: string }
 ) {
   if (!id) {
     return { full: allLabel, short: allLabel };
   }
-  const hotel = HOTELS.find((h) => h.id === id);
+  const hotel = hotels.find((h) => h.id === id);
   if (!hotel) {
     return { full: allLabel, short: allLabel };
   }
@@ -52,6 +54,7 @@ function getHotelLabels(
 }
 
 export function GlobalSearchBar({ className, variant = "hero" }: GlobalSearchBarProps) {
+  const { hotels } = useHotelsCatalog();
   const { t, language } = useAppLanguage();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -111,7 +114,7 @@ export function GlobalSearchBar({ className, variant = "hero" }: GlobalSearchBar
   const allGuestHouses = t("search.allGuestHouses");
 
   const labelForHotel = useCallback(
-    (hotel: (typeof HOTELS)[number]) => ({
+    (hotel: Hotel) => ({
       name: t(`hotels.${hotel.slug}.name`, { defaultValue: hotel.name }),
       city: t(`cities.${hotel.city}`, { defaultValue: hotel.city }),
     }),
@@ -119,21 +122,21 @@ export function GlobalSearchBar({ className, variant = "hero" }: GlobalSearchBar
   );
 
   const hotelLabels = useMemo(
-    () => getHotelLabels(hotelId, allGuestHouses, labelForHotel),
-    [hotelId, allGuestHouses, labelForHotel]
+    () => getHotelLabels(hotelId, allGuestHouses, hotels, labelForHotel),
+    [hotelId, allGuestHouses, hotels, labelForHotel]
   );
 
   const hotelTriggerLabel = useMemo(() => {
     if (!hotelId) return allGuestHouses;
     if (variant === "hero" && !isDesktop) {
-      const hotel = HOTELS.find((h) => h.id === hotelId);
+      const hotel = hotels.find((h) => h.id === hotelId);
       if (hotel) {
         const { city } = labelForHotel(hotel);
         return city;
       }
     }
     return hotelLabels.short;
-  }, [hotelId, allGuestHouses, hotelLabels.short, variant, isDesktop, labelForHotel]);
+  }, [hotelId, allGuestHouses, hotelLabels.short, variant, isDesktop, labelForHotel, hotels]);
 
   const handleRangeChange = useCallback(
     (next: DateRange | undefined, complete: boolean) => {
@@ -151,7 +154,7 @@ export function GlobalSearchBar({ className, variant = "hero" }: GlobalSearchBar
   const handleSearch = () => {
     // Specific guest house selected → open that hotel's rooms
     if (hotelId) {
-      const hotel = HOTELS.find((h) => h.id === hotelId);
+      const hotel = hotels.find((h) => h.id === hotelId);
       if (hotel) {
         const params = new URLSearchParams();
         params.set("adults", String(guests.adults));
@@ -256,7 +259,7 @@ export function GlobalSearchBar({ className, variant = "hero" }: GlobalSearchBar
         <SelectItem value="all">
           <span className="text-sm font-semibold">{allGuestHouses}</span>
         </SelectItem>
-        {HOTELS.map((h) => {
+        {hotels.map((h) => {
           const { name, city } = labelForHotel(h);
           return (
             <SelectItem key={h.id} value={h.id}>

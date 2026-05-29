@@ -23,7 +23,21 @@ import { getBooking, cancelBooking } from "@/lib/api/bookings";
 import { mapBookingDetail, type CustomerBookingDetail } from "@/lib/api/mappers";
 import { canExtendCustomerBooking } from "@/lib/bookings/customer";
 import { useAuthenticatedSession } from "@/lib/hooks/use-authenticated-session";
+import { formatRoomTypeLabel } from "@/lib/room-type-label";
 import { formatCurrency, formatDate } from "@/lib/utils";
+
+function refundStatusMessage(paymentStatus: string): string | null {
+  if (paymentStatus === "refund_pending") {
+    return "Refund requested — our team will process it within 5–7 business days.";
+  }
+  if (paymentStatus === "refunded") {
+    return "Refund completed. Funds should reflect per your bank or payment method.";
+  }
+  if (paymentStatus === "partially_refunded") {
+    return "A partial refund has been processed for this booking.";
+  }
+  return null;
+}
 
 export default function BookingDetailPage() {
   const params = useParams();
@@ -129,11 +143,16 @@ export default function BookingDetailPage() {
     displayBooking.status !== "completed" &&
     displayBooking.status !== "checked_in";
 
+  const refundNote = refundStatusMessage(displayBooking.paymentStatus);
+
   return (
     <div>
       <BackLink />
 
-      <div className="card-surface rounded-xl p-6 border border-charcoal/10 space-y-6">
+      <div
+        id="booking-invoice"
+        className="card-surface rounded-xl p-6 border border-charcoal/10 space-y-6 print:shadow-none"
+      >
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <h2 className="font-display text-2xl text-charcoal">{displayBooking.hotelName}</h2>
@@ -141,8 +160,10 @@ export default function BookingDetailPage() {
               <p className="text-sm text-muted mt-0.5">{displayBooking.branchCity}</p>
             )}
             <p className="text-sm text-muted mt-1">
-              {displayBooking.roomType}
-              {displayBooking.roomNumber ? ` · Room ${displayBooking.roomNumber}` : ""}
+              {displayBooking.roomType
+                ? formatRoomTypeLabel(displayBooking.roomType)
+                : "Guest room"}
+              {displayBooking.roomNumber ? ` · ${displayBooking.roomNumber}` : ""}
             </p>
             {displayBooking.reference && (
               <p className="text-xs font-mono text-muted mt-1">
@@ -150,15 +171,32 @@ export default function BookingDetailPage() {
               </p>
             )}
           </div>
-          <div className="flex flex-col items-end gap-1.5">
+          <div className="flex flex-col items-end gap-1.5 print:hidden">
             <Badge className="capitalize">
               {displayBooking.status.replace(/_/g, " ")}
             </Badge>
             <Badge variant="outline" className="capitalize text-xs">
               Payment: {displayBooking.paymentStatus.replace(/_/g, " ")}
             </Badge>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="gap-2 text-xs"
+              onClick={() => window.print()}
+            >
+              <Receipt className="h-3.5 w-3.5" />
+              Download / print summary
+            </Button>
           </div>
         </div>
+
+        {refundNote && (
+          <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+            <p className="font-semibold">Refund status</p>
+            <p className="mt-1">{refundNote}</p>
+          </div>
+        )}
 
         <div className="grid gap-4 sm:grid-cols-2 text-sm">
           <Detail icon={Calendar} label="Check-in" value={formatDate(displayBooking.checkIn)} />

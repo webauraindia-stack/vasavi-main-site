@@ -90,12 +90,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         const next = updateSession as {
           accessToken?: string;
           accessTokenExpires?: number;
+          name?: string;
         };
         if (next.accessToken) {
           token.accessToken = next.accessToken;
           token.accessTokenExpires =
             next.accessTokenExpires ?? accessTokenExpiresAt();
           token.error = undefined;
+        }
+        if (next.name) {
+          token.name = next.name;
         }
       }
 
@@ -115,6 +119,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           token.isKnownMember as boolean;
         (session.user as { profileComplete?: boolean }).profileComplete =
           token.profileComplete as boolean;
+        if (token.name) {
+          session.user.name = token.name as string;
+        }
       }
       return session;
     },

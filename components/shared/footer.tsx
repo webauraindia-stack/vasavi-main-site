@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Instagram, Facebook, Twitter, Linkedin, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { HOTELS } from "@/lib/data/hotels";
+import { useHotelsCatalog } from "@/lib/context/hotels-catalog";
 import { cn } from "@/lib/utils";
 import { useAppLanguage } from "@/hooks/use-app-language";
 import { useLocalizedHotel } from "@/hooks/use-localized-content";
@@ -20,6 +20,7 @@ const social = [
 ];
 
 export function Footer() {
+  const { hotels } = useHotelsCatalog();
   const { t } = useAppLanguage();
   const [email, setEmail] = useState("");
   const [openSection, setOpenSection] = useState<string | null>(null);
@@ -49,7 +50,7 @@ export function Footer() {
             onToggle={() => toggle("hotels")}
           >
             <ul className="space-y-2 pb-4">
-              {HOTELS.map((h) => (
+              {hotels.map((h) => (
                 <FooterHotelLink key={h.id} slug={h.slug} name={h.name} description={h.description} variant="mobile" />
               ))}
             </ul>
@@ -115,7 +116,7 @@ export function Footer() {
           <div>
             <h3 className="font-display text-lg text-white mb-4">{t("footer.ourHotels")}</h3>
             <ul className="space-y-2 max-h-48 overflow-y-auto scrollbar-hide">
-              {HOTELS.map((h) => (
+              {hotels.map((h) => (
                 <FooterHotelLink key={h.id} slug={h.slug} name={h.name} description={h.description} variant="desktop" />
               ))}
             </ul>

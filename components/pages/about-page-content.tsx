@@ -9,13 +9,14 @@ import {
   VCI_CONTACT,
   QUICK_LINKS,
 } from "@/lib/data/vasavi-community";
-import { HOTELS } from "@/lib/data/hotels";
+import { useHotelsCatalog } from "@/lib/context/hotels-catalog";
 import { useAppLanguage } from "@/hooks/use-app-language";
 import { useLocalizedHotel, useLocalizedScheme } from "@/hooks/use-localized-content";
 
 export function AboutPageContent() {
   const { t } = useAppLanguage();
-  const cityCount = new Set(HOTELS.map((h) => h.city)).size;
+  const { hotels } = useHotelsCatalog();
+  const cityCount = new Set(hotels.map((h) => h.city)).size;
 
   return (
     <div className="pt-20 pb-20 bg-white">
@@ -46,10 +47,10 @@ export function AboutPageContent() {
                 {t("about.collection")}
               </h2>
               <p className="text-base md:text-lg text-muted mb-6">
-                {t("about.propertiesInCities", { count: HOTELS.length, cities: cityCount })}
+                {t("about.propertiesInCities", { count: hotels.length, cities: cityCount })}
               </p>
               <ul className="grid sm:grid-cols-2 xl:grid-cols-3 gap-3">
-                {HOTELS.map((h) => (
+                {hotels.map((h) => (
                   <HotelListItem
                     key={h.id}
                     slug={h.slug}

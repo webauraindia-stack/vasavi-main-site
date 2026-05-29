@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -21,21 +21,26 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { HOTELS } from "@/lib/data/hotels";
 import {
   HEALTH_CENTRE_HOTEL_SLUGS,
   type HealthCentreQueryType,
 } from "@/lib/data/health-centre";
+import { useHotelsCatalog } from "@/lib/context/hotels-catalog";
 import { useAppLanguage } from "@/hooks/use-app-language";
 import { useLocalizedHotel } from "@/hooks/use-localized-content";
+import type { Hotel } from "@/types";
 import { formatCurrency } from "@/lib/utils";
-
-const RELATED_HOTELS = HEALTH_CENTRE_HOTEL_SLUGS.map(
-  (slug) => HOTELS.find((h) => h.slug === slug)!
-).filter(Boolean);
 
 export function HealthCentrePageContent() {
   const { t } = useAppLanguage();
+  const { hotels } = useHotelsCatalog();
+  const relatedHotels = useMemo(
+    () =>
+      HEALTH_CENTRE_HOTEL_SLUGS.map((slug) => hotels.find((h) => h.slug === slug)).filter(
+        (h): h is Hotel => Boolean(h)
+      ),
+    [hotels]
+  );
   const [submitted, setSubmitted] = useState(false);
   const [queryType, setQueryType] = useState<HealthCentreQueryType>("general");
 
@@ -211,7 +216,7 @@ export function HealthCentrePageContent() {
           </ul>
 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {RELATED_HOTELS.map((hotel) => (
+            {relatedHotels.map((hotel) => (
               <RelatedHotelCard key={hotel.id} hotel={hotel} />
             ))}
           </div>
@@ -233,7 +238,7 @@ export function HealthCentrePageContent() {
 function RelatedHotelCard({
   hotel,
 }: {
-  hotel: (typeof HOTELS)[number];
+  hotel: Hotel;
 }) {
   const { t } = useAppLanguage();
   const localized = useLocalizedHotel(hotel.slug, {

@@ -1,4 +1,5 @@
 import { roomImagesFromApi } from "@/lib/images/room-image";
+import { formatRoomListingLabel, formatRoomTypeLabel } from "@/lib/room-type-label";
 import type {
   BookingStatus,
   Coupon,
@@ -164,9 +165,9 @@ export function mapRoomFromCatalog(room: BackendRoomCatalog): Room {
     hotelId: branch.id,
     hotelSlug: slug,
     hotelName: branch.name,
-    name: `${room.room_type.name} · ${room.room_number}`,
+    name: formatRoomListingLabel(room.room_type.name, room.room_number),
     category,
-    description: `${room.room_type.name} at ${branch.name}, ${branch.city}`,
+    description: `${formatRoomTypeLabel(room.room_type.name)} at ${branch.name}, ${branch.city}`,
     pricePerNight: priceRupees,
     bedType: "Standard",
     sizeSqFt: 200,
@@ -194,9 +195,9 @@ export function mapRoomFromBackend(room: BackendRoomAvailability): Room {
     hotelId: branch.id,
     hotelSlug: slug,
     hotelName: branch.name,
-    name: `${room.room_type.name} · ${room.room_number}`,
+    name: formatRoomListingLabel(room.room_type.name, room.room_number),
     category,
-    description: `${room.room_type.name} at ${branch.name}, ${branch.city}`,
+    description: `${formatRoomTypeLabel(room.room_type.name)} at ${branch.name}, ${branch.city}`,
     pricePerNight: priceRupees,
     bedType: "Standard",
     sizeSqFt: 200,
@@ -305,7 +306,7 @@ export function mapBookingListItem(b: BackendBooking): CustomerBookingListItem {
     reference: b.booking_reference,
     hotelName: b.branch?.name ?? "Vasavi Hotel",
     roomType: b.room?.room_type?.name
-      ? `${b.room.room_type.name} · ${b.room.room_number}`
+      ? formatRoomListingLabel(b.room.room_type.name, b.room.room_number)
       : b.room?.room_number ?? "Room",
     checkIn: b.check_in_date,
     checkOut: b.check_out_date,

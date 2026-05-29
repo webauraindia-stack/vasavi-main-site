@@ -20,7 +20,7 @@ import {
   Search,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { HOTELS } from "@/lib/data/hotels";
+import { useHotelsCatalog } from "@/lib/context/hotels-catalog";
 import { useBodyScrollLock } from "@/lib/use-body-scroll-lock";
 import { cn } from "@/lib/utils";
 import { useAppLanguage } from "@/hooks/use-app-language";
@@ -29,6 +29,7 @@ import { NotificationsBellButton } from "@/components/shared/notifications-bell-
 import { PendingPaymentBanner } from "@/components/shared/pending-payment-banner";
 import { usePendingPaymentStore } from "@/stores/pending-payment-store";
 export function Navbar() {
+  const { hotels } = useHotelsCatalog();
   const { t, languages, changeLanguage } = useAppLanguage();
   const { data: session } = useSession();
   const pathname = usePathname();
@@ -182,7 +183,7 @@ export function Navbar() {
                     <div className="absolute -top-2 left-0 right-0 h-2" />
                     <div className="w-[min(90vw,56rem)] bg-white rounded-2xl border border-beige/70 shadow-warm-lg overflow-hidden">
                       <div className="p-5 grid grid-cols-3 gap-2 max-h-[70vh] overflow-y-auto">
-                        {HOTELS.map((hotel) => (
+                        {hotels.map((hotel) => (
                           <Link
                             key={hotel.id}
                             href={`/hotels/${hotel.slug}`}
@@ -214,7 +215,7 @@ export function Navbar() {
                       </div>
                       <div className="border-t border-beige/60 px-5 py-3 flex items-center justify-between bg-surface/60">
                         <p className="text-xs lg:text-sm text-muted font-semibold">
-                          {HOTELS.length} {t("nav.hotels").toLowerCase()}
+                          {hotels.length} {t("nav.hotels").toLowerCase()}
                         </p>
                         <Link
                           href="/search"
@@ -389,7 +390,7 @@ export function Navbar() {
 
                 <p className="text-label mt-6 mb-3">{t("nav.hotelsSection")}</p>
                 <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2">
-                  {HOTELS.map((h) => (
+                  {hotels.map((h) => (
                     <Link
                       key={h.id}
                       href={`/hotels/${h.slug}`}

@@ -14,19 +14,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { VCI_CONTACT, QUICK_LINKS } from "@/lib/data/vasavi-community";
-import { HOTELS } from "@/lib/data/hotels";
+import { useHotelsCatalog } from "@/lib/context/hotels-catalog";
 import { useAppLanguage } from "@/hooks/use-app-language";
+import type { Hotel } from "@/types";
 import { Suspense, useEffect, useMemo, useState } from "react";
 
-const HOTELS_SORTED = [...HOTELS].sort(
-  (a, b) => a.city.localeCompare(b.city) || a.name.localeCompare(b.name)
-);
-
-function resolveHotelParam(param: string | null): string | null {
+function resolveHotelParam(hotels: Hotel[], param: string | null): string | null {
   if (!param) return null;
-  const byId = HOTELS.find((h) => h.id === param);
+  const byId = hotels.find((h) => h.id === param);
   if (byId) return byId.id;
-  const bySlug = HOTELS.find((h) => h.slug === param);
+  const bySlug = hotels.find((h) => h.slug === param);
   return bySlug?.id ?? null;
 }
 
@@ -40,19 +37,26 @@ export function ContactPageContent() {
 
 function ContactPageContentInner() {
   const { t } = useAppLanguage();
+  const { hotels } = useHotelsCatalog();
+  const hotelsSorted = useMemo(
+    () => [...hotels].sort((a, b) => a.city.localeCompare(b.city) || a.name.localeCompare(b.name)),
+    [hotels]
+  );
   const searchParams = useSearchParams();
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [hotelId, setHotelId] = useState("");
   const [hotelError, setHotelError] = useState(false);
 
   useEffect(() => {
-    const fromUrl = resolveHotelParam(searchParams.get("hotel"));
+    const fromUrl = resolveHotelParam(hotels, searchParams.get("hotel"));
     if (fromUrl) setHotelId(fromUrl);
-  }, [searchParams]);
+  }, [searchParams, hotels]);
 
   const selectedHotel = useMemo(
-    () => (hotelId && hotelId !== "general" ? HOTELS.find((h) => h.id === hotelId) : null),
-    [hotelId]
+    () => (hotelId && hotelId !== "general" ? hotels.find((h) => h.id === hotelId) : null),
+    [hotelId, hotels]
   );
 
   return (
@@ -155,14 +159,41 @@ function ContactPageContentInner() {
             ) : (
               <form
                 className="space-y-5"
-                onSubmit={(e) => {
+                onSubmit={async (e) => {
                   e.preventDefault();
                   if (!hotelId) {
                     setHotelError(true);
                     return;
                   }
                   setHotelError(false);
-                  setSubmitted(true);
+                  setSubmitError(null);
+                  const form = e.currentTarget;
+                  const data = new FormData(form);
+                  const name = String(data.get("name") ?? "").trim();
+                  const email = String(data.get("email") ?? "").trim();
+                  const message = String(data.get("message") ?? "").trim();
+                  setSubmitting(true);
+                  try {
+                    const res = await fetch("/api/contact", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        name,
+                        email,
+                        message,
+                        hotel_id: hotelId === "general" ? null : hotelId,
+                      }),
+                    });
+                    if (!res.ok) {
+                      const body = (await res.json().catch(() => ({}))) as { error?: string };
+                      throw new Error(body.error ?? "Could not send your message.");
+                    }
+                    setSubmitted(true);
+                  } catch (err) {
+                    setSubmitError(err instanceof Error ? err.message : "Could not send your message.");
+                  } finally {
+                    setSubmitting(false);
+                  }
                 }}
               >
                 <div>
@@ -193,7 +224,7 @@ function ContactPageContentInner() {
                       <SelectItem value="general">
                         <span className="text-sm font-semibold">{t("contact.hotelGeneral")}</span>
                       </SelectItem>
-                      {HOTELS_SORTED.map((h) => (
+                      {hotelsSorted.map((h) => (
                         <SelectItem key={h.id} value={h.id}>
                           <span className="flex flex-col leading-tight py-0.5">
                             <span className="text-sm font-semibold text-charcoal">{h.name}</span>
@@ -230,8 +261,17 @@ function ContactPageContentInner() {
                     className="mt-1.5 w-full rounded-lg border border-charcoal/15 px-3 py-2.5 text-base focus:outline-none focus:ring-2 focus:ring-champagne/40"
                   />
                 </div>
-                <Button type="submit" className="w-full h-11 text-base font-bold">
-                  {t("contact.submit")}
+                {submitError && (
+                  <p className="text-sm text-red-600 font-medium" role="alert">
+                    {submitError}
+                  </p>
+                )}
+                <Button
+                  type="submit"
+                  className="w-full h-11 text-base font-bold"
+                  disabled={submitting}
+                >
+                  {submitting ? t("contact.submitting", { defaultValue: "Sending…" }) : t("contact.submit")}
                 </Button>
               </form>
             )}

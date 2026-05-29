@@ -56,6 +56,17 @@ export async function fetchMe(accessToken: string): Promise<BackendUser> {
   });
 }
 
+export async function updateProfile(
+  accessToken: string,
+  data: { name: string }
+): Promise<BackendUser> {
+  return apiFetch<BackendUser>("accounts/me/", {
+    method: "PATCH",
+    accessToken,
+    body: JSON.stringify(data),
+  });
+}
+
 export async function logoutApi(): Promise<{ ok: boolean }> {
   return apiFetch<{ ok: boolean }>("accounts/logout/", {
     method: "POST",

@@ -1,5 +1,4 @@
 import Fuse, { type FuseResult, type FuseResultMatch } from "fuse.js";
-import { HOTELS } from "@/lib/data/hotels";
 import type { Hotel } from "@/types";
 
 // ─── Synonym map ────────────────────────────────────────────────────────────
@@ -63,8 +62,8 @@ export interface HotelDoc {
   hotel: Hotel;
 }
 
-function buildDocs(): HotelDoc[] {
-  return HOTELS.map((h) => ({
+function buildDocs(hotels: Hotel[]): HotelDoc[] {
+  return hotels.map((h) => ({
     id: h.id,
     slug: h.slug,
     name: h.name,
@@ -93,27 +92,40 @@ function buildDocs(): HotelDoc[] {
   }));
 }
 
-const DOCS = buildDocs();
+let catalogHotels: Hotel[] = [];
+let fuse: Fuse<HotelDoc> | null = null;
 
-// ─── Fuse.js instance ────────────────────────────────────────────────────────
-const fuse = new Fuse(DOCS, {
+const FUSE_OPTIONS = {
   includeScore: true,
   includeMatches: true,
-  threshold: 0.45,          // 0 = exact, 1 = match anything
-  ignoreLocation: true,     // search anywhere in the string, not just start
+  threshold: 0.45,
+  ignoreLocation: true,
   distance: 200,
   minMatchCharLength: 2,
   useExtendedSearch: false,
   keys: [
-    { name: "name",            weight: 0.30 },
-    { name: "city",            weight: 0.25 },
-    { name: "amenitiesText",   weight: 0.15 },
-    { name: "region",          weight: 0.10 },
-    { name: "description",     weight: 0.08 },
+    { name: "name", weight: 0.3 },
+    { name: "city", weight: 0.25 },
+    { name: "amenitiesText", weight: 0.15 },
+    { name: "region", weight: 0.1 },
+    { name: "description", weight: 0.08 },
     { name: "attractionsText", weight: 0.07 },
-    { name: "tags",            weight: 0.05 },
+    { name: "tags", weight: 0.05 },
   ],
-});
+};
+
+/** Rebuild the in-memory search index when the live hotel catalog loads. */
+export function setSearchCatalog(hotels: Hotel[]): void {
+  catalogHotels = hotels;
+  fuse = hotels.length ? new Fuse(buildDocs(hotels), FUSE_OPTIONS) : null;
+}
+
+function getFuse(): Fuse<HotelDoc> {
+  if (!fuse) {
+    fuse = new Fuse(buildDocs(catalogHotels), FUSE_OPTIONS);
+  }
+  return fuse;
+}
 
 // ─── Search result types ─────────────────────────────────────────────────────
 export interface SearchMatch {
@@ -131,8 +143,9 @@ export interface HotelSearchResult {
 
 // ─── Main search function ────────────────────────────────────────────────────
 export function searchHotels(rawQuery: string): HotelSearchResult[] {
+  const docs = buildDocs(catalogHotels);
   if (!rawQuery.trim()) {
-    return DOCS.map((d) => ({
+    return docs.map((d) => ({
       hotel: d.hotel,
       score: 0,
       matches: [],
@@ -141,7 +154,7 @@ export function searchHotels(rawQuery: string): HotelSearchResult[] {
   }
 
   const query = expandQuery(rawQuery);
-  const results: FuseResult<HotelDoc>[] = fuse.search(query);
+  const results: FuseResult<HotelDoc>[] = getFuse().search(query);
 
   return results.map((r) => ({
     hotel: r.item.hotel,
@@ -182,7 +195,7 @@ export function getAutocompleteSuggestions(
   const suggestions: { label: string; type: "city" | "hotel" | "amenity" }[] = [];
 
   // Cities
-  const cities = Array.from(new Set(HOTELS.map((h) => h.city)));
+  const cities = Array.from(new Set(catalogHotels.map((h) => h.city)));
   for (const city of cities) {
     if (city.toLowerCase().includes(q) || levenshtein(q, city.toLowerCase()) <= 2) {
       if (!seen.has(city)) {
@@ -193,7 +206,7 @@ export function getAutocompleteSuggestions(
   }
 
   // Hotel names
-  for (const h of HOTELS) {
+  for (const h of catalogHotels) {
     if (
       h.name.toLowerCase().includes(q) ||
       levenshtein(q, h.name.toLowerCase().split(" ")[0]) <= 2
@@ -206,7 +219,7 @@ export function getAutocompleteSuggestions(
   }
 
   // Amenities
-  const allAmenities = Array.from(new Set(HOTELS.flatMap((h) => h.amenities)));
+  const allAmenities = Array.from(new Set(catalogHotels.flatMap((h) => h.amenities)));
   for (const a of allAmenities) {
     if (a.toLowerCase().includes(q) || levenshtein(q, a.toLowerCase()) <= 2) {
       if (!seen.has(a)) {
