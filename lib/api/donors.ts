@@ -46,8 +46,10 @@ export async function getPublicDonors(
     if (res.results && res.results.length > 0) {
       return res;
     }
-  } catch (e) {
-    console.warn("API failed, falling back to mock donors", e);
+  } catch {
+    if (process.env.NODE_ENV === "development") {
+      console.warn("Donors API unavailable — using local fallback data");
+    }
   }
 
   // Fallback to mock data if API returns empty or fails

@@ -26,7 +26,7 @@ const defaultFilters: SearchFilters = {
 };
 
 export const useSearchStore = create<SearchState>((set, get) => ({
-  hotelId: null,
+  hotelId: "1", // Sri Vasavi Nityannadana Residency (Hyderabad) as default
   checkIn: null,
   checkOut: null,
   guests: { adults: 2, children: 0, rooms: 1 },

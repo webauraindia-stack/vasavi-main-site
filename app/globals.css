@@ -28,10 +28,15 @@
     font-size: 16px;
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
+    width: 100%;
+    max-width: 100%;
   }
 
   body {
     @apply bg-surface text-charcoal font-body text-base font-medium leading-relaxed antialiased overflow-x-hidden;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
     background-image:
       radial-gradient(circle at 12% 0%, rgba(201, 168, 76, 0.08), transparent 34%),
       radial-gradient(circle at 88% 8%, rgba(107, 20, 20, 0.05), transparent 30%);
@@ -64,22 +69,7 @@
     font-size: inherit;
   }
 
-  @media (min-width: 768px) {
-    body {
-      font-size: 1.0625rem;
-    }
-  }
-
   @media (min-width: 1024px) {
-    html {
-      font-size: 17px;
-    }
-
-    body {
-      font-size: 1.125rem;
-      line-height: 1.65;
-    }
-
     h1 {
       @apply text-4xl xl:text-5xl;
     }
@@ -93,14 +83,9 @@
     }
   }
 
-  @media (min-width: 1280px) {
-    html {
-      font-size: 18px;
-    }
-
-    body {
-      font-size: 1.1875rem;
-    }
+  img,
+  video {
+    max-width: 100%;
   }
 
   :focus-visible {

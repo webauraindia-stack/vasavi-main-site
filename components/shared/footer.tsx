@@ -83,12 +83,13 @@ export function Footer() {
               href="/"
               className="select-none flex items-center gap-3 hover:opacity-90 transition-opacity mb-4"
             >
-              <div className="relative h-10 w-10 shrink-0 rounded-full border border-champagne-dark/40 p-1 bg-white shadow-warm overflow-hidden">
+              <div className="relative h-10 w-10 shrink-0 rounded-full overflow-hidden">
                 <Image
                   src="/images/vasavi-logo.png"
                   alt="Vasavi Clubs Logo"
                   fill
-                  className="object-contain p-0.5 rounded-full"
+                  sizes="44px"
+                  className="object-contain rounded-full"
                 />
               </div>
               <span className="font-display text-lg tracking-wide uppercase text-white">
@@ -150,8 +151,14 @@ export function Footer() {
         <div className="md:hidden mt-8 space-y-6 text-center">
           <div>
             <Link href="/" className="inline-flex items-center gap-2 mb-2">
-              <div className="relative h-9 w-9 shrink-0 rounded-full border border-champagne-dark/40 p-1 bg-white shadow-warm overflow-hidden">
-                <Image src="/images/vasavi-logo.png" alt="" fill className="object-contain p-0.5 rounded-full" />
+              <div className="relative h-9 w-9 shrink-0 rounded-full overflow-hidden">
+                <Image
+                  src="/images/vasavi-logo.png"
+                  alt=""
+                  fill
+                  sizes="36px"
+                  className="object-contain rounded-full"
+                />
               </div>
               <span className="font-display text-lg text-white uppercase">Vasavi Hotels</span>
             </Link>

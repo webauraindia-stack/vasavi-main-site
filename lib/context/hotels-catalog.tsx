@@ -31,8 +31,8 @@ export function HotelsCatalogProvider({ children }: { children: ReactNode }) {
 
 export function useHotelsCatalog(): HotelsCatalogValue {
   const ctx = useContext(HotelsCatalogContext);
-  if (ctx) return ctx;
   const { data = [], isLoading, isError, error } = useHotels();
+  if (ctx) return ctx;
   return {
     hotels: data,
     isLoading,

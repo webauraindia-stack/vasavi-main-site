@@ -13,7 +13,7 @@ export function DonorsMarqueeClient({ donors }: Props) {
   const duplicatedDonors = [...donors, ...donors, ...donors, ...donors, ...donors];
 
   return (
-    <section className="py-20 bg-gradient-to-b from-slate-50 to-white overflow-hidden relative">
+    <section className="py-20 bg-white overflow-hidden relative">
       <style>{`
         @keyframes marquee {
           0% { transform: translateX(0%); }
@@ -48,7 +48,7 @@ export function DonorsMarqueeClient({ donors }: Props) {
           {duplicatedDonors.map((donor, idx) => (
             <div
               key={`${donor.id}-${idx}`}
-              className="mx-4 flex flex-col items-center justify-center p-6 bg-white border border-slate-200 rounded-2xl shadow-sm min-w-[300px] transition-transform duration-300 hover:shadow-md hover:-translate-y-1 cursor-default"
+              className="mx-2 sm:mx-4 flex flex-col items-center justify-center p-4 sm:p-6 bg-white border border-slate-200 rounded-2xl shadow-sm min-w-[min(280px,78vw)] sm:min-w-[300px] transition-transform duration-300 hover:shadow-md hover:-translate-y-1 cursor-default"
             >
               <div className="h-12 w-12 rounded-full bg-amber-100 flex items-center justify-center mb-4">
                 <Award className="h-6 w-6 text-amber-600" />
@@ -67,7 +67,7 @@ export function DonorsMarqueeClient({ donors }: Props) {
       <div className="mt-14 text-center">
         <Link
           href="/donors/directory"
-          className="inline-flex items-center justify-center px-8 py-4 text-base font-semibold rounded-full text-white bg-blue-600 hover:bg-blue-700 transition-all duration-200 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          className="inline-flex items-center justify-center px-8 py-4 text-base font-semibold rounded-full text-white bg-champagne hover:bg-champagne/90 transition-all duration-200 shadow-warm hover:shadow-warm-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-champagne-dark"
         >
           View All Donors
           <ArrowRight className="ml-2 -mr-1 h-5 w-5" aria-hidden="true" />

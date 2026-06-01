@@ -45,5 +45,5 @@ export function roomImagesFromApi(
     (url) => typeof url === "string" && url.trim().length > 0
   );
   if (valid.length > 0) return valid;
-  return [getRoomImageUrl(room)];
+  return [getRoomImageUrl({ category: room.category })];
 }

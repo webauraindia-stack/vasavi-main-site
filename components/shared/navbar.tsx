@@ -132,12 +132,13 @@ export function Navbar() {
             aria-label="Vasavi Hotels home"
           >
             <span className="flex items-center gap-2 sm:gap-2.5">
-              <span className="relative h-9 w-9 sm:h-10 sm:w-10 lg:h-10 lg:w-10 xl:h-11 xl:w-11 shrink-0 rounded-full border border-champagne-dark/35 p-1 bg-white shadow-warm overflow-hidden group-hover:scale-105 group-hover:rotate-6 transition-transform duration-300">
+              <span className="relative h-9 w-9 sm:h-10 sm:w-10 lg:h-10 lg:w-10 xl:h-11 xl:w-11 shrink-0 rounded-full overflow-hidden group-hover:scale-105 group-hover:rotate-6 transition-transform duration-300">
                 <Image
                   src="/images/vasavi-logo.png"
                   alt=""
                   fill
-                  className="object-contain p-0.5 rounded-full"
+                  sizes="44px"
+                  className="object-contain rounded-full"
                 />
               </span>
               <span className="flex min-w-0 flex-col leading-none">

@@ -12,6 +12,7 @@ export function IntroAnimation({ onComplete }: { onComplete: () => void }) {
   const [particles, setParticles] = useState<{ x: number; delay: number; duration: number }[]>([]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
     
     // Check if animation already played in this session
@@ -22,7 +23,6 @@ export function IntroAnimation({ onComplete }: { onComplete: () => void }) {
     }
 
     setShow(true);
-    sessionStorage.setItem("vasavi_intro_played", "true");
 
     // Generate random particles client-side to avoid SSR mismatch
     setParticles(
@@ -69,6 +69,7 @@ export function IntroAnimation({ onComplete }: { onComplete: () => void }) {
       setTimeout(() => setPhase(4), 4500),
       setTimeout(() => {
         setShow(false);
+        sessionStorage.setItem("vasavi_intro_played", "true");
         setTimeout(onComplete, 600); // Trigger parent reveal when fading out
       }, 4800),
     ];
@@ -86,7 +87,7 @@ export function IntroAnimation({ onComplete }: { onComplete: () => void }) {
           initial={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.8, ease: "easeInOut" }}
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-[#fffdf9] overflow-hidden"
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-white overflow-hidden"
         >
           {/* Subtle Traditional Indian Pattern Background */}
           <div 
@@ -149,12 +150,13 @@ export function IntroAnimation({ onComplete }: { onComplete: () => void }) {
                   )}
 
                   {/* Vasavi Clubs International Logo */}
-                  <div className="relative z-10 h-36 w-36 drop-shadow-[0_0_24px_rgba(201,168,76,0.55)]">
+                  <div className="relative z-10 h-36 w-36 drop-shadow-[0_0_24px_rgba(201,168,76,0.45)] rounded-full border-2 border-champagne-dark/35 bg-white p-1.5 shadow-warm overflow-hidden">
                     <Image
                       src="/images/vasavi-logo.png"
                       alt="Vasavi Clubs International"
                       fill
-                      className="object-contain"
+                      sizes="144px"
+                      className="object-contain p-1 rounded-full"
                       priority
                     />
                   </div>
@@ -173,12 +175,13 @@ export function IntroAnimation({ onComplete }: { onComplete: () => void }) {
                   transition={{ duration: 0.9, ease: "easeOut" }}
                   className="absolute text-center flex flex-col items-center justify-center"
                 >
-                  <div className="relative h-28 w-28 md:h-36 md:w-36 drop-shadow-[0_0_24px_rgba(201,168,76,0.5)] mb-3">
+                  <div className="relative h-28 w-28 md:h-36 md:w-36 drop-shadow-[0_0_24px_rgba(201,168,76,0.4)] mb-3 rounded-full border-2 border-champagne-dark/35 bg-white p-1.5 shadow-warm overflow-hidden">
                     <Image
                       src="/images/vasavi-logo.png"
                       alt="Vasavi Clubs International"
                       fill
-                      className="object-contain"
+                      sizes="144px"
+                      className="object-contain p-1 rounded-full"
                       priority
                     />
                   </div>
@@ -212,7 +215,7 @@ export function IntroAnimation({ onComplete }: { onComplete: () => void }) {
                   initial={{ opacity: 0, scale: 0, y: 40 }}
                   animate={
                     phase === 4
-                      ? { scale: 15, opacity: 0, filter: "blur(10px)" }
+                      ? { opacity: 0, scale: 1.15, filter: "blur(12px)" }
                       : { opacity: 1, scale: 1, y: 0 }
                   }
                   transition={{ duration: phase === 4 ? 0.8 : 0.6, ease: phase === 4 ? "easeIn" : "easeOut" }}

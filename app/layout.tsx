@@ -31,7 +31,7 @@ const inter = Inter({
 export const viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 5,
+  viewportFit: "cover",
 };
 
 const siteUrl =
@@ -65,7 +65,7 @@ export default function RootLayout({
       data-scroll-behavior="smooth"
       className={`${cinzel.variable} ${marcellus.variable} ${inter.variable}`}
     >
-      <body className="min-h-screen flex flex-col">
+      <body className="min-h-screen min-w-0 flex flex-col">
         <div id="google_translate_element" style={{ display: "none" }}></div>
         <Script
           src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"
@@ -117,14 +117,16 @@ export default function RootLayout({
                 }
               };
               
-              // Run periodically to catch it if it loads late or reappears
-              setInterval(hideGoogleTranslate, 50);
+              hideGoogleTranslate();
+              const observer = new MutationObserver(hideGoogleTranslate);
+              observer.observe(document.body, { childList: true, subtree: true });
+              window.addEventListener("resize", hideGoogleTranslate, { passive: true });
             }
           `}
         </Script>
         <Providers>
           <Navbar />
-          <main className="flex-1 pb-20 lg:pb-0">{children}</main>
+          <main className="flex-1 min-w-0 pb-20 lg:pb-0">{children}</main>
           <Footer />
           <BookingModal />
           <BookingToast />

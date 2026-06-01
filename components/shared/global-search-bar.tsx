@@ -82,6 +82,7 @@ export function GlobalSearchBar({ className, variant = "hero" }: GlobalSearchBar
   // Keep store in sync, but don't overwrite an in-progress range selection
   useEffect(() => {
     if (calendarOpen) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setRange({
       from: checkIn ?? undefined,
       to: checkOut ?? undefined,
@@ -96,10 +97,15 @@ export function GlobalSearchBar({ className, variant = "hero" }: GlobalSearchBar
     const from = parseSearchDate(searchParams.get("checkIn"));
     const to = parseSearchDate(searchParams.get("checkOut"));
 
-    setHotel(hotel);
+    if (hotel) {
+      setHotel(hotel);
+    } else if (isSearchPage) {
+      setHotel(null);
+    }
     if (from) {
       const { checkIn: inDate, checkOut: outDate } = normalizeStayDates(from, to);
       setDates(inDate, outDate);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setRange({ from: inDate, to: outDate });
     }
 
@@ -109,7 +115,7 @@ export function GlobalSearchBar({ className, variant = "hero" }: GlobalSearchBar
       rooms: searchParams.get("rooms"),
     });
     if (Object.keys(guestUpdates).length > 0) setGuests(guestUpdates);
-  }, [searchParams, calendarOpen, setHotel, setDates, setGuests]);
+  }, [searchParams, calendarOpen, setHotel, setDates, setGuests, isSearchPage]);
 
   const allGuestHouses = t("search.allGuestHouses");
 

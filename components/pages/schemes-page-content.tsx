@@ -45,14 +45,24 @@ export function SchemesPageContent() {
   const { t } = useAppLanguage();
 
   return (
-    <div className="pt-20 pb-20 bg-white">
-      {/* Header banner */}
-      <div className="bg-surface py-14 md:py-20 border-b border-beige">
-        <div className="page-container text-center">
-          <h1 className="font-display text-4xl md:text-5xl lg:text-6xl text-charcoal mb-6">
+    <div className="pt-16 pb-20 bg-white">
+      {/* Header banner with big photo background */}
+      <div className="relative h-[320px] md:h-[420px] flex items-center justify-center overflow-hidden border-b border-beige">
+        {/* Background Image */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center transition-transform duration-[10000ms] ease-out scale-105 hover:scale-100"
+          style={{ backgroundImage: "url('/images/temple-corridor.png')" }}
+        />
+        {/* Dark overlay for readability */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#1f0a0a]/75 via-[#4a0e0e]/55 to-[#1f0a0a]/85" />
+        
+        {/* Overlay Content */}
+        <div className="page-container relative z-10 text-center text-white px-4 sm:px-6">
+          <h1 className="font-display text-4xl md:text-5xl lg:text-6xl text-white drop-shadow-sm mb-4 leading-tight">
             {t("schemesPage.title")}
           </h1>
-          <p className="text-base md:text-lg lg:text-xl text-muted leading-relaxed max-w-3xl mx-auto">
+          <div className="w-24 h-[3px] bg-champagne-dark mx-auto mb-6 rounded-full shadow-sm"></div>
+          <p className="text-base md:text-lg lg:text-xl text-white/90 leading-relaxed max-w-3xl mx-auto drop-shadow-sm font-body font-medium">
             {t("schemesPage.intro")}
           </p>
         </div>
@@ -73,8 +83,30 @@ export function SchemesPageContent() {
         </div>
       </div>
 
-      {/* Scheme articles */}
-      <div className="page-container py-14 space-y-14">
+      {/* Big photo in one row */}
+      <div className="page-container py-10 max-w-4xl mx-auto">
+        <div className="relative h-[280px] sm:h-[380px] md:h-[480px] w-full rounded-[var(--radius-devotional)] overflow-hidden shadow-warm-lg border border-beige/60 group">
+          <div 
+            className="absolute inset-0 bg-cover bg-center transition-transform duration-[10000ms] ease-out scale-105 group-hover:scale-100"
+            style={{ backgroundImage: "url('/images/temple-guest-house-exterior.png')" }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#1f0a0a]/90 via-[#4a0e0e]/20 to-transparent" />
+          <div className="absolute bottom-0 left-0 right-0 p-6 md:p-10 text-white flex flex-col justify-end">
+            <p className="text-xs sm:text-sm font-bold uppercase tracking-[0.2em] text-champagne-dark mb-2">
+              Vasavi Spiritual Stays
+            </p>
+            <h2 className="font-display text-2xl sm:text-3xl md:text-4xl text-white drop-shadow-md leading-tight mb-3">
+              Supporting Noble Causes Through Sacred Hospitality
+            </h2>
+            <p className="text-xs sm:text-sm md:text-base text-white/80 max-w-2xl font-body leading-relaxed hidden sm:block">
+              Every room booking across our eleven guest house properties directly strengthens the welfare and educational schemes of Vasavi Clubs International.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content Layout */}
+      <div className="page-container py-10 max-w-4xl mx-auto space-y-16">
         {COMMUNITY_SCHEMES.map((scheme) => (
           <SchemeArticle key={scheme.id} scheme={scheme} />
         ))}
