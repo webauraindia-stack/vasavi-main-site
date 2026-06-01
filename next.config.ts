@@ -6,6 +6,8 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       { protocol: "https", hostname: "images.unsplash.com" },
       { protocol: "https", hostname: "plus.unsplash.com" },
+      { protocol: "http", hostname: "localhost", pathname: "/media/**" },
+      { protocol: "http", hostname: "127.0.0.1", pathname: "/media/**" },
     ],
     minimumCacheTTL: 60 * 60 * 24 * 7,
   },

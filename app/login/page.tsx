@@ -248,10 +248,12 @@ function LoginPageContent() {
             <Button
               type="submit"
               className="w-full gap-2"
-              disabled={loading || !isValidIndianMobile(phone)}
+              loading={loading}
+              loadingText="Sending…"
+              disabled={!isValidIndianMobile(phone)}
             >
               <MessageCircle className="h-4 w-4" />
-              {loading ? "Sending..." : "Send OTP"}
+              Send OTP
             </Button>
           </form>
         )}
@@ -282,8 +284,14 @@ function LoginPageContent() {
             {info && <p className="text-sm text-emerald-700">{info}</p>}
             {error && <p className="text-sm text-red-600">{error}</p>}
 
-            <Button type="submit" className="w-full" disabled={loading || otp.length !== 6}>
-              {loading ? "Verifying..." : "Verify OTP"}
+            <Button
+              type="submit"
+              className="w-full"
+              loading={loading}
+              loadingText="Verifying…"
+              disabled={otp.length !== 6}
+            >
+              Verify OTP
             </Button>
 
             <div className="flex items-center justify-between gap-2">
@@ -338,8 +346,14 @@ function LoginPageContent() {
 
             {error && <p className="text-sm text-red-600">{error}</p>}
 
-            <Button type="submit" className="w-full" disabled={loading || name.trim().length < 2}>
-              {loading ? "Creating account..." : "Create account & sign in"}
+            <Button
+              type="submit"
+              className="w-full"
+              loading={loading}
+              loadingText="Creating account…"
+              disabled={name.trim().length < 2}
+            >
+              Create account & sign in
             </Button>
           </form>
         )}

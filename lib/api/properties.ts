@@ -2,6 +2,14 @@ import { apiFetch } from "@/lib/api/client";
 import { fetchAllResults } from "@/lib/api/paginate";
 import type { BackendRoomAvailability } from "@/lib/api/mappers";
 
+export type BackendRoomImage = {
+  id: string;
+  url: string | null;
+  caption?: string;
+  is_primary: boolean;
+  sort_order: number;
+};
+
 export type BackendRoomCatalog = {
   id: string;
   branch: { id: string; name: string; city: string };
@@ -12,6 +20,7 @@ export type BackendRoomCatalog = {
   base_price_display?: string;
   is_donor_exclusive: boolean;
   is_active: boolean;
+  images?: BackendRoomImage[];
 };
 
 /** All active rooms at a branch (public catalog — no date filter). */

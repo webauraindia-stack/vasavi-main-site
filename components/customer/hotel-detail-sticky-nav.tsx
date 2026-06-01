@@ -9,8 +9,10 @@ interface HotelDetailStickyNavProps {
 
 export function HotelDetailStickyNav({ hotelName }: HotelDetailStickyNavProps) {
   const { t } = useAppLanguage();
-  const scrollToRooms = () => {
-    document.getElementById("rooms")?.scrollIntoView({ behavior: "smooth" });
+  const scrollToBook = () => {
+    const halls = document.getElementById("function-halls");
+    const rooms = document.getElementById("rooms");
+    (halls ?? rooms)?.scrollIntoView({ behavior: "smooth" });
   };
 
   return (
@@ -18,7 +20,7 @@ export function HotelDetailStickyNav({ hotelName }: HotelDetailStickyNavProps) {
       {/* Mobile sticky bar */}
       <div className="fixed top-14 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-b border-charcoal/10 px-4 py-2 flex items-center justify-between gap-3 md:hidden">
         <p className="font-display text-sm text-charcoal truncate flex-1">{hotelName}</p>
-        <Button size="sm" onClick={scrollToRooms} className="shrink-0">
+        <Button size="sm" onClick={scrollToBook} className="shrink-0">
           {t("common.bookNow")}
         </Button>
       </div>
@@ -30,6 +32,7 @@ export function HotelDetailStickyNav({ hotelName }: HotelDetailStickyNavProps) {
             { id: "overview", label: t("hotel.overview") },
             { id: "amenities", label: t("hotel.amenities") },
             { id: "rooms", label: t("hotel.rooms") },
+            { id: "function-halls", label: "Function halls" },
             { id: "reviews", label: t("hotel.reviews") },
           ].map((item) => (
             <a
@@ -40,7 +43,7 @@ export function HotelDetailStickyNav({ hotelName }: HotelDetailStickyNavProps) {
               {item.label}
             </a>
           ))}
-          <Button size="sm" className="ml-auto" onClick={scrollToRooms}>
+          <Button size="sm" className="ml-auto" onClick={scrollToBook}>
             {t("common.bookNow")}
           </Button>
         </div>

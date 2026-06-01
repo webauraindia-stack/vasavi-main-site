@@ -269,9 +269,10 @@ function ContactPageContentInner() {
                 <Button
                   type="submit"
                   className="w-full h-11 text-base font-bold"
-                  disabled={submitting}
+                  loading={submitting}
+                  loadingText={t("contact.submitting", { defaultValue: "Sending…" })}
                 >
-                  {submitting ? t("contact.submitting", { defaultValue: "Sending…" }) : t("contact.submit")}
+                  {t("contact.submit")}
                 </Button>
               </form>
             )}

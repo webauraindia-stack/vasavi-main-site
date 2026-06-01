@@ -244,15 +244,15 @@ export function StayExtensionDialog({
 
             <Button
               className="w-full"
+              loading={submitting || checking}
+              loadingText={checking ? "Checking availability…" : "Submitting…"}
               disabled={
                 !requestedCheckOut ||
-                checking ||
-                submitting ||
                 (!availability?.available && !selectedAltId)
               }
               onClick={() => void handleContinue()}
             >
-              {submitting ? "Submitting…" : "Continue"}
+              Continue
             </Button>
           </div>
         )}
@@ -264,7 +264,9 @@ export function StayExtensionDialog({
             </p>
             <Button
               className="w-full"
-              disabled={!selectedAltId || submitting}
+              loading={submitting}
+              loadingText="Confirming…"
+              disabled={!selectedAltId}
               onClick={() => void handleContinue()}
             >
               Confirm room transfer
@@ -296,8 +298,13 @@ export function StayExtensionDialog({
               ))}
             </div>
             {error && <p className="text-sm text-rose-700">{error}</p>}
-            <Button className="w-full" disabled={submitting} onClick={() => void handlePayment()}>
-              {submitting ? "Processing…" : `Pay & extend stay`}
+            <Button
+              className="w-full"
+              loading={submitting}
+              loadingText="Processing…"
+              onClick={() => void handlePayment()}
+            >
+              Pay & extend stay
             </Button>
           </div>
         )}

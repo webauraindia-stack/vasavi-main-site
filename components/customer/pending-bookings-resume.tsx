@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { Clock, ChevronRight } from "lucide-react";
@@ -19,6 +19,7 @@ function isActivePending(expiresAt?: string | null): boolean {
 export function PendingBookingsResume() {
   const { isAuthenticated, accessToken, withAccessToken } = useAuthenticatedSession();
   const resumePendingBooking = useBookingStore((s) => s.resumePendingBooking);
+  const [resumingId, setResumingId] = useState<string | null>(null);
 
   const { data: pending, isLoading } = useQuery({
     queryKey: ["pending-bookings", accessToken],
@@ -36,6 +37,8 @@ export function PendingBookingsResume() {
 
   const handleResume = useCallback(
     async (bookingId: string) => {
+      setResumingId(bookingId);
+      try {
       await withAccessToken(async (token) => {
         const booking = await getBooking(token, bookingId);
         const room = mapRoomFromBooking(booking);
@@ -44,6 +47,9 @@ export function PendingBookingsResume() {
         const couponIds =
           booking.coupons_applied?.map((c) => c.id).filter(Boolean) ?? [];
 
+        const isHall =
+          booking.booking_kind === "function_hall" ||
+          Boolean(booking.function_hall?.id);
         resumePendingBooking(
           booking.id,
           booking.booking_reference,
@@ -51,9 +57,13 @@ export function PendingBookingsResume() {
           new Date(booking.check_in_date),
           new Date(booking.check_out_date),
           2,
-          couponIds
+          couponIds,
+          isHall ? "function_hall" : "room"
         );
       });
+      } finally {
+        setResumingId(null);
+      }
     },
     [resumePendingBooking, withAccessToken]
   );
@@ -77,9 +87,13 @@ export function PendingBookingsResume() {
         <ul className="space-y-2">
           {pending.map((b) => {
             const hotel = b.branch?.name ?? "Vasavi Hotel";
-            const roomLabel = b.room?.room_type?.name
-              ? `${b.room.room_type.name} · ${b.room.room_number}`
-              : b.room?.room_number ?? "Room";
+            const isHall =
+              b.booking_kind === "function_hall" || Boolean(b.function_hall?.id);
+            const roomLabel = isHall
+              ? `Hall · ${b.function_hall?.name ?? "Function hall"}`
+              : b.room?.room_type?.name
+                ? `${b.room.room_type.name} · ${b.room.room_number}`
+                : b.room?.room_number ?? "Room";
             const total = Math.round((b.final_amount_paise ?? 0) / 100);
             return (
               <li
@@ -103,10 +117,12 @@ export function PendingBookingsResume() {
                   type="button"
                   size="sm"
                   className="shrink-0 gap-1"
+                  loading={resumingId === b.id}
+                  loadingText="Opening…"
                   onClick={() => void handleResume(b.id)}
                 >
                   Continue
-                  <ChevronRight className="h-4 w-4" />
+                  {!resumingId && <ChevronRight className="h-4 w-4" />}
                 </Button>
               </li>
             );

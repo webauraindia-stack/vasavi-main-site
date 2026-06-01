@@ -6,10 +6,13 @@ import type { DonorTier } from "@/types";
 /** Stay → Blessings (optional) → Seva → Pay → Done */
 export type BookingStep = 1 | 2 | 3 | 4 | 5;
 
+export type BookingTarget = "room" | "function_hall";
+
 interface BookingState {
-  isOpen: boolean;
-  step: BookingStep;
-  selectedRoom: Room | null;
+    isOpen: boolean;
+    step: BookingStep;
+    bookingTarget: BookingTarget;
+    selectedRoom: Room | null;
   checkIn: Date | null;
   checkOut: Date | null;
   guestCount: GuestCount;
@@ -45,6 +48,7 @@ interface BookingState {
     checkOut?: Date,
     guests?: Partial<GuestCount>
   ) => void;
+  openHallBooking: (hall: Room, checkIn?: Date, checkOut?: Date) => void;
   closeBooking: () => void;
   setStep: (step: BookingStep) => void;
   nextStep: () => void;
@@ -72,7 +76,8 @@ interface BookingState {
     checkIn: Date,
     checkOut: Date,
     step?: BookingStep,
-    couponIds?: string[]
+    couponIds?: string[],
+    target?: BookingTarget
   ) => void;
   dismissToast: () => void;
   reset: () => void;
@@ -85,6 +90,7 @@ export const useBookingStore = create<BookingState>()(
     (set, get) => ({
       isOpen: false,
       step: 1,
+      bookingTarget: "room",
       selectedRoom: null,
       checkIn: null,
       checkOut: null,
@@ -116,11 +122,31 @@ export const useBookingStore = create<BookingState>()(
         set({
           isOpen: true,
           step: 1,
+          bookingTarget: "room",
           selectedRoom: room,
           checkIn: checkIn ?? null,
           checkOut: checkOut ?? null,
           guestCount: nextGuests,
           roomCount: guests?.rooms ?? get().roomCount,
+          bookingReference: null,
+          pendingBookingId: null,
+          pendingBookingReference: null,
+          selectedCouponIds: [],
+          sevaDonation: 0,
+          isDraft: true,
+        });
+      },
+
+      openHallBooking: (hall, checkIn, checkOut) => {
+        set({
+          isOpen: true,
+          step: 1,
+          bookingTarget: "function_hall",
+          selectedRoom: hall,
+          checkIn: checkIn ?? null,
+          checkOut: checkOut ?? null,
+          guestCount: { adults: Math.min(hall.maxOccupancy, 50), children: 0, rooms: 1 },
+          roomCount: 1,
           bookingReference: null,
           pendingBookingId: null,
           pendingBookingReference: null,
@@ -176,10 +202,20 @@ export const useBookingStore = create<BookingState>()(
       clearPendingBooking: () =>
         set({ pendingBookingId: null, pendingBookingReference: null }),
 
-      resumePendingBooking: (bookingId, reference, room, checkIn, checkOut, step = 2, couponIds = []) =>
+      resumePendingBooking: (
+        bookingId,
+        reference,
+        room,
+        checkIn,
+        checkOut,
+        step = 2,
+        couponIds = [],
+        target = "room"
+      ) =>
         set({
           isOpen: true,
           step,
+          bookingTarget: target,
           selectedRoom: room,
           checkIn,
           checkOut,
@@ -217,6 +253,7 @@ export const useBookingStore = create<BookingState>()(
         set({
           isOpen: false,
           step: 1,
+          bookingTarget: "room",
           selectedRoom: null,
           checkIn: null,
           checkOut: null,
@@ -243,6 +280,7 @@ export const useBookingStore = create<BookingState>()(
       name: "vasavi-booking-draft",
       partialize: (state) => ({
         step: state.step === 5 ? 1 : state.step,
+        bookingTarget: state.bookingTarget,
         selectedRoom: state.selectedRoom,
         checkIn: state.checkIn,
         checkOut: state.checkOut,

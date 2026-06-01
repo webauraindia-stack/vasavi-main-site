@@ -25,6 +25,7 @@ import {
 import { DayPicker, type DateRange } from "react-day-picker";
 import { normalizeRangeSelection, todayStart } from "@/lib/date-range-selection";
 import { Button } from "@/components/ui/button";
+import { LoadingOverlay } from "@/components/ui/spinner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -57,6 +58,7 @@ export function BookingModal() {
   const {
     isOpen,
     step,
+    bookingTarget,
     selectedRoom,
     checkIn,
     checkOut,
@@ -235,7 +237,11 @@ export function BookingModal() {
       return;
     }
     if (!isUuid(selectedRoom.id)) {
-      setContinueError("Invalid room. Please search again and select an available room.");
+      setContinueError(
+        bookingTarget === "function_hall"
+          ? "Invalid hall. Please search again and select an available function hall."
+          : "Invalid room. Please search again and select an available room."
+      );
       return;
     }
 
@@ -249,11 +255,14 @@ export function BookingModal() {
 
         if (pendingBookingId) {
           const existing = await getBooking(accessToken, pendingBookingId);
-          const sameRoom = existing.room?.id === selectedRoom.id;
+          const sameResource =
+            bookingTarget === "function_hall"
+              ? existing.function_hall?.id === selectedRoom.id
+              : existing.room?.id === selectedRoom.id;
           const sameDates =
             existing.check_in_date === checkInStr &&
             existing.check_out_date === checkOutStr;
-          if (existing.status === "pending" && sameRoom && sameDates) {
+          if (existing.status === "pending" && sameResource && sameDates) {
             nextStep();
             return;
           }
@@ -266,10 +275,15 @@ export function BookingModal() {
         }
 
         const booking = await createBooking(accessToken, {
-          room_id: selectedRoom.id,
+          ...(bookingTarget === "function_hall"
+            ? { function_hall_id: selectedRoom.id }
+            : { room_id: selectedRoom.id }),
           check_in_date: checkInStr,
           check_out_date: checkOutStr,
-          guest_count: guestCount.adults + guestCount.children,
+          guest_count:
+            bookingTarget === "function_hall"
+              ? Math.max(1, Math.min(selectedRoom.maxOccupancy, guestCount.adults + guestCount.children))
+              : guestCount.adults + guestCount.children,
         });
 
         setPendingBooking(booking.id, booking.booking_reference);
@@ -393,7 +407,15 @@ export function BookingModal() {
               {step < 5 && <BookingStepper step={step} />}
             </div>
 
-            <div className="flex-1 overflow-y-auto px-5 py-4 scrollbar-thin">
+            <div className="relative flex-1 overflow-y-auto px-5 py-4 scrollbar-thin">
+              <LoadingOverlay
+                show={continueLoading || payLoading}
+                label={
+                  payLoading
+                    ? "Confirming your booking…"
+                    : "Saving your reservation…"
+                }
+              />
               {/* STEP 1 — Stay review */}
               {step === 1 && (
                 <div className="space-y-4">
@@ -497,7 +519,9 @@ export function BookingModal() {
                     nextDisabled={
                       !checkIn || !checkOut || continueLoading || !hasValidSession
                     }
-                    nextLabel={continueLoading ? "Saving…" : "Continue"}
+                    nextLoading={continueLoading}
+                    nextLabel="Continue"
+                    nextLoadingText="Saving…"
                   />
                 </div>
               )}
@@ -607,12 +631,27 @@ export function BookingModal() {
                       <NavButtons
                         onBack={prevStep}
                         onNext={pricing.isFullyCovered && pricing.sevaDonation === 0 ? undefined : nextStep}
-                        onNextClick={pricing.isFullyCovered && pricing.sevaDonation === 0 ? handlePayment : undefined}
+                        onNextClick={
+                          pricing.isFullyCovered && pricing.sevaDonation === 0
+                            ? () => void handlePayment()
+                            : undefined
+                        }
+                        nextLoading={
+                          pricing.isFullyCovered && pricing.sevaDonation === 0
+                            ? payLoading
+                            : false
+                        }
+                        nextDisabled={
+                          pricing.isFullyCovered && pricing.sevaDonation === 0
+                            ? payLoading || !hasValidSession
+                            : false
+                        }
                         nextLabel={
                           pricing.isFullyCovered && pricing.sevaDonation === 0
                             ? "Confirm blessed stay"
                             : "Continue"
                         }
+                        nextLoadingText="Confirming…"
                       />
                     </>
                   ) : (
@@ -732,13 +771,13 @@ export function BookingModal() {
                     onBack={prevStep}
                     onNext={() => void handlePayment()}
                     nextDisabled={payLoading || !hasValidSession}
+                    nextLoading={payLoading}
                     nextLabel={
-                      payLoading
-                        ? "Confirming…"
-                        : pricing.total > 0
-                          ? `Confirm · ${formatCurrency(pricing.total)} cash`
-                          : "Confirm booking"
+                      pricing.total > 0
+                        ? `Confirm · ${formatCurrency(pricing.total)} cash`
+                        : "Confirm booking"
                     }
+                    nextLoadingText="Confirming…"
                     nextIcon={<Banknote className="h-4 w-4" />}
                   />
                 </div>
@@ -901,7 +940,9 @@ function NavButtons({
   onNext,
   onNextClick,
   nextLabel = "Continue",
+  nextLoadingText = "Please wait…",
   nextDisabled,
+  nextLoading,
   submit,
   nextIcon,
 }: {
@@ -910,13 +951,21 @@ function NavButtons({
   onNext?: () => void;
   onNextClick?: () => void;
   nextLabel?: string;
+  nextLoadingText?: string;
   nextDisabled?: boolean;
+  nextLoading?: boolean;
   submit?: boolean;
   nextIcon?: React.ReactNode;
 }) {
   return (
     <div className="flex justify-between gap-2 pt-4 border-t border-beige/40">
-      <Button type="button" variant="outline" onClick={onBack} className="h-11 rounded-xl">
+      <Button
+        type="button"
+        variant="outline"
+        onClick={onBack}
+        disabled={nextLoading}
+        className="h-11 rounded-xl"
+      >
         <ChevronLeft className="h-4 w-4 mr-1" />
         {backLabel}
       </Button>
@@ -924,10 +973,16 @@ function NavButtons({
         type={submit ? "submit" : "button"}
         onClick={onNextClick ?? onNext}
         disabled={nextDisabled}
+        loading={nextLoading}
+        loadingText={nextLoadingText}
         className="h-11 rounded-xl bg-champagne hover:bg-champagne/90 text-white font-bold"
       >
-        {nextLabel}
-        {nextIcon ?? <ChevronRight className="h-4 w-4 ml-1" />}
+        {!nextLoading && (
+          <>
+            {nextLabel}
+            {nextIcon ?? <ChevronRight className="h-4 w-4 ml-1" />}
+          </>
+        )}
       </Button>
     </div>
   );

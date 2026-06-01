@@ -1,4 +1,9 @@
+import { propertyImageUrls } from "@/lib/images/property-images";
 import { roomImagesFromApi } from "@/lib/images/room-image";
+import type {
+  BackendRoomCatalog,
+  BackendRoomImage,
+} from "@/lib/api/properties";
 import { formatRoomListingLabel, formatRoomTypeLabel } from "@/lib/room-type-label";
 import type {
   BookingStatus,
@@ -31,6 +36,7 @@ export type BackendRoomAvailability = {
   is_donor_exclusive: boolean;
   is_available: boolean;
   unavailable_reason?: string | null;
+  images?: BackendRoomImage[];
 };
 
 export type BackendCoupon = {
@@ -77,6 +83,7 @@ export type BackendBooking = {
   expires_at?: string | null;
   created_at?: string;
   branch?: BackendBranch;
+  booking_kind?: "room" | "function_hall";
   room?: {
     id: string;
     room_number: string;
@@ -84,6 +91,14 @@ export type BackendBooking = {
     capacity?: number;
     base_price_per_night?: number;
     is_donor_exclusive?: boolean;
+    images?: BackendRoomImage[];
+  };
+  function_hall?: {
+    id: string;
+    name: string;
+    capacity?: number;
+    base_price_per_day?: number;
+    images?: BackendRoomImage[];
   };
   coupons_applied?: BackendCoupon[];
   user?: {
@@ -110,9 +125,41 @@ function mapRoomCategory(name: string): RoomCategory {
 
 /** Build a Room from booking detail (resume pending checkout). */
 export function mapRoomFromBooking(b: BackendBooking): Room | null {
-  const room = b.room;
   const branch = b.branch;
-  if (!room?.id || !branch) return null;
+  if (!branch) return null;
+
+  const isHall =
+    b.booking_kind === "function_hall" || Boolean(b.function_hall?.id);
+  if (isHall && b.function_hall?.id) {
+    const hall = b.function_hall;
+    const priceRupees = Math.round((hall.base_price_per_day ?? b.final_amount_paise ?? 0) / 100);
+    const hallMapped = {
+      id: hall.id,
+      hotelId: branch.id,
+      hotelSlug: slugify(branch.name),
+      hotelName: branch.name,
+      name: hall.name,
+      category: "Suite" as const,
+      description: `Function hall at ${branch.name}, ${branch.city}`,
+      pricePerNight: priceRupees || 1,
+      bedType: "Event space",
+      sizeSqFt: (hall.capacity ?? 100) * 10,
+      maxOccupancy: hall.capacity ?? 100,
+      floor: 0,
+      amenities: [] as string[],
+      images: [] as string[],
+      isDonorExclusive: false,
+      isFullyBooked: false,
+      availableDates: [] as string[],
+    };
+    return {
+      ...hallMapped,
+      images: roomImagesFromApi(hallMapped, hall.images),
+    };
+  }
+
+  const room = b.room;
+  if (!room?.id) return null;
 
   const slug = slugify(branch.name);
   const priceRupees = Math.round((room.base_price_per_night ?? b.final_amount_paise ?? 0) / 100);
@@ -139,21 +186,9 @@ export function mapRoomFromBooking(b: BackendBooking): Room | null {
   };
   return {
     ...mapped,
-    images: roomImagesFromApi(mapped),
+    images: roomImagesFromApi(mapped, room.images),
   };
 }
-
-export type BackendRoomCatalog = {
-  id: string;
-  branch: BackendBranch;
-  room_number: string;
-  room_type: BackendRoomType;
-  capacity: number;
-  base_price_per_night: number;
-  base_price_display?: string;
-  is_donor_exclusive: boolean;
-  is_active: boolean;
-};
 
 export function mapRoomFromCatalog(room: BackendRoomCatalog): Room {
   const branch = room.branch;
@@ -181,7 +216,7 @@ export function mapRoomFromCatalog(room: BackendRoomCatalog): Room {
   };
   return {
     ...mapped,
-    images: roomImagesFromApi(mapped),
+    images: roomImagesFromApi(mapped, room.images),
   };
 }
 
@@ -211,7 +246,7 @@ export function mapRoomFromBackend(room: BackendRoomAvailability): Room {
   };
   return {
     ...mapped,
-    images: roomImagesFromApi(mapped),
+    images: roomImagesFromApi(mapped, room.images),
   };
 }
 
@@ -301,13 +336,18 @@ export type CustomerBookingListItem = {
 export function mapBookingListItem(b: BackendBooking): CustomerBookingListItem {
   const totalPaid = Math.round((b.final_amount_paise ?? 0) / 100);
   const discount = Math.round((b.discount_amount_paise ?? 0) / 100);
+  const isHall =
+    b.booking_kind === "function_hall" || Boolean(b.function_hall?.id);
+  const roomType = isHall
+    ? `Hall · ${b.function_hall?.name ?? "Function hall"}`
+    : b.room?.room_type?.name
+      ? formatRoomListingLabel(b.room.room_type.name, b.room.room_number)
+      : b.room?.room_number ?? "Room";
   return {
     id: b.id,
     reference: b.booking_reference,
     hotelName: b.branch?.name ?? "Vasavi Hotel",
-    roomType: b.room?.room_type?.name
-      ? formatRoomListingLabel(b.room.room_type.name, b.room.room_number)
-      : b.room?.room_number ?? "Room",
+    roomType,
     checkIn: b.check_in_date,
     checkOut: b.check_out_date,
     status: mapBookingStatus(b.status),
@@ -347,13 +387,17 @@ export type CustomerBookingDetail = DonorBooking & {
 
 export function mapBookingDetail(b: BackendBooking): CustomerBookingDetail {
   const list = mapBookingListItem(b);
+  const isHall =
+    b.booking_kind === "function_hall" || Boolean(b.function_hall?.id);
   return {
     id: list.id,
     reference: list.reference,
     hotelId: b.branch?.id,
     hotelName: list.hotelName,
-    roomType: b.room?.room_type?.name ?? list.roomType,
-    roomNumber: b.room?.room_number,
+    roomType: isHall
+      ? list.roomType
+      : b.room?.room_type?.name ?? list.roomType,
+    roomNumber: isHall ? undefined : b.room?.room_number,
     checkIn: list.checkIn,
     checkOut: list.checkOut,
     nights: b.nights,

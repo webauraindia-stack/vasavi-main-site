@@ -2,7 +2,8 @@ import { apiFetch } from "@/lib/api/client";
 import type { BackendBooking } from "@/lib/api/mappers";
 
 export type CreateBookingPayload = {
-  room_id: string;
+  room_id?: string;
+  function_hall_id?: string;
   check_in_date: string;
   check_out_date: string;
   guest_count: number;

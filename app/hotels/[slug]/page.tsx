@@ -15,6 +15,8 @@ import {
   ReviewsList,
   AmenitiesGrid,
 } from "@/components/customer/hotel-detail-client";
+import { FunctionHallList } from "@/components/customer/function-hall-list";
+import { fetchBranchFunctionHallCatalog } from "@/lib/function-halls/catalog";
 
 export const dynamic = "force-dynamic";
 
@@ -53,6 +55,7 @@ export default async function HotelDetailPage({
 
   const dates = defaultSearchDates();
   let rooms: Awaited<ReturnType<typeof fetchBranchRoomCatalog>> = [];
+  let halls: Awaited<ReturnType<typeof fetchBranchFunctionHallCatalog>> = [];
   try {
     rooms = await fetchBranchRoomCatalog(hotel.id, {
       check_in: dates.check_in,
@@ -61,6 +64,15 @@ export default async function HotelDetailPage({
     });
   } catch {
     rooms = [];
+  }
+  try {
+    halls = await fetchBranchFunctionHallCatalog(hotel, {
+      check_in: dates.check_in,
+      check_out: dates.check_out,
+      guests: 50,
+    });
+  } catch {
+    halls = [];
   }
 
   return (
@@ -124,6 +136,17 @@ export default async function HotelDetailPage({
             ) : (
               <RoomList rooms={rooms} hotel={hotel} />
             )}
+          </section>
+
+          <section id="function-halls" className="mt-12 scroll-mt-24">
+            <h2 className="font-display text-2xl font-bold text-charcoal mb-2">
+              Function halls
+            </h2>
+            <p className="text-sm text-muted mb-4 max-w-2xl">
+              Book our community function hall for events and gatherings. Pricing is per day for
+              your selected date range (same as room stays).
+            </p>
+            <FunctionHallList halls={halls} hotel={hotel} />
           </section>
 
           <section id="reviews" className="mt-12 scroll-mt-24">

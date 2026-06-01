@@ -15,7 +15,7 @@ import { canAccessDonorRoom } from "@/lib/donor-engine";
 import { useSession } from "next-auth/react";
 import type { Hotel, Room, Review, DateAvailability } from "@/types";
 import type { DonorTier } from "@/types";
-import { getRoomImageUrl } from "@/lib/images/room-image";
+import { getRoomImageUrl, roomImagesFromApi } from "@/lib/images/room-image";
 import { cn } from "@/lib/utils";
 import "react-day-picker/style.css";
 
@@ -144,6 +144,7 @@ function RoomSection({
       </h3>
       <div className="space-y-4">
         {rooms.map((room) => {
+          const gallery = roomImagesFromApi(room);
           const canBook =
             !room.isFullyBooked &&
             (!room.isDonorExclusive ||
@@ -155,12 +156,17 @@ function RoomSection({
             >
               <div className="relative h-40 md:h-32 md:w-48 shrink-0 rounded-lg overflow-hidden">
                 <Image
-                  src={getRoomImageUrl(room)}
+                  src={gallery[0]}
                   alt={room.name}
                   fill
                   className="object-cover"
                   sizes="200px"
                 />
+                {gallery.length > 1 && (
+                  <span className="absolute bottom-2 right-2 rounded-full bg-charcoal/70 px-2 py-0.5 text-[10px] font-medium text-white">
+                    +{gallery.length - 1} photos
+                  </span>
+                )}
               </div>
               <div className="flex-1">
                 <div className="flex items-start justify-between gap-2">
