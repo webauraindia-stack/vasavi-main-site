@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { DonorsPageContent } from "@/components/pages/donors-page-content";
+import { DonorsMarqueeSection } from "@/components/customer/donors-marquee";
 
 export const metadata: Metadata = {
   title: "Donor Program — KCGF & Community Schemes",
@@ -8,5 +9,10 @@ export const metadata: Metadata = {
 };
 
 export default function DonorsPage() {
-  return <DonorsPageContent />;
+  return (
+    <>
+      <DonorsPageContent />
+      <DonorsMarqueeSection />
+    </>
+  );
 }

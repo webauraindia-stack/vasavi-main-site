@@ -266,7 +266,9 @@ export function Navbar() {
               <Search className="h-6 w-6 stroke-[1.75] xl:h-7 xl:w-7" />
             </NavIconButton>
 
-            <NotificationsBellButton className="h-10 w-10 sm:h-11 sm:w-11 xl:h-12 xl:w-12" />
+            {session && (
+              <NotificationsBellButton className="h-10 w-10 sm:h-11 sm:w-11 xl:h-12 xl:w-12" />
+            )}
 
             <div className="relative" ref={userMenuRef}>
               <NavIconButton
@@ -366,14 +368,16 @@ export function Navbar() {
               </div>
 
               <div className="flex-1 overflow-y-auto px-4 py-2">
-                <Link
-                  href="/notifications"
-                  onClick={closeMobile}
-                  className="flex min-h-12 items-center gap-2 border-b border-charcoal/8 text-base font-bold text-charcoal hover:text-champagne transition-colors"
-                >
-                  <Bell className="h-5 w-5" aria-hidden />
-                  {t("nav.notifications")}
-                </Link>
+                {session && (
+                  <Link
+                    href="/notifications"
+                    onClick={closeMobile}
+                    className="flex min-h-12 items-center gap-2 border-b border-charcoal/8 text-base font-bold text-charcoal hover:text-champagne transition-colors"
+                  >
+                    <Bell className="h-5 w-5" aria-hidden />
+                    {t("nav.notifications")}
+                  </Link>
+                )}
 
                 <nav>
                   {drawerLinks.map((link) => (

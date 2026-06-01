@@ -498,3 +498,22 @@ html {
   transform-origin: center;
 }
 
+@keyframes notification-bell-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(201, 168, 76, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(201, 168, 76, 0);
+  }
+}
+
+.notification-bell-pulse {
+  animation: notification-bell-pulse 2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .notification-bell-pulse {
+    animation: none;
+  }
+}
+

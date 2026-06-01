@@ -3,6 +3,7 @@ import { FeaturesSection } from "@/components/customer/features-section";
 import { TrustStats } from "@/components/customer/trust-stats";
 import { HotelGrid } from "@/components/customer/hotel-grid";
 import { PendingBookingsResume } from "@/components/customer/pending-bookings-resume";
+import { DonorsMarqueeSection } from "@/components/customer/donors-marquee";
 
 export default function HomePage() {
   return (
@@ -12,6 +13,7 @@ export default function HomePage() {
       <TrustStats />
       <HotelGrid />
       <FeaturesSection />
+      <DonorsMarqueeSection />
     </>
   );
 }
