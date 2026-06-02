@@ -215,6 +215,14 @@ export interface Guest {
   donorId?: string;
 }
 
+export interface CouponStats {
+  total: number;
+  issued: number;
+  dispatched: number;
+  available: number;
+  used: number;
+}
+
 export interface Donor {
   id: string;
   donorId: string;
@@ -240,6 +248,7 @@ export interface Donor {
   rewardPoints: number;
   compensationCredits: number;
   coupons: Coupon[];
+  couponStats: CouponStats;
   loyaltyStreak: number;
   bookingBenefits: string[];
 }

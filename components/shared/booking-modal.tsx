@@ -44,6 +44,7 @@ import { formatLocalDateString } from "@/lib/date-format";
 import { useQueryClient } from "@tanstack/react-query";
 import { getRoomImageUrl } from "@/lib/images/room-image";
 import { isUuid } from "@/lib/hotels/catalog";
+import { GuestCountFields } from "@/components/booking/guest-count-fields";
 import { BookingStepper } from "@/components/booking/booking-stepper";
 import { BenefitWalletSummaryPanel } from "@/components/booking/benefit-wallet-summary";
 import { BenefitCouponCard } from "@/components/booking/benefit-coupon-card";
@@ -77,6 +78,7 @@ export function BookingModal() {
     nextStep,
     prevStep,
     setDates,
+    setGuestCount,
     setDonorSession,
     setSelectedCouponIds,
     setUseCompensationWallet,
@@ -274,16 +276,21 @@ export function BookingModal() {
           clearPendingBooking();
         }
 
+        const totalGuests = guestCount.adults + guestCount.children;
+        const cappedTotal =
+          bookingTarget === "function_hall"
+            ? Math.max(1, Math.min(selectedRoom.maxOccupancy, totalGuests))
+            : totalGuests;
+
         const booking = await createBooking(accessToken, {
           ...(bookingTarget === "function_hall"
             ? { function_hall_id: selectedRoom.id }
             : { room_id: selectedRoom.id }),
           check_in_date: checkInStr,
           check_out_date: checkOutStr,
-          guest_count:
-            bookingTarget === "function_hall"
-              ? Math.max(1, Math.min(selectedRoom.maxOccupancy, guestCount.adults + guestCount.children))
-              : guestCount.adults + guestCount.children,
+          adults: guestCount.adults,
+          children: guestCount.children,
+          guest_count: cappedTotal,
         });
 
         setPendingBooking(booking.id, booking.booking_reference);
@@ -462,19 +469,26 @@ export function BookingModal() {
                       <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        className="rounded-xl bg-champagne/5 border border-champagne/20 px-3 py-2 text-center"
+                        className="rounded-xl bg-champagne/5 border border-champagne/20 px-3 py-2 text-center space-y-3"
                       >
-                        <p className="text-xs text-muted font-semibold uppercase tracking-wider">
-                          Stay duration
-                        </p>
-                        <p className="font-display font-bold text-champagne text-lg">
-                          {nights} {nights === 1 ? "night" : "nights"} · {roomCount}{" "}
-                          {roomCount === 1 ? "room" : "rooms"}
-                        </p>
-                        <p className="text-[11px] text-muted">
-                          {guestCount.adults} adults
-                          {guestCount.children > 0 && `, ${guestCount.children} children`}
-                        </p>
+                        <div>
+                          <p className="text-xs text-muted font-semibold uppercase tracking-wider">
+                            Stay duration
+                          </p>
+                          <p className="font-display font-bold text-champagne text-lg">
+                            {nights} {nights === 1 ? "night" : "nights"} · {roomCount}{" "}
+                            {roomCount === 1 ? "room" : "rooms"}
+                          </p>
+                        </div>
+                        <GuestCountFields
+                          value={guestCount}
+                          onChange={(partial) => setGuestCount(partial)}
+                          maxTotal={
+                            selectedRoom
+                              ? Math.max(1, selectedRoom.maxOccupancy)
+                              : 20
+                          }
+                        />
                       </motion.div>
                     )}
                     <div className="border-t border-beige/40 pt-2 flex justify-between font-bold">

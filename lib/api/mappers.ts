@@ -8,6 +8,7 @@ import { formatRoomListingLabel, formatRoomTypeLabel } from "@/lib/room-type-lab
 import type {
   BookingStatus,
   Coupon,
+  CouponStats,
   Donor,
   DonorBooking,
   DonorTier,
@@ -47,6 +48,14 @@ export type BackendCoupon = {
   batch?: { extra_benefit?: string };
 };
 
+export type BackendCouponStats = {
+  total: number;
+  issued: number;
+  dispatched: number;
+  available: number;
+  used: number;
+};
+
 export type BackendDonorProfile = {
   id: string;
   donor_id: string;
@@ -55,7 +64,12 @@ export type BackendDonorProfile = {
   tier?: { name: string } | null;
   club_name?: string;
   total_donated_paise?: number;
+  total_coupons_count?: number;
+  issued_coupons_count?: number;
+  dispatched_coupons_count?: number;
   available_coupons_count?: number;
+  used_coupons_count?: number;
+  coupon_stats?: BackendCouponStats;
   date_joined?: string;
 };
 
@@ -284,9 +298,32 @@ const TIER_MAP: Record<string, DonorTier> = {
   elite: "elite",
 };
 
+export function mapCouponStatsFromBackend(
+  stats?: BackendCouponStats | null,
+  profile?: BackendDonorProfile
+): CouponStats {
+  if (stats) {
+    return {
+      total: stats.total,
+      issued: stats.issued,
+      dispatched: stats.dispatched,
+      available: stats.available,
+      used: stats.used,
+    };
+  }
+  return {
+    total: profile?.total_coupons_count ?? 0,
+    issued: profile?.issued_coupons_count ?? 0,
+    dispatched: profile?.dispatched_coupons_count ?? 0,
+    available: profile?.available_coupons_count ?? 0,
+    used: profile?.used_coupons_count ?? 0,
+  };
+}
+
 export function mapDonorFromBackend(
   profile: BackendDonorProfile,
-  coupons: Coupon[]
+  coupons: Coupon[],
+  couponStats?: CouponStats
 ): Donor {
   const tierName = (profile.tier?.name ?? "").toLowerCase();
   const tier =
@@ -314,6 +351,7 @@ export function mapDonorFromBackend(
     rewardPoints: 0,
     compensationCredits: 0,
     coupons,
+    couponStats: couponStats ?? mapCouponStatsFromBackend(null, profile),
     loyaltyStreak: 0,
     bookingBenefits: [],
     clubName: profile.club_name?.trim() || "Vasavi Community",

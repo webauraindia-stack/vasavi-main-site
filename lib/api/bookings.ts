@@ -6,7 +6,9 @@ export type CreateBookingPayload = {
   function_hall_id?: string;
   check_in_date: string;
   check_out_date: string;
-  guest_count: number;
+  guest_count?: number;
+  adults?: number;
+  children?: number;
   guest_name?: string;
   guest_phone?: string;
   coupon_ids?: string[];

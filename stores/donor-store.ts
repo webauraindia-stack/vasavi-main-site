@@ -6,7 +6,12 @@ import {
   getMonthlyQuota,
 } from "@/lib/donor-engine";
 import { fetchCouponWallet } from "@/lib/api/coupons";
-import { mapCouponFromBackend, mapDonorFromBackend } from "@/lib/api/mappers";
+import {
+  mapCouponFromBackend,
+  mapCouponStatsFromBackend,
+  mapDonorFromBackend,
+} from "@/lib/api/mappers";
+import type { CouponStats } from "@/types";
 import type { BackendDonorProfile } from "@/lib/api/mappers";
 
 let hydrateInFlight: Promise<void> | null = null;
@@ -125,7 +130,10 @@ export const useDonorStore = create<DonorState>()(
           set({ isLoading: true });
           try {
             const wallet = await fetchCouponWallet(accessToken);
-            const coupons = wallet.available.map(mapCouponFromBackend);
+            const coupons = [
+              ...wallet.available.map(mapCouponFromBackend),
+              ...wallet.used.map((c) => mapCouponFromBackend(c)),
+            ];
             const meRes = await fetch("/api/backend/donors/me/", {
               headers: { Authorization: `Bearer ${accessToken}` },
               credentials: "include",
@@ -139,7 +147,10 @@ export const useDonorStore = create<DonorState>()(
               data?: BackendDonorProfile;
             };
             if (body.success && body.data) {
-              const donor = mapDonorFromBackend(body.data, coupons);
+              const stats: CouponStats = wallet.stats
+                ? mapCouponStatsFromBackend(wallet.stats)
+                : mapCouponStatsFromBackend(body.data.coupon_stats, body.data);
+              const donor = mapDonorFromBackend(body.data, coupons, stats);
               const tier = donor.tier;
               set({
                 isAuthenticated: true,

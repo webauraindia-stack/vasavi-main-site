@@ -30,6 +30,7 @@ import { useDonorStore } from "@/stores/donor-store";
 import { getNextTierProgress, getTierInfo, TIER_THRESHOLDS } from "@/lib/donor-engine";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import type { Coupon } from "@/types";
+import { CouponStatsPanel } from "@/components/donor/coupon-stats-panel";
 
 // Custom float-animation for high-fidelity interactive confetti
 function pseudoRandom(seed: number) {
@@ -135,6 +136,7 @@ export default function DonorPortalPage() {
 
   const availableCoupons = donor.coupons.filter((c) => c.status === "available");
   const redeemedCoupons = donor.coupons.filter((c) => c.status === "redeemed");
+  const stats = donor.couponStats;
 
   return (
     <div className="pt-24 pb-20 min-h-screen bg-gradient-to-b from-slate-50 via-slate-50/50 to-white text-slate-800">
@@ -260,11 +262,18 @@ export default function DonorPortalPage() {
           />
           <StatBentoCard
             title="Available Coupons"
-            value={`${availableCoupons.length} Active`}
-            subtext={`${redeemedCoupons.length} already claimed`}
+            value={String(stats.available)}
+            subtext={`${stats.used} used · ${stats.issued} pending dispatch`}
             icon={Gift}
             colorClass="text-purple-600 bg-purple-50 border-purple-100/50"
           />
+        </div>
+
+        <div className="mb-8">
+          <h2 className="font-display text-lg font-bold text-slate-900 mb-3">
+            Coupon tracking
+          </h2>
+          <CouponStatsPanel stats={stats} className="[&>div]:bg-white [&>div]:border-slate-200" />
         </div>
 
         {/* Loyalty Progression Tracker & Streak */}

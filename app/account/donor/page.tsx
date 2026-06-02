@@ -10,6 +10,7 @@ import { getTierInfo } from "@/lib/donor-engine";
 import { useAuthenticatedSession } from "@/lib/hooks/use-authenticated-session";
 import { useDonorStore } from "@/stores/donor-store";
 import { formatCurrency } from "@/lib/utils";
+import { CouponStatsPanel } from "@/components/donor/coupon-stats-panel";
 
 export default function DonorBenefitsPage() {
   const router = useRouter();
@@ -90,6 +91,12 @@ export default function DonorBenefitsPage() {
           Total contributed {formatCurrency(donor.totalDonation)}
         </p>
       </div>
+
+      <h3 className="font-display text-lg text-charcoal mb-3 flex items-center gap-2">
+        <Ticket className="h-5 w-5 text-champagne" />
+        Coupon tracking
+      </h3>
+      <CouponStatsPanel stats={donor.couponStats} className="mb-8" />
 
       <h3 className="font-display text-lg text-charcoal mb-3">Included benefits</h3>
       <ul className="space-y-2 mb-8">
