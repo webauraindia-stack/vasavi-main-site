@@ -88,19 +88,54 @@ const DEFAULT_TEMPLE = {
   langName: "Telugu (తెలుగు)"
 };
 
+function cityKeyFromHotelId(
+  hotelId: string | null,
+  hotels: { id: string; city: string }[]
+): string {
+  if (!hotelId) return "hyderabad";
+  const selectedHotel = hotels.find((h) => h.id === hotelId);
+  if (!selectedHotel) return "hyderabad";
+  const cityLower = selectedHotel.city.toLowerCase();
+  return CITY_TEMPLE_IMAGES[cityLower] ? cityLower : "hyderabad";
+}
+
 export function HeroSection() {
   const { t } = useAppLanguage();
   const { hotelId, setHotel } = useSearchStore();
   const { hotels } = useHotelsCatalog();
+  const [activeCityKey, setActiveCityKey] = useState("hyderabad");
 
-  // Compute temple info dynamically based on current hotel selection
-  const templeInfo = useMemo(() => {
-    if (!hotelId) return CITY_TEMPLE_IMAGES["hyderabad"];
-    const selectedHotel = hotels.find((h) => h.id === hotelId);
-    if (!selectedHotel) return CITY_TEMPLE_IMAGES["hyderabad"];
-    const cityLower = selectedHotel.city.toLowerCase();
-    return CITY_TEMPLE_IMAGES[cityLower] || DEFAULT_TEMPLE;
+  const POPULAR_DESTINATIONS = useMemo(() => {
+    const hotelForCity = (cityKey: string) =>
+      hotels.find((h) => h.city.toLowerCase() === cityKey)?.id ?? null;
+
+    return [
+      {
+        label: t("hero.destTirupati"),
+        cityKey: "tirupati",
+        hotelId: hotelForCity("tirupati"),
+      },
+      {
+        label: t("hero.destVijayawada"),
+        cityKey: "vijayawada",
+        hotelId: hotelForCity("vijayawada"),
+      },
+      {
+        label: t("hero.destHyderabad"),
+        cityKey: "hyderabad",
+        hotelId: hotelForCity("hyderabad"),
+      },
+    ];
+  }, [hotels, t]);
+
+  useEffect(() => {
+    setActiveCityKey(cityKeyFromHotelId(hotelId, hotels));
   }, [hotelId, hotels]);
+
+  const templeInfo = useMemo(
+    () => CITY_TEMPLE_IMAGES[activeCityKey] ?? DEFAULT_TEMPLE,
+    [activeCityKey]
+  );
 
   // Intro animation visibility state to completely unmount once played
   const [showIntro, setShowIntro] = useState(true);
@@ -113,11 +148,14 @@ export function HeroSection() {
     }
   }, []);
 
-  const POPULAR_DESTINATIONS = [
-    { label: t("hero.destTirupati"), hotelId: "2" },
-    { label: t("hero.destVijayawada"), hotelId: "3" },
-    { label: t("hero.destHyderabad"), hotelId: "1" },
-  ];
+  const isDestinationActive = (cityKey: string, destHotelId: string | null) =>
+    activeCityKey === cityKey ||
+    (destHotelId !== null && hotelId === destHotelId);
+
+  const selectDestination = (cityKey: string, destHotelId: string | null) => {
+    setActiveCityKey(cityKey);
+    if (destHotelId) setHotel(destHotelId);
+  };
 
   return (
     <>
@@ -128,13 +166,13 @@ export function HeroSection() {
       <section className="relative min-h-[92vh] flex w-full max-w-full items-end overflow-hidden bg-charcoal">
         
         {/* Dynamic Landscape Spiritual Background Image */}
-        <AnimatePresence mode="popLayout">
+        <AnimatePresence mode="wait">
           <motion.div
-            key={templeInfo.url}
+            key={activeCityKey}
             initial={{ opacity: 0, scale: 1.05 }}
             animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.9 }}
+            exit={{ opacity: 0, scale: 1.02 }}
+            transition={{ duration: 0.7, ease: "easeInOut" }}
             className="absolute inset-0 w-full h-full"
           >
             <Image
@@ -156,12 +194,12 @@ export function HeroSection() {
           <div className="page-container min-w-0 max-w-full">
             <div className="grid min-w-0 max-w-full gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-end lg:gap-12">
 
-              {/* Left Column — Devotional Info */}
+              {/* Left Column — Devotional Info (desktop only) */}
               <motion.div
                 initial={{ opacity: 0, y: 28 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.75, ease: "easeOut" }}
-                className="rounded-2xl bg-black/40 backdrop-blur-md border border-white/10 p-5 sm:p-8 overflow-hidden w-full min-w-0 max-w-full order-2 lg:order-1 relative shadow-warm-lg"
+                className="hidden lg:block rounded-2xl bg-black/40 backdrop-blur-md border border-white/10 p-5 sm:p-8 overflow-hidden w-full min-w-0 max-w-full order-2 lg:order-1 relative shadow-warm-lg"
               >
                 <div className="inline-flex max-w-full items-center gap-2 rounded-full border border-[#c9a84c]/60 bg-white/10 px-3.5 py-1.5 mb-5">
                   <Sparkles className="h-4 w-4 shrink-0 text-[#c9a84c]" />
@@ -181,10 +219,11 @@ export function HeroSection() {
                 <div className="mt-6 flex flex-wrap gap-2.5 w-full">
                   {POPULAR_DESTINATIONS.map((dest) => (
                     <button
-                      key={dest.hotelId}
-                      onClick={() => setHotel(dest.hotelId)}
+                      key={dest.cityKey}
+                      type="button"
+                      onClick={() => selectDestination(dest.cityKey, dest.hotelId)}
                       className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-4 py-2.5 text-xs sm:text-sm font-bold backdrop-blur-sm transition-all duration-300 ${
-                        hotelId === dest.hotelId 
+                        isDestinationActive(dest.cityKey, dest.hotelId)
                         ? "border-[#c9a84c] bg-[#c9a84c]/30 text-white shadow-md scale-105" 
                         : "border-white/20 bg-white/10 text-white hover:bg-[#c9a84c]/20 hover:border-[#c9a84c]/50"
                       }`}
@@ -201,9 +240,9 @@ export function HeroSection() {
                 initial={{ opacity: 0, y: 24 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.65, delay: 0.2 }}
-                className="w-full min-w-0 max-w-full order-1 lg:order-2"
+                className="w-full min-w-0 max-w-full lg:order-2"
               >
-                <p className="mb-3.5 text-center lg:text-left text-xs sm:text-sm font-bold uppercase tracking-[0.15em] text-white drop-shadow-md px-1">
+                <p className="mb-3.5 hidden lg:block text-left text-xs sm:text-sm font-bold uppercase tracking-[0.15em] text-white drop-shadow-md px-1">
                   {t("hero.searchPrompt")}
                 </p>
                 <Suspense
