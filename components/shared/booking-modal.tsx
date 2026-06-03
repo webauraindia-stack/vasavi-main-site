@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { QRCodeSVG } from "qrcode.react";
 import { useSession } from "next-auth/react";
 import { useAuthenticatedSession } from "@/lib/hooks/use-authenticated-session";
@@ -54,6 +55,7 @@ import "react-day-picker/style.css";
 const SEVA_AMOUNTS = [0, 101, 501, 1001, 2501];
 
 export function BookingModal() {
+  const router = useRouter();
   const { data: session } = useSession();
   const { isAuthenticated: hasValidSession, withAccessToken } = useAuthenticatedSession();
   const {
@@ -89,6 +91,7 @@ export function BookingModal() {
     completeBooking,
     setPendingBooking,
     clearPendingBooking,
+    dismissToast,
     reset,
   } = useBookingStore();
 
@@ -353,8 +356,16 @@ export function BookingModal() {
   };
 
   const handleClose = () => {
+    dismissToast();
     closeBooking();
     if (step === 5) setTimeout(reset, 300);
+  };
+
+  const handleGoToMyBookings = () => {
+    dismissToast();
+    closeBooking();
+    reset();
+    router.push("/account/bookings");
   };
 
   const availableCoupons =
@@ -894,11 +905,12 @@ export function BookingModal() {
                       Done
                     </Button>
                     <Button
+                      type="button"
                       variant="outline"
                       className="flex-1 h-12 rounded-xl font-bold border-beige"
-                      asChild
+                      onClick={handleGoToMyBookings}
                     >
-                      <Link href="/account/bookings">My bookings</Link>
+                      My bookings
                     </Button>
                   </div>
                 </div>

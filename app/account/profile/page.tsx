@@ -12,14 +12,11 @@ import { formatAadhaarDisplay } from "@/lib/aadhaar";
 import { useAppLanguage } from "@/hooks/use-app-language";
 import { useAuthenticatedSession } from "@/lib/hooks/use-authenticated-session";
 import { updateProfile } from "@/lib/api/accounts";
-import { useDonorStore } from "@/stores/donor-store";
-import { CouponStatsPanel } from "@/components/donor/coupon-stats-panel";
 
 export default function ProfilePage() {
   const { t } = useAppLanguage();
   const { data: session, update } = useSession();
   const { withAccessToken } = useAuthenticatedSession();
-  const donor = useDonorStore((s) => s.donor);
   const [name, setName] = useState(session?.user?.name ?? "");
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -153,15 +150,6 @@ export default function ProfilePage() {
             <div>
               <Label>{t("account.donorId")}</Label>
               <Input value={user.donorId} disabled className="mt-1 opacity-60" />
-            </div>
-          )}
-          {user?.isDonor && donor?.couponStats && (
-            <div className="rounded-xl border border-champagne/25 bg-champagne/5 p-4 space-y-2">
-              <p className="text-sm font-semibold text-charcoal flex items-center gap-2">
-                <Crown className="h-4 w-4 text-champagne" />
-                Your coupons
-              </p>
-              <CouponStatsPanel stats={donor.couponStats} variant="compact" />
             </div>
           )}
           {user?.city && (
