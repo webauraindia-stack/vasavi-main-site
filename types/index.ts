@@ -1,5 +1,16 @@
 export type DonorTier = "bronze" | "silver" | "gold" | "platinum" | "elite" | null;
 
+/**
+ * Frontend coupon types.
+ *
+ * Backend types are mapped to these in lib/api/mappers.ts:
+ *   backend "concession" → frontend "percentage_discount"
+ *   backend "free"       → frontend "free_booking"
+ *
+ * The remaining types (fixed_compensation, special_access,
+ * premium_benefit, festival_special) are frontend-only display
+ * categories derived from coupon metadata.
+ */
 export type CouponType =
   | "free_booking"
   | "percentage_discount"

@@ -224,7 +224,7 @@ export function suggestBestCoupons(
   const stackableIds = selectedStackable.map((item) => item.coupon.id);
 
   // Compare Option A vs Option B
-  if (bestFreeBooking && subtotal >= stackableTotalSavings) {
+  if (bestFreeBooking && subtotal > stackableTotalSavings) {
     return {
       selectedIds: [bestFreeBooking.id],
       totalDiscount: subtotal,
@@ -260,7 +260,13 @@ export function calculateLoyaltyPoints(
   return Math.round(basePoints * multiplier);
 }
 
-export function generateCouponCode(type: CouponType, value: number): string {
+/**
+ * Generate a display-only coupon code preview.
+ * These codes are for UI display purposes only and are NOT
+ * sent to or validated by the backend. Actual coupon codes
+ * are assigned server-side via CouponBatch creation.
+ */
+export function generateCouponCodePreview(type: CouponType, value: number): string {
   const prefix = {
     free_booking: "FREE",
     percentage_discount: "PCT",

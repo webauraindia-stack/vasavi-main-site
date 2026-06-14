@@ -1,6 +1,8 @@
 import { NextRequest } from "next/server";
 import { proxyToBackend } from "@/lib/api/proxy-handler";
 
+export const dynamic = "force-dynamic";
+
 type RouteContext = { params: Promise<{ path: string[] }> };
 
 async function handle(request: NextRequest, context: RouteContext) {

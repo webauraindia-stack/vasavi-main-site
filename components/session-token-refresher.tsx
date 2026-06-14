@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { useSession } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import { refreshAccessToken } from "@/lib/auth/refresh-access-token";
 import { isSessionExpiredError } from "@/lib/auth/session-expired";
 import {
@@ -12,7 +12,7 @@ import {
 
 /**
  * Keeps the NextAuth access token in sync with the httpOnly refresh cookie before expiry.
- * Does not sign the user out on refresh failure — API 401 handling does that when needed.
+ * Signs the user out when the refresh token is expired or missing.
  */
 export function SessionTokenRefresher() {
   const { data: session, status, update } = useSession();
@@ -50,9 +50,14 @@ export function SessionTokenRefresher() {
           accessTokenExpires: accessTokenExpiresAt(),
         });
       } catch (error) {
-        if (cancelled || !isSessionExpiredError(error)) return;
-        // Refresh cookie missing or expired — keep current access token until it 401s.
-        console.warn("[auth] Proactive token refresh failed:", error.message);
+        if (cancelled) return;
+        if (isSessionExpiredError(error)) {
+          console.warn("[auth] Session expired — signing out:", (error as Error).message);
+          void signOut({
+            callbackUrl: `/login?session=expired&reason=${encodeURIComponent((error as Error).message)}`,
+          });
+          return;
+        }
       } finally {
         refreshingRef.current = false;
       }

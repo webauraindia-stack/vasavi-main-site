@@ -41,6 +41,7 @@ interface BookingState {
     whatsappSent?: boolean;
   } | null;
   isDraft: boolean;
+  userId: string | null;
 
   openBooking: (
     room: Room,
@@ -80,6 +81,7 @@ interface BookingState {
     target?: BookingTarget
   ) => void;
   dismissToast: () => void;
+  clearIfDifferentUser: (currentUserId: string) => void;
   reset: () => void;
 }
 
@@ -114,6 +116,7 @@ export const useBookingStore = create<BookingState>()(
       showToast: false,
       toastData: null,
       isDraft: false,
+      userId: null,
 
       openBooking: (room, checkIn, checkOut, guests) => {
         const nextGuests = guests
@@ -249,6 +252,14 @@ export const useBookingStore = create<BookingState>()(
 
       dismissToast: () => set({ showToast: false, toastData: null }),
 
+      clearIfDifferentUser: (currentUserId) => {
+        const { userId } = get();
+        if (userId && userId !== currentUserId) {
+          get().reset();
+        }
+        set({ userId: currentUserId });
+      },
+
       reset: () =>
         set({
           isOpen: false,
@@ -274,6 +285,9 @@ export const useBookingStore = create<BookingState>()(
           pendingBookingId: null,
           pendingBookingReference: null,
           isDraft: false,
+          showToast: false,
+          toastData: null,
+          userId: null,
         }),
     }),
     {
@@ -296,6 +310,7 @@ export const useBookingStore = create<BookingState>()(
         pendingBookingId: state.pendingBookingId,
         pendingBookingReference: state.pendingBookingReference,
         isDraft: state.isDraft,
+        userId: state.userId,
       }),
       onRehydrateStorage: () => (state) => {
         if (state) {

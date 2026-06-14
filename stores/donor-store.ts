@@ -1,3 +1,5 @@
+"use client";
+
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { Donor, DonorTier, Coupon } from "@/types";
@@ -9,6 +11,7 @@ import { fetchCouponWallet } from "@/lib/api/coupons";
 import { mapCouponFromBackend, mapDonorFromBackend } from "@/lib/api/mappers";
 import type { BackendDonorProfile } from "@/lib/api/mappers";
 
+// Client-only dedup guard — safe because this module is "use client"
 let hydrateInFlight: Promise<void> | null = null;
 
 interface DonorState {
