@@ -1,11 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { LayoutGrid, Map } from "lucide-react";
 import { useHotels } from "@/lib/hooks/use-hotels";
 import { HotelCard } from "@/components/customer/hotel-card";
-import { HotelMap } from "@/components/customer/hotel-map";
-import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -38,8 +35,6 @@ export function HotelGrid() {
   const [amenities, setAmenities] = useState<AmenityTag[]>([]);
   const [priceRange, setPriceRange] = useState([PRICE_MIN, PRICE_MAX]);
   const [donorOnly, setDonorOnly] = useState(false);
-  const [view, setView] = useState<"grid" | "map">("grid");
-  const [highlightId, setHighlightId] = useState<string | undefined>();
 
   const filtered = useMemo(() => {
     return hotels.filter((h) => {
@@ -177,72 +172,21 @@ export function HotelGrid() {
                   ? "Loading guest houses…"
                   : `${filtered.length} hotel${filtered.length !== 1 ? "s" : ""}`}
               </p>
-              <div className="hidden lg:flex gap-1 rounded-lg border border-charcoal/10 p-1 bg-surface">
-                <Button
-                  variant={view === "grid" ? "default" : "ghost"}
-                  size="sm"
-                  onClick={() => setView("grid")}
-                  aria-label="Grid view"
-                >
-                  <LayoutGrid className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant={view === "map" ? "default" : "ghost"}
-                  size="sm"
-                  onClick={() => setView("map")}
-                  aria-label="Map view"
-                >
-                  <Map className="h-4 w-4" />
-                </Button>
-              </div>
             </div>
 
-            {view === "grid" ? (
-              <div className="grid grid-cols-2 gap-x-3 gap-y-4 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4">
-                {filtered.map((hotel) => (
-                  <HotelCard
-                    key={hotel.id}
-                    hotel={hotel}
-                    className={highlightId === hotel.id ? "ring-2 ring-champagne" : ""}
-                  />
-                ))}
-                {filtered.length === 0 && (
-                  <p className="text-center text-muted py-12 col-span-full">
-                    No hotels match your filters. Try adjusting your criteria.
-                  </p>
-                )}
-              </div>
-            ) : (
-              <HotelMap
-                hotels={filtered}
-                selectedId={highlightId}
-                onSelect={setHighlightId}
-                className="h-[60dvh] lg:h-[500px]"
-              />
-            )}
+            <div className="grid grid-cols-2 gap-x-3 gap-y-4 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4">
+              {filtered.map((hotel) => (
+                <HotelCard key={hotel.id} hotel={hotel} />
+              ))}
+              {filtered.length === 0 && (
+                <p className="text-center text-muted py-12 col-span-full">
+                  No hotels match your filters. Try adjusting your criteria.
+                </p>
+              )}
+            </div>
           </div>
         </div>
       </div>
-
-      <Button
-        size="icon"
-        className="fixed bottom-6 right-6 z-40 h-14 w-14 rounded-full shadow-warm-lg lg:hidden"
-        onClick={() => setView(view === "map" ? "grid" : "map")}
-        aria-label={view === "map" ? "Show grid" : "Show map"}
-      >
-        {view === "map" ? <LayoutGrid className="h-5 w-5" /> : <Map className="h-5 w-5" />}
-      </Button>
-
-      {view === "map" && (
-        <div className="fixed inset-x-0 bottom-0 top-16 z-30 bg-white lg:hidden">
-          <HotelMap
-            hotels={filtered}
-            selectedId={highlightId}
-            onSelect={setHighlightId}
-            className="h-full rounded-none border-0"
-          />
-        </div>
-      )}
     </section>
   );
 }
