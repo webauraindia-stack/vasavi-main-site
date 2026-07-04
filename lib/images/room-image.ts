@@ -45,5 +45,7 @@ export function roomImagesFromApi(
     (url) => typeof url === "string" && url.trim().length > 0
   );
   if (valid.length > 0) return valid;
-  return [getRoomImageUrl(room)];
+  // No usable image URLs remain (object and string paths both exhausted above),
+  // so only the category drives the fallback image.
+  return [getRoomImageUrl({ category: room.category })];
 }
